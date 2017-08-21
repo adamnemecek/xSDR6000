@@ -69,6 +69,7 @@
 		91FADE5E1F4A7A2400DEC52B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE5C1F4A7A2400DEC52B /* Main.storyboard */; };
 		91FADE611F4A7A3E00DEC52B /* Panafall.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE5F1F4A7A3E00DEC52B /* Panafall.storyboard */; };
 		91FADE641F4A7A4F00DEC52B /* Preferences.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE621F4A7A4F00DEC52B /* Preferences.storyboard */; };
+		91FADE681F4B1A2A00DEC52B /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE671F4B1A2A00DEC52B /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -148,6 +149,7 @@
 		91FADE5D1F4A7A2400DEC52B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = xSDR6000/Base.lproj/Main.storyboard; sourceTree = SOURCE_ROOT; };
 		91FADE601F4A7A3E00DEC52B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = xSDR6000/Base.lproj/Panafall.storyboard; sourceTree = SOURCE_ROOT; };
 		91FADE631F4A7A4F00DEC52B /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = xSDR6000/Base.lproj/Preferences.storyboard; sourceTree = SOURCE_ROOT; };
+		91FADE671F4B1A2A00DEC52B /* README.md */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -255,6 +257,7 @@
 		91B16FCE1CDF7F5E00600E02 = {
 			isa = PBXGroup;
 			children = (
+				91FADE671F4B1A2A00DEC52B /* README.md */,
 				91B16FD91CDF7F5E00600E02 /* xSDR6000 */,
 				91B16FD81CDF7F5E00600E02 /* Products */,
 				91ED52501E1EE5390086A56D /* Frameworks */,
@@ -470,6 +473,7 @@
 				91FADE121F4A76B800DEC52B /* SliceLayer.swift in Sources */,
 				91FADDEA1F4A74FB00DEC52B /* AppDelegate.swift in Sources */,
 				91FADE041F4A765A00DEC52B /* PCWViewController.swift in Sources */,
+				91FADE681F4B1A2A00DEC52B /* README.md in Sources */,
 				91FADE181F4A76DD00DEC52B /* WaterfallViewController.swift in Sources */,
 				91FADDFB1F4A75AE00DEC52B /* PanafallsViewController.swift in Sources */,
 				91FADE051F4A765A00DEC52B /* PhoneViewController.swift in Sources */,
