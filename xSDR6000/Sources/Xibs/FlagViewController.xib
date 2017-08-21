@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12120" systemVersion="16E195" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+    <dependencies>
+        <deployment identifier="macosx"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12120"/>
+        <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
+    </dependencies>
+    <objects>
+        <customObject id="-2" userLabel="File's Owner"/>
+        <customObject id="-1" userLabel="First Responder" customClass="FirstResponder"/>
+        <customObject id="-3" userLabel="Application" customClass="NSObject"/>
+        <customView id="AdE-j1-PQB" userLabel="Flag">
+            <rect key="frame" x="0.0" y="0.0" width="250" height="101"/>
+            <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+            <subviews>
+                <segmentedControl verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ntP-34-5uy" userLabel="BottomBar">
+                    <rect key="frame" x="-1" y="-1" width="252" height="20"/>
+                    <segmentedCell key="cell" borderStyle="border" alignment="left" style="roundRect" trackingMode="selectOne" id="v8p-3U-2ZJ">
+                        <font key="font" metaFont="cellTitle"/>
+                        <segments>
+                            <segment label="AUDIO" width="48"/>
+                            <segment label="DSP" width="48" tag="1"/>
+                            <segment label="LSB" width="49"/>
+                            <segment label="X/RIT" width="49"/>
+                            <segment label="DAX" width="48"/>
+                        </segments>
+                    </segmentedCell>
+                </segmentedControl>
+                <button verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="T0X-MI-eFe" userLabel="Lock">
+                    <rect key="frame" x="0.0" y="60" width="20" height="20"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="20" id="J5w-4i-JnP"/>
+                    </constraints>
+                    <buttonCell key="cell" type="square" bezelStyle="shadowlessSquare" image="NSLockUnlockedTemplate" imagePosition="only" alignment="center" imageScaling="proportionallyUpOrDown" inset="2" id="XNl-Is-pNZ">
+                        <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
+                        <font key="font" metaFont="system"/>
+                    </buttonCell>
+                </button>
+                <segmentedControl verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="nfK-4E-Nfm" userLabel="TopBar">
+                    <rect key="frame" x="-1" y="81" width="252" height="20"/>
+                    <segmentedCell key="cell" refusesFirstResponder="YES" borderStyle="border" alignment="left" style="roundRect" trackingMode="selectAny" id="xVS-uU-LXL">
+                        <font key="font" metaFont="cellTitle"/>
+                        <segments>
+                            <segment image="NSStopProgressFreestandingTemplate" width="48">
+                                <nil key="label"/>
+                            </segment>
+                            <segment label="ANT1" width="48" tag="1"/>
+                            <segment label="ANT1" width="49"/>
+                            <segment label="TX" width="49"/>
+                            <segment label="A" width="48"/>
+                        </segments>
+                    </segmentedCell>
+                </segmentedControl>
+                <textField verticalHuggingPriority="750" ambiguous="YES" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="nob-Dv-pXg" userLabel="Frequency">
+                    <rect key="frame" x="30" y="47" width="215" height="27"/>
+                    <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" alignment="right" placeholderString="7.235.000" id="t0A-BY-hBr">
+                        <font key="font" size="21" name="LatinWide"/>
+                        <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
+                        <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
+                    </textFieldCell>
+                </textField>
+                <levelIndicator verticalHuggingPriority="750" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="w1u-gK-t7q" userLabel="Meter">
+                    <rect key="frame" x="32" y="26" width="212" height="18"/>
+                    <constraints>
+                        <constraint firstAttribute="height" constant="16" id="yd8-gp-YeL"/>
+                    </constraints>
+                    <levelIndicatorCell key="cell" alignment="left" maxValue="99" warningValue="75" criticalValue="90" id="yjv-I5-Mtx"/>
+                </levelIndicator>
+            </subviews>
+            <constraints>
+                <constraint firstItem="nob-Dv-pXg" firstAttribute="top" secondItem="nfK-4E-Nfm" secondAttribute="bottom" constant="8" symbolic="YES" id="6yh-U8-45Z"/>
+                <constraint firstItem="nfK-4E-Nfm" firstAttribute="leading" secondItem="T0X-MI-eFe" secondAttribute="leading" id="Bdx-6p-8I9"/>
+                <constraint firstItem="T0X-MI-eFe" firstAttribute="leading" secondItem="ntP-34-5uy" secondAttribute="leading" id="M8m-BW-sYs"/>
+                <constraint firstItem="ntP-34-5uy" firstAttribute="top" secondItem="w1u-gK-t7q" secondAttribute="bottom" constant="10" id="WPf-AW-Mgv"/>
+                <constraint firstItem="nob-Dv-pXg" firstAttribute="leading" secondItem="T0X-MI-eFe" secondAttribute="trailing" constant="12" id="XEM-OG-u0j"/>
+                <constraint firstItem="T0X-MI-eFe" firstAttribute="top" secondItem="nfK-4E-Nfm" secondAttribute="bottom" constant="2" id="aAb-8H-QuT"/>
+                <constraint firstItem="w1u-gK-t7q" firstAttribute="top" secondItem="nob-Dv-pXg" secondAttribute="bottom" constant="3" id="bFO-QC-BYS"/>
+                <constraint firstItem="ntP-34-5uy" firstAttribute="top" secondItem="T0X-MI-eFe" secondAttribute="bottom" constant="42" id="dee-ep-gyW"/>
+                <constraint firstItem="nob-Dv-pXg" firstAttribute="leading" secondItem="w1u-gK-t7q" secondAttribute="leading" id="mGa-AZ-cq2"/>
+                <constraint firstItem="nob-Dv-pXg" firstAttribute="centerX" secondItem="w1u-gK-t7q" secondAttribute="centerX" id="rdi-5K-HkF"/>
+            </constraints>
+            <point key="canvasLocation" x="-369" y="-223"/>
+        </customView>
+    </objects>
+    <resources>
+        <image name="NSLockUnlockedTemplate" width="10" height="14"/>
+        <image name="NSStopProgressFreestandingTemplate" width="14" height="14"/>
+    </resources>
+</document>
