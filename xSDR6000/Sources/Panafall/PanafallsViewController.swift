@@ -27,6 +27,7 @@ class PanafallsViewController: NSSplitViewController {
     fileprivate let _log = (NSApp.delegate as! AppDelegate)
 
     fileprivate let kPanafallStoryboard = "Panafall"                        // Storyboard names
+    
     fileprivate let kPanafallButtonIdentifier = "Button"                    // Storyboard identifiers
     fileprivate let kPanadapterIdentifier = "Panadapter"
     fileprivate let kWaterfallIdentifier = "Waterfall"

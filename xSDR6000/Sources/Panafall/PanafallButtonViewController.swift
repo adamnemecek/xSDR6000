@@ -86,7 +86,7 @@ final class PanafallButtonViewController: NSViewController {
     
     fileprivate var _radio: Radio { return _params.radio }
     fileprivate var _panadapter: Panadapter? { return _params.panadapter }
-    fileprivate var _waterfall: Waterfall? { return _params.waterfall }
+    fileprivate var _waterfall: Waterfall? { return _radio.waterfalls[_panadapter!.waterfallId] }
 
     fileprivate var _center: Int {return _panadapter!.center }
     fileprivate var _bandwidth: Int { return _panadapter!.bandwidth }
