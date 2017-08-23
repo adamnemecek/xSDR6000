@@ -706,7 +706,7 @@
                         <outlet property="delegate" destination="Voe-Tx-rLC" id="PrD-fu-P6m"/>
                     </connections>
                 </application>
-                <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="xFlex" customModuleProvider="target"/>
+                <customObject id="Voe-Tx-rLC" customClass="AppDelegate" customModule="xSDR6000" customModuleProvider="target"/>
                 <customObject id="Ady-hI-5gd" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
             </objects>
             <point key="canvasLocation" x="63.5" y="-299"/>
@@ -714,7 +714,7 @@
         <!--Main Window-->
         <scene sceneID="R2V-B0-nI4">
             <objects>
-                <windowController storyboardIdentifier="MainWindow" id="B8D-0N-5wS" userLabel="Main Window" customClass="MainWindowController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <windowController storyboardIdentifier="MainWindow" id="B8D-0N-5wS" userLabel="Main Window" customClass="MainWindowController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <window key="window" title="xFlex" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="xFlexMainWindow" animationBehavior="default" id="IQv-IB-iLA">
                         <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" unifiedTitleAndToolbar="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
@@ -840,7 +840,7 @@
                                         <action selector="remoteRxButton:" target="Oky-zY-oP4" id="MNS-ox-p2f"/>
                                     </connections>
                                 </toolbarItem>
-                                <toolbarItem implicitItemIdentifier="9C8BEA12-CA67-4BE7-93CC-4AE3236599CC" explicitItemIdentifier="VoltageTemp" label="Voltage/Temp" paletteLabel="Voltage/Temp" tag="-1" id="xxh-2I-BDg" customClass="ParameterMonitor" customModule="xFlex" customModuleProvider="target">
+                                <toolbarItem implicitItemIdentifier="9C8BEA12-CA67-4BE7-93CC-4AE3236599CC" explicitItemIdentifier="VoltageTemp" label="Voltage/Temp" paletteLabel="Voltage/Temp" tag="-1" id="xxh-2I-BDg" customClass="ParameterMonitor" customModule="xSDR6000" customModuleProvider="target">
                                     <nil key="toolTip"/>
                                     <size key="minSize" width="45" height="38"/>
                                     <size key="maxSize" width="52" height="38"/>
@@ -998,13 +998,13 @@
         <!--Radio View Controller-->
         <scene sceneID="hg3-hZ-gZY">
             <objects>
-                <splitViewController id="2ro-LE-ZBU" customClass="RadioViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <splitViewController id="2ro-LE-ZBU" customClass="RadioViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <splitViewItems>
                         <splitViewItem id="0W5-iK-sGW"/>
-                        <splitViewItem id="usv-4b-Zp0"/>
+                        <splitViewItem holdingPriority="249" id="usv-4b-Zp0"/>
                     </splitViewItems>
-                    <splitView key="splitView" dividerStyle="thin" vertical="YES" id="oU9-Vu-xiy">
-                        <rect key="frame" x="-250" y="0.0" width="958" height="300"/>
+                    <splitView key="splitView" misplaced="YES" dividerStyle="thin" vertical="YES" id="oU9-Vu-xiy">
+                        <rect key="frame" x="0.0" y="0.0" width="958" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </splitView>
                     <connections>
@@ -1022,7 +1022,7 @@
                 <splitViewController storyboardIdentifier="Side" id="Jdb-W6-QFS" userLabel="Side" sceneMemberID="viewController">
                     <splitViewItems>
                         <splitViewItem id="dW4-Ui-ZbW"/>
-                        <splitViewItem id="KeZ-aN-E7V"/>
+                        <splitViewItem holdingPriority="249" id="KeZ-aN-E7V"/>
                     </splitViewItems>
                     <splitView key="splitView" dividerStyle="thin" id="Ctb-uG-jWF">
                         <rect key="frame" x="0.0" y="0.0" width="387" height="256"/>
@@ -1171,7 +1171,7 @@
         <!--Radio Picker-->
         <scene sceneID="I6X-ii-a1s">
             <objects>
-                <viewController title="Radio Picker" storyboardIdentifier="RadioPicker" id="Je7-HH-yXX" userLabel="Radio Picker" customClass="RadioPickerViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Radio Picker" storyboardIdentifier="RadioPicker" id="Je7-HH-yXX" userLabel="Radio Picker" customClass="RadioPickerViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="e0j-zY-f6o">
                         <rect key="frame" x="0.0" y="0.0" width="584" height="205"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -1462,7 +1462,7 @@ DQ
         <!--Panafalls-->
         <scene sceneID="2B4-2I-NKY">
             <objects>
-                <splitViewController storyboardIdentifier="Panafalls" showSeguePresentationStyle="single" id="uMM-BY-Dcg" userLabel="Panafalls" customClass="PanafallsViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <splitViewController storyboardIdentifier="Panafalls" showSeguePresentationStyle="single" id="uMM-BY-Dcg" userLabel="Panafalls" customClass="PanafallsViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <splitView key="splitView" autosaveName="Panafalls" dividerStyle="thin" id="Mfh-In-tH1">
                         <rect key="frame" x="0.0" y="0.0" width="945" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>

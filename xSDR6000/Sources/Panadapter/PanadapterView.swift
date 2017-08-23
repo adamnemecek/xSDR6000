@@ -736,7 +736,7 @@ final class PanadapterView : NSView, CALayerDelegate {
                 addSlice(slice)
                 
                 // log the event
-                _log.msg("Slice initialized, ID = \(slice.id), pan = \(slice.panadapterId)", level: .debug, function: #function, file: #file, line: #line)
+                _log.msg("ID = \(slice.id), pan = \(slice.panadapterId)", level: .debug, function: #function, file: #file, line: #line)
             }
 
         }
@@ -754,7 +754,7 @@ final class PanadapterView : NSView, CALayerDelegate {
             if slice.panadapterId == _panadapter!.id {
                 
                 // YES, log the event
-                _log.msg("Slice will be removed, ID = \(slice.id), pan = \(slice.panadapterId)", level: .debug, function: #function, file: #file, line: #line)
+                _log.msg("ID = \(slice.id), pan = \(slice.panadapterId)", level: .debug, function: #function, file: #file, line: #line)
                 
                 // remove the Slice Layer
                 removeSlice(slice)
