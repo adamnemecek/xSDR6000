@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="12113" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="jcl-33-LeA">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="jcl-33-LeA">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12113"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="Alignment constraints to the first baseline" minToolsVersion="6.0"/>
         <capability name="Alignment constraints with different attributes" minToolsVersion="5.1"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
@@ -29,7 +29,7 @@
         <!--Preference Tabs-->
         <scene sceneID="rdp-1L-oes">
             <objects>
-                <tabViewController id="f5E-4P-cEO" userLabel="Preference Tabs" customClass="PreferencesTabViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <tabViewController id="f5E-4P-cEO" userLabel="Preference Tabs" customClass="PreferencesTabViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <tabViewItems>
                         <tabViewItem id="axq-W9-QDG"/>
                         <tabViewItem id="FBh-PH-oC5"/>
@@ -54,7 +54,7 @@
         <!--Colors Tab-->
         <scene sceneID="GU6-BE-ej6">
             <objects>
-                <viewController title="Colors" id="3IL-Xb-5ey" userLabel="Colors Tab" customClass="ColorsViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController title="Colors" id="3IL-Xb-5ey" userLabel="Colors Tab" customClass="ColorsViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" id="VEM-Wk-vwv">
                         <rect key="frame" x="0.0" y="0.0" width="600" height="360"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -816,16 +816,16 @@
                         <rect key="frame" x="0.0" y="0.0" width="600" height="360"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yan-Ej-svz" userLabel="xFlex API Version label">
-                                <rect key="frame" x="18" y="269" width="108" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="xFlex API Version" id="Fx7-bw-GOz">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="yan-Ej-svz" userLabel="API Version label">
+                                <rect key="frame" x="18" y="269" width="142" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="xSDR6000 API Version" id="Fx7-bw-GOz">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YKg-wi-WTR" userLabel="xFlex API Version">
-                                <rect key="frame" x="206" y="266" width="133" height="22"/>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="YKg-wi-WTR" userLabel="API Version">
+                                <rect key="frame" x="240" y="266" width="133" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="right" placeholderString="1.2.3.4" id="FVb-gM-nBW">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -835,16 +835,16 @@
                                     <binding destination="BlG-y8-jgO" name="value" keyPath="representedObject.apiVersion" id="OZh-xQ-3Ql"/>
                                 </connections>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="D94-eN-xbF" userLabel="xFlex GUI Version label">
-                                <rect key="frame" x="18" y="323" width="111" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="xFlex GUI Version" id="U5k-mc-487">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="D94-eN-xbF" userLabel="GUI Version label">
+                                <rect key="frame" x="18" y="323" width="145" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="xSDR6000 GUI Version" id="U5k-mc-487">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2A3-Re-Kfm" userLabel="xFlex Gui Version">
-                                <rect key="frame" x="206" y="320" width="133" height="22"/>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="2A3-Re-Kfm" userLabel="Gui Version">
+                                <rect key="frame" x="240" y="320" width="133" height="22"/>
                                 <constraints>
                                     <constraint firstAttribute="width" constant="133" id="W5T-J7-ktT"/>
                                 </constraints>
@@ -866,7 +866,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="XG0-Ut-XOs" userLabel="Radio Firmware Version">
-                                <rect key="frame" x="206" y="212" width="133" height="22"/>
+                                <rect key="frame" x="240" y="212" width="133" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="right" placeholderString="1.2.3.4" id="rUa-Fu-2hx">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -885,7 +885,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="Ntm-Cv-zvr" userLabel="Radio Model">
-                                <rect key="frame" x="206" y="187" width="133" height="22"/>
+                                <rect key="frame" x="240" y="187" width="133" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="right" placeholderString="6500" id="RHg-3a-pEr">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -904,7 +904,7 @@
                                 </textFieldCell>
                             </textField>
                             <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="p0X-df-tvj" userLabel="OpenGLVersion">
-                                <rect key="frame" x="206" y="160" width="133" height="22"/>
+                                <rect key="frame" x="240" y="160" width="133" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="right" placeholderString="0.0" id="cMP-ZG-LU5">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -914,16 +914,16 @@
                                     <binding destination="BlG-y8-jgO" name="value" keyPath="representedObject.openGLVersion" id="zXQ-1n-eg4"/>
                                 </connections>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="TcN-xx-4Gq" userLabel="xFlex GUI Firmware Support label">
-                                <rect key="frame" x="18" y="296" width="173" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="xFlex GUI Firmware Support" id="cRB-bX-UQS">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="TcN-xx-4Gq" userLabel="GUI Firmware Support label">
+                                <rect key="frame" x="18" y="296" width="207" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="xSDR6000 GUI Firmware Support" id="cRB-bX-UQS">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aur-Ay-MAR" userLabel="xFlex GUI Firmware Support">
-                                <rect key="frame" x="206" y="293" width="133" height="22"/>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="aur-Ay-MAR" userLabel="GUI Firmware Support">
+                                <rect key="frame" x="240" y="293" width="133" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="right" placeholderString="1.2.3" id="ut6-7Q-Cst">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
@@ -933,16 +933,16 @@
                                     <binding destination="BlG-y8-jgO" name="value" keyPath="representedObject.guiFirmwareSupport" id="y82-Q0-HrH"/>
                                 </connections>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ri5-kd-FRY" userLabel="xFlex API Firmware Support label">
-                                <rect key="frame" x="18" y="242" width="171" height="17"/>
-                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="xFlex API Firmware Support" id="AOG-wB-Nz7">
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="ri5-kd-FRY" userLabel="API Firmware Support label">
+                                <rect key="frame" x="18" y="242" width="205" height="17"/>
+                                <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" title="xSDR6000 API Firmware Support" id="AOG-wB-Nz7">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                             </textField>
-                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cLy-r4-kDR" userLabel="xFlex API Firmware Support">
-                                <rect key="frame" x="206" y="239" width="133" height="22"/>
+                            <textField horizontalHuggingPriority="251" verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="cLy-r4-kDR" userLabel="API Firmware Support">
+                                <rect key="frame" x="240" y="239" width="133" height="22"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" sendsActionOnEndEditing="YES" borderStyle="bezel" alignment="right" placeholderString="1.2.3.4" id="jZB-1L-7ou">
                                     <font key="font" metaFont="system"/>
                                     <color key="textColor" name="labelColor" catalog="System" colorSpace="catalog"/>
