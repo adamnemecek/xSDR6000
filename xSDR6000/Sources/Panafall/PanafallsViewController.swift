@@ -244,10 +244,19 @@ class PanafallsViewController: NSSplitViewController {
         if let waterfall = note.object as? Waterfall {
             
             // YES, log the event
-            _log.msg("Waterfall Initialized, ID = \(waterfall.id)", level: .debug, function: #function, file: #file, line: #line)
+            _log.msg("Waterfall Initialized, ID = \(waterfall.id), \(waterfall)", level: .debug, function: #function, file: #file, line: #line)
 
             // observe changes to Waterfall properties
             observations(waterfall, paths: _waterfallKeyPaths)
+
+//            // find the Panafall Button View Controller for the Panafall containing the Waterfall
+//            for vc in self.childViewControllers where (((vc as! PanafallButtonViewController).representedObject) as! Params).panadapter!.id == waterfall.panadapterId {
+//                
+//                // add the waterfall to the params
+//                var params = ((vc as! PanafallButtonViewController).representedObject as! Params)
+//                params.waterfall = waterfall
+//                (vc as! PanafallButtonViewController).representedObject = params                
+//            }
         }
     }
     //
@@ -291,6 +300,8 @@ class PanafallsViewController: NSSplitViewController {
             // remove Waterfall property observers
             observations(waterfall, paths: _waterfallKeyPaths, remove: true)
             
+            _log.msg("Observation removed - waterfall \(waterfall), paths \(_waterfallKeyPaths)", level: .debug, function: #function, file: #file, line: #line)
+
             waterfall.delegate = nil
 
             // interact with the UI

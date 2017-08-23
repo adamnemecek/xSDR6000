@@ -55,22 +55,28 @@ final class WaterfallView: NSView, CALayerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Overridden methods
     
-    required init?(coder: NSCoder) {
-        super.init(coder: coder)
-        
-        // create the Waterfall layers
-        setupLayers()
-    }
+//    required init?(coder: NSCoder) {
+//        super.init(coder: coder)
+//        
+//        // create the Waterfall layers
+//        setupLayers()
+//    }
     /// Awake from nib
     ///
     override func awakeFromNib() {
         
+        // create the Waterfall layers
+        setupLayers()
+
         // setup the Legend font & size
         _legendAttributes[NSFontAttributeName] = NSFont(name: "Monaco", size: 12.0)
         
         // give the Waterfall layer a reference to the Params
         _spectrumLayer.params = params
         
+        // add notification subscriptions
+        addNotifications()
+
         // setup observations of Waterfall
         observations(_waterfall!, paths: _waterfallKeyPaths)
     }
@@ -162,9 +168,6 @@ final class WaterfallView: NSView, CALayerDelegate {
         // setup the layer hierarchy
         _rootLayer.addSublayer(_spectrumLayer)
         _rootLayer.addSublayer(_legendLayer)
-        
-        // add notification subscriptions
-        addNotifications()
     }
     /// Calculate the number & spacing of the Time legends
     ///
@@ -256,8 +259,14 @@ final class WaterfallView: NSView, CALayerDelegate {
         // does the Notification contain a Waterfall object?
         if let waterfall = note.object as? Waterfall {
             
-            // remove Panadapter property observers
-            observations(waterfall, paths: _waterfallKeyPaths, remove: true)
+            // is it this waterfall
+            if waterfall == _waterfall! {
+                
+                // YES, remove Waterfall property observers
+                observations(waterfall, paths: _waterfallKeyPaths, remove: true)
+
+                _log.msg("Observation removed - waterfall \(waterfall), paths \(_waterfallKeyPaths)", level: .debug, function: #function, file: #file, line: #line)
+            }
         }
     }
 

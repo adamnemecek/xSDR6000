@@ -710,10 +710,14 @@ final class PanadapterView : NSView, CALayerDelegate {
     @objc fileprivate func panadapterWillBeRemoved(_ note: Notification) {
         
         // does the Notification contain a Panadapter object?
-        if (note.object as? Panadapter) != nil {
+        if let panadapter = note.object as? Panadapter {
 
-            // remove Defaults property observers
-            observations(Defaults, paths: _defaultsKeyPaths, remove: true)
+            // YES, is it this panadapter
+            if panadapter == _panadapter! {
+                
+                // YES, remove Defaults property observers
+                observations(Defaults, paths: _defaultsKeyPaths, remove: true)
+            }
         }
     }
     /// Process .sliceHasBeenAdded Notification
@@ -725,15 +729,19 @@ final class PanadapterView : NSView, CALayerDelegate {
         // does the Notification contain a Slice object?
         if let slice = note.object as? xLib6000.Slice {
             
-            // YES, add a Slice Layer
-            addSlice(slice)
+            // YES, is it on this panadapter
+            if slice.panadapterId == _panadapter!.id {
             
-            // log the event
-            _log.msg("Slice initialized, ID = \(slice.id), pan = \(slice.panadapterId)", level: .debug, function: #function, file: #file, line: #line)
+                // YES, add a Slice Layer
+                addSlice(slice)
+                
+                // log the event
+                _log.msg("Slice initialized, ID = \(slice.id), pan = \(slice.panadapterId)", level: .debug, function: #function, file: #file, line: #line)
+            }
 
         }
     }
-    /// Process .sliceShouldBeRemoved Notification
+    /// Process .sliceWillBeRemoved Notification
     ///
     /// - Parameter note: a Notification instance
     ///
@@ -742,15 +750,15 @@ final class PanadapterView : NSView, CALayerDelegate {
         // does the Notification contain a Slice object?
         if let slice = note.object as? xLib6000.Slice {
             
-            // YES, log the event
-            _log.msg("Slice will be removed, ID = \(slice.id), pan = \(slice.panadapterId)", level: .debug, function: #function, file: #file, line: #line)
-            
-            // remove the Slice Layer
-            removeSlice(slice)
-            
-            // remove the Slice object
-            _radio.slices[slice.id] = nil
-
+            // YES, is it on this panadapter
+            if slice.panadapterId == _panadapter!.id {
+                
+                // YES, log the event
+                _log.msg("Slice will be removed, ID = \(slice.id), pan = \(slice.panadapterId)", level: .debug, function: #function, file: #file, line: #line)
+                
+                // remove the Slice Layer
+                removeSlice(slice)
+            }
         }
     }
     /// Process .tnfHasBeenAdded Notification
@@ -772,7 +780,7 @@ final class PanadapterView : NSView, CALayerDelegate {
             redrawLayer(kFrequencyLegendLayer)
         }
     }
-    /// Process .tnfShouldBeRemoved Notification
+    /// Process .tnfWillBeRemoved Notification
     ///
     /// - Parameter note: a Notification instance
     ///
@@ -786,9 +794,6 @@ final class PanadapterView : NSView, CALayerDelegate {
             
             // remove Tnf property observers
             observations(tnf, paths: _tnfKeyPaths, remove: true)
-            
-            // remove the Tnf
-            _radio.tnfs[tnf.id] = nil
             
             // force a redraw of the Layer containing the Tnf's
             redrawLayer(kFrequencyLegendLayer)

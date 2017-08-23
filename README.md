@@ -13,6 +13,8 @@ Portions of this app do not work and changes may be added from time to time
 which will break all or part of this app. Releases will be created at
 relatively stable points, please use them.
 
+Direct questions and/or comments to:  douglas.adams@me.com
+
 ==========================================================================
 
 Coming soon: An xSDR6000.pdf documentatiion file will be added to this

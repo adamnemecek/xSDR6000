@@ -21,7 +21,6 @@
 		91FADDE51F4A74D400DEC52B /* xLib6000.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 91FADDD91F4A74C200DEC52B /* xLib6000.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, RemoveHeadersOnCopy, ); }; };
 		91FADDEA1F4A74FB00DEC52B /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDE61F4A74FB00DEC52B /* AppDelegate.swift */; };
 		91FADDEB1F4A74FB00DEC52B /* Extensions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDE71F4A74FB00DEC52B /* Extensions.swift */; };
-		91FADDEC1F4A74FB00DEC52B /* Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 91FADDE81F4A74FB00DEC52B /* Info.plist */; };
 		91FADDF01F4A754100DEC52B /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDED1F4A754100DEC52B /* MainWindowController.swift */; };
 		91FADDF11F4A754100DEC52B /* RadioPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDEE1F4A754100DEC52B /* RadioPickerViewController.swift */; };
 		91FADDF21F4A754100DEC52B /* RadioViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDEF1F4A754100DEC52B /* RadioViewController.swift */; };
@@ -69,7 +68,6 @@
 		91FADE5E1F4A7A2400DEC52B /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE5C1F4A7A2400DEC52B /* Main.storyboard */; };
 		91FADE611F4A7A3E00DEC52B /* Panafall.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE5F1F4A7A3E00DEC52B /* Panafall.storyboard */; };
 		91FADE641F4A7A4F00DEC52B /* Preferences.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE621F4A7A4F00DEC52B /* Preferences.storyboard */; };
-		91FADE681F4B1A2A00DEC52B /* README.md in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE671F4B1A2A00DEC52B /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -369,6 +367,7 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 91B16FE61CDF7F5E00600E02 /* Build configuration list for PBXNativeTarget "xSDR6000" */;
 			buildPhases = (
+				912A81B81F4D1F54005C3125 /* ShellScript */,
 				91B16FD31CDF7F5E00600E02 /* Sources */,
 				91B16FD41CDF7F5E00600E02 /* Frameworks */,
 				91B16FD51CDF7F5E00600E02 /* Resources */,
@@ -428,7 +427,6 @@
 				91FADE5A1F4A784300DEC52B /* Defaults.plist in Resources */,
 				91FADE641F4A7A4F00DEC52B /* Preferences.storyboard in Resources */,
 				91FADE2A1F4A775400DEC52B /* Purple.tex in Resources */,
-				91FADDEC1F4A74FB00DEC52B /* Info.plist in Resources */,
 				91FADE1E1F4A771800DEC52B /* FlagViewController.xib in Resources */,
 				91FADE2B1F4A775400DEC52B /* Tritanopia.tex in Resources */,
 				91FADE271F4A775400DEC52B /* Dark.tex in Resources */,
@@ -449,6 +447,19 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
+		912A81B81F4D1F54005C3125 /* ShellScript */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "if [ \"${PROJECT_DIR}\" == \"/Users/doug/Dropbox/Code (Current)/xSDR6000-master\" ] ; then\n    cp -r /tmp/AudioLibrary.dst/Library/Frameworks/AudioLibrary.framework \"${PROJECT_DIR}/${PROJECT_NAME}/Embedded\"\n    cp -r /tmp/XCGLogger.dst/Library/Frameworks/ObjcExceptionBridging.framework \"${PROJECT_DIR}/${PROJECT_NAME}/Embedded\"\n    cp -r /tmp/Opus.dst/Library/Frameworks/OpusOSX.framework \"${PROJECT_DIR}/${PROJECT_NAME}/Embedded\"\n    cp -r /tmp/SwiftyUserDefaults.dst/Library/Frameworks/SwiftyUserDefaults.framework \"${PROJECT_DIR}/${PROJECT_NAME}/Embedded\"\n    cp -r /tmp/XCGLogger.dst/Library/Frameworks/XCGLogger.framework \"${PROJECT_DIR}/${PROJECT_NAME}/Embedded\"\n    cp -r /tmp/xLib6000.dst/Library/Frameworks/xLib6000.framework \"${PROJECT_DIR}/${PROJECT_NAME}/Embedded\"\nfi";
+		};
 		91533CE41E230578003CEEBA /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;
@@ -473,7 +484,6 @@
 				91FADE121F4A76B800DEC52B /* SliceLayer.swift in Sources */,
 				91FADDEA1F4A74FB00DEC52B /* AppDelegate.swift in Sources */,
 				91FADE041F4A765A00DEC52B /* PCWViewController.swift in Sources */,
-				91FADE681F4B1A2A00DEC52B /* README.md in Sources */,
 				91FADE181F4A76DD00DEC52B /* WaterfallViewController.swift in Sources */,
 				91FADDFB1F4A75AE00DEC52B /* PanafallsViewController.swift in Sources */,
 				91FADE051F4A765A00DEC52B /* PhoneViewController.swift in Sources */,
