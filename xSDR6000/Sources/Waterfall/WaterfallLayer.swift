@@ -41,7 +41,6 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var _end: Int { return _center + (_bandwidth/2) }
 
     fileprivate var _currentLine = [GLuint]()                           // current line in waterfall
-    fileprivate var _waterfallTime: [Date?]!
 
     // OpenGL
     fileprivate var _tools = OpenGLTools()                              // OpenGL support class
@@ -98,6 +97,10 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var _endBinNumber = 0
     fileprivate var _autoBlackLevel: UInt32 = 0                         // calculated Black level from Radio
     fileprivate var _lineDuration = 100                                 // line duration in milliseconds
+    
+    fileprivate var _gradient: Gradient!
+    fileprivate var _gradientArray: GradientArray?
+    
 
     fileprivate var startBinNumber: Int {
         get { return _waterfallQ.sync { _startBinNumber } }
@@ -157,9 +160,6 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
                 // update the current line in the Texture
                 glTexSubImage2D(GLenum(GL_TEXTURE_2D), 0, 0, _currentLineNumber, kTextureWidth, 1, GLenum(GL_RGBA), GLenum(GL_UNSIGNED_BYTE), _currentLine)
                 
-                // set the date/time for the _currentLine
-                _waterfallTime[Int(_currentLineNumber)] = Date()
-                
                 // increment the line number
                 _currentLineNumber = (_currentLineNumber + 1) % kTextureHeight
                 
@@ -205,8 +205,13 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     ///
     fileprivate func prepare() {
         
-        // populate an empty date/time array
-        _waterfallTime = [Date?](repeating: nil, count: Int(kTextureHeight) )
+        // create a Gradient
+        
+        // FIXME: Get the actual gradient name
+        
+//        _gradient = Gradient("Basic")
+//        
+//        assert( _gradient != nil, "Gradient failure")
         
         // create a ProgramID, Compile & Link the Shaders
         if !_tools.loadShaders(&_shaders) {
@@ -315,13 +320,15 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
             // load the new Gradient & recalc the levels
             _waterfallGradient.loadGradient(waterfall)
             _waterfallGradient.calcLevels(waterfall)
-
+//            _gradient.calcLevels(autoBlackEnabled: waterfall.autoBlackEnabled, autoBlackLevel: autoBlackLevel, blackLevel: waterfall.blackLevel, colorGain: waterfall.colorGain)
+            
             // populate the current waterfall "line"
             let binsPtr = UnsafeMutablePointer<UInt16>(mutating: dataFrame.bins)
             for binNumber in 0..<dataFrame.numberOfBins {
                 
-                self._currentLine[binNumber] = GLuint(self._waterfallGradient.value(binsPtr.advanced(by: binNumber).pointee, id: waterfall.id))
-//                self._currentLine[binNumber] = GLuint(0)
+                _currentLine[binNumber] = GLuint(_waterfallGradient.value(binsPtr.advanced(by: binNumber).pointee, id: waterfall.id))
+//                _currentLine[binNumber] = GLuint(0)
+//                _currentLine[binNumber] = GLuint(_gradient.value(binsPtr.advanced(by: binNumber).pointee))
             }
             // interact with the UI
             DispatchQueue.main.async { [unowned self] in                
