@@ -84,7 +84,7 @@ final class WaterfallGradient {
         let _ = gradientData.copyBytes(to: UnsafeMutableBufferPointer(start: &gradientArray, count: kGradientSize))
         _gradients[id] = gradientArray
     }
-    /// Load a Gradient given its Nam
+    /// Load a Gradient given its Name
     ///
     /// - Parameter name:   a Waterfall instance
     ///

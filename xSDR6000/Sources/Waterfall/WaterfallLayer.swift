@@ -185,9 +185,10 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
                 glBufferData(GLenum(GL_ARRAY_BUFFER), GLsizeiptr(vertices.count * MemoryLayout<GLfloat>.size), vertices, GLenum(GL_DYNAMIC_DRAW))
             }
         }
-        // clear & draw
+        // clear
         glClear(GLenum(GL_COLOR_BUFFER_BIT))
         
+        // draw
         if lineDuration != 0 { glDrawArrays(GLenum(GL_TRIANGLE_STRIP), GLint(0), GLsizei(4)) }
         
         // call super to trigger a flush
@@ -315,15 +316,15 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
             _waterfallGradient.loadGradient(waterfall)
             _waterfallGradient.calcLevels(waterfall)
 
-            // interact with the UI
-            DispatchQueue.main.async { [unowned self] in
+            // populate the current waterfall "line"
+            let binsPtr = UnsafeMutablePointer<UInt16>(mutating: dataFrame.bins)
+            for binNumber in 0..<dataFrame.numberOfBins {
                 
-                // populate the current waterfall "line"
-                let binsPtr = UnsafeMutablePointer<UInt16>(mutating: dataFrame.bins)
-                for binNumber in 0..<dataFrame.numberOfBins {
-                    
-                    self._currentLine[binNumber] = GLuint(self._waterfallGradient.value(binsPtr.advanced(by: binNumber).pointee, id: waterfall.id))
-                }
+                self._currentLine[binNumber] = GLuint(self._waterfallGradient.value(binsPtr.advanced(by: binNumber).pointee, id: waterfall.id))
+//                self._currentLine[binNumber] = GLuint(0)
+            }
+            // interact with the UI
+            DispatchQueue.main.async { [unowned self] in                
                 
                 // force a redraw of the Waterfall
                 self.setNeedsDisplay()
