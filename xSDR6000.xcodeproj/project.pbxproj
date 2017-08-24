@@ -53,7 +53,6 @@
 		91FADE291F4A775400DEC52B /* Grayscale.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE221F4A775400DEC52B /* Grayscale.tex */; };
 		91FADE2A1F4A775400DEC52B /* Purple.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE231F4A775400DEC52B /* Purple.tex */; };
 		91FADE2B1F4A775400DEC52B /* Tritanopia.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE241F4A775400DEC52B /* Tritanopia.tex */; };
-		91FADE2C1F4A775400DEC52B /* WaterfallGradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE251F4A775400DEC52B /* WaterfallGradient.swift */; };
 		91FADE321F4A778700DEC52B /* OpenGLTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE2D1F4A778700DEC52B /* OpenGLTools.swift */; };
 		91FADE331F4A778700DEC52B /* Panadapter.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE2E1F4A778700DEC52B /* Panadapter.fsh */; };
 		91FADE341F4A778700DEC52B /* Panadapter.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE2F1F4A778700DEC52B /* Panadapter.vsh */; };
@@ -133,7 +132,6 @@
 		91FADE221F4A775400DEC52B /* Grayscale.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Grayscale.tex; path = xSDR6000/Sources/Gradients/Grayscale.tex; sourceTree = SOURCE_ROOT; };
 		91FADE231F4A775400DEC52B /* Purple.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Purple.tex; path = xSDR6000/Sources/Gradients/Purple.tex; sourceTree = SOURCE_ROOT; };
 		91FADE241F4A775400DEC52B /* Tritanopia.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Tritanopia.tex; path = xSDR6000/Sources/Gradients/Tritanopia.tex; sourceTree = SOURCE_ROOT; };
-		91FADE251F4A775400DEC52B /* WaterfallGradient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = WaterfallGradient.swift; path = xSDR6000/Sources/Gradients/WaterfallGradient.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE2D1F4A778700DEC52B /* OpenGLTools.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = OpenGLTools.swift; path = xSDR6000/Sources/OpenGL/OpenGLTools.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE2E1F4A778700DEC52B /* Panadapter.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; lineEnding = 0; name = Panadapter.fsh; path = xSDR6000/Sources/OpenGL/Panadapter.fsh; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
 		91FADE2F1F4A778700DEC52B /* Panadapter.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; lineEnding = 0; name = Panadapter.vsh; path = xSDR6000/Sources/OpenGL/Panadapter.vsh; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
@@ -325,7 +323,6 @@
 				91FADE221F4A775400DEC52B /* Grayscale.tex */,
 				91FADE231F4A775400DEC52B /* Purple.tex */,
 				91FADE241F4A775400DEC52B /* Tritanopia.tex */,
-				91FADE251F4A775400DEC52B /* WaterfallGradient.swift */,
 				91329A8B1F4F52410095DAE2 /* Gradient.swift */,
 			);
 			name = Gradients;
@@ -483,7 +480,6 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				91FADE2C1F4A775400DEC52B /* WaterfallGradient.swift in Sources */,
 				91FADE121F4A76B800DEC52B /* SliceLayer.swift in Sources */,
 				91FADDEA1F4A74FB00DEC52B /* AppDelegate.swift in Sources */,
 				91FADE041F4A765A00DEC52B /* PCWViewController.swift in Sources */,

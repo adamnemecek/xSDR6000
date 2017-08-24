@@ -209,9 +209,9 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
         
         // FIXME: Get the actual gradient name
         
-//        _gradient = Gradient("Basic")
-//        
-//        assert( _gradient != nil, "Gradient failure")
+        _gradient = Gradient("Grayscale")
+        
+        assert( _gradient != nil, "Gradient failure")
         
         // create a ProgramID, Compile & Link the Shaders
         if !_tools.loadShaders(&_shaders) {
@@ -318,17 +318,13 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
             endBinNumber = Int( (CGFloat(_end) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
             
             // load the new Gradient & recalc the levels
-            _waterfallGradient.loadGradient(waterfall)
-            _waterfallGradient.calcLevels(waterfall)
-//            _gradient.calcLevels(autoBlackEnabled: waterfall.autoBlackEnabled, autoBlackLevel: autoBlackLevel, blackLevel: waterfall.blackLevel, colorGain: waterfall.colorGain)
+            _gradient.calcLevels(autoBlackEnabled: waterfall.autoBlackEnabled, autoBlackLevel: dataFrame.autoBlackLevel, blackLevel: waterfall.blackLevel, colorGain: waterfall.colorGain)
             
             // populate the current waterfall "line"
             let binsPtr = UnsafeMutablePointer<UInt16>(mutating: dataFrame.bins)
             for binNumber in 0..<dataFrame.numberOfBins {
                 
-                _currentLine[binNumber] = GLuint(_waterfallGradient.value(binsPtr.advanced(by: binNumber).pointee, id: waterfall.id))
-//                _currentLine[binNumber] = GLuint(0)
-//                _currentLine[binNumber] = GLuint(_gradient.value(binsPtr.advanced(by: binNumber).pointee))
+                _currentLine[binNumber] = GLuint(_gradient.value(binsPtr.advanced(by: binNumber).pointee))
             }
             // interact with the UI
             DispatchQueue.main.async { [unowned self] in                
