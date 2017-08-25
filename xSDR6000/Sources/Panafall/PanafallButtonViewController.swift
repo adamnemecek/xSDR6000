@@ -69,7 +69,7 @@ final class PanafallButtonViewController: NSViewController {
 
     var gradientName: String { return gradientNames[_waterfall!.gradientIndex] }
 
-    var gradientNames: [String] { return WaterfallGradient.sharedInstance.gradientNames }
+    var gradientNames: [String] { return Gradient.gradientNames() }
 
     var lineDuration: Int {
         get { return _waterfall!.lineDuration }

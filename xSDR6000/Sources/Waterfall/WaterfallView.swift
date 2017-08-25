@@ -55,12 +55,6 @@ final class WaterfallView: NSView, CALayerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Overridden methods
     
-//    required init?(coder: NSCoder) {
-//        super.init(coder: coder)
-//        
-//        // create the Waterfall layers
-//        setupLayers()
-//    }
     /// Awake from nib
     ///
     override func awakeFromNib() {
@@ -77,7 +71,7 @@ final class WaterfallView: NSView, CALayerDelegate {
         // add notification subscriptions
         addNotifications()
 
-        // setup observations of Waterfall
+        // setup observations of Waterfall properties
         observations(_waterfall!, paths: _waterfallKeyPaths)
     }
     /// The view is about to begin resizing
@@ -264,8 +258,6 @@ final class WaterfallView: NSView, CALayerDelegate {
                 
                 // YES, remove Waterfall property observers
                 observations(waterfall, paths: _waterfallKeyPaths, remove: true)
-
-                _log.msg("Observation removed - waterfall \(waterfall), paths \(_waterfallKeyPaths)", level: .debug, function: #function, file: #file, line: #line)
             }
         }
     }

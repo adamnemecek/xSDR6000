@@ -50,7 +50,6 @@ final class PanafallViewController: NSSplitViewController {
     fileprivate var _myContext = 0
     
     
-    fileprivate let _waterfallGradient = WaterfallGradient.sharedInstance
     
 
     // constants

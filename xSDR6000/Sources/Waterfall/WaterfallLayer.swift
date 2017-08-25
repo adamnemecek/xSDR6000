@@ -77,7 +77,6 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var _stepValue: GLfloat = 0                             // space between lines
     fileprivate var _heightPercent: GLfloat = 0                         // percent of texture height being displayed
     fileprivate var _prepared = false                                   // whether prepareOpenGL has completed
-    fileprivate let _waterfallGradient = WaterfallGradient.sharedInstance              // Gradient class
     fileprivate var _updateGradient = false                             // set when Gradient needs to be updated
     fileprivate var _updateLevels = false                               // set when Levels need to be updated
     
@@ -99,8 +98,8 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var _lineDuration = 100                                 // line duration in milliseconds
     
     fileprivate var _gradient: Gradient!
-    fileprivate var _gradientArray: GradientArray?
-    
+
+    fileprivate var _first = true
 
     fileprivate var startBinNumber: Int {
         get { return _waterfallQ.sync { _startBinNumber } }
@@ -205,14 +204,6 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     ///
     fileprivate func prepare() {
         
-        // create a Gradient
-        
-        // FIXME: Get the actual gradient name
-        
-        _gradient = Gradient("Grayscale")
-        
-        assert( _gradient != nil, "Gradient failure")
-        
         // create a ProgramID, Compile & Link the Shaders
         if !_tools.loadShaders(&_shaders) {
             // FIXME: do something if there is an error
@@ -275,6 +266,15 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
         // enable Waterfall stream processing
         _waterfall!.delegate = self
 
+        // create a Gradient
+        _gradient = Gradient(_waterfall?.gradientIndex ?? 0)
+        
+        // add notification subscriptions
+        addNotifications()
+        
+        // setup observations of Waterfall properties
+        observations(_waterfall!, paths: _waterfallKeyPaths)
+        
         // prepare is complete
         _prepared = true
     }
@@ -282,8 +282,81 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     // ----------------------------------------------------------------------------
     // MARK: - Observation methods
     
+    fileprivate let _waterfallKeyPaths =              // Waterfall keypaths to observe
+        [
+            #keyPath(Waterfall.autoBlackEnabled),
+            #keyPath(Waterfall.blackLevel),
+            #keyPath(Waterfall.colorGain),
+            #keyPath(Waterfall.gradientIndex)
+    ]
+    /// Add / Remove property observations
+    ///
+    /// - Parameters:
+    ///   - object: the object of the observations
+    ///   - paths: an array of KeyPaths
+    ///   - add: add / remove (defaults to add)
+    ///
+    fileprivate func observations<T: NSObject>(_ object: T, paths: [String], remove: Bool = false) {
+        
+        // for each KeyPath Add / Remove observations
+        for keyPath in paths {
+            
+            if remove { object.removeObserver(self, forKeyPath: keyPath, context: nil) }
+            else { object.addObserver(self, forKeyPath: keyPath, options: [.initial, .new], context: nil) }
+        }
+    }
+    /// Observe properties
+    ///
+    /// - Parameters:
+    ///   - keyPath: the registered KeyPath
+    ///   - object: object containing the KeyPath
+    ///   - change: dictionary of values
+    ///   - context: context (if any)
+    ///
+    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        
+        switch keyPath! {
+            
+        case #keyPath(Waterfall.autoBlackEnabled), #keyPath(Waterfall.blackLevel), #keyPath(Waterfall.colorGain):
+            // recalc the levels
+            _gradient.calcLevels(autoBlackEnabled: _waterfall!.autoBlackEnabled, autoBlackLevel: _waterfall!.autoBlackLevel, blackLevel: _waterfall!.blackLevel, colorGain: _waterfall!.colorGain)
+            
+        case #keyPath(Waterfall.gradientIndex):
+            // reload the Gradient
+            _gradient.loadGradient(index: _waterfall!.gradientIndex)
+            
+        default:
+            _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
+        }
+    }
+    
     // ----------------------------------------------------------------------------
     // MARK: - Notification methods
+    
+    /// Add subsciptions to Notifications
+    ///     (as of 10.11, subscriptions are automatically removed on deinit when using the Selector-based approach)
+    ///
+    fileprivate func addNotifications() {
+        
+        NC.makeObserver(self, with: #selector(waterfallWillBeRemoved(_:)), of: .waterfallWillBeRemoved, object: nil)
+    }
+    /// Process .waterfallWillBeRemoved Notification
+    ///
+    /// - Parameter note: a Notification instance
+    ///
+    @objc fileprivate func waterfallWillBeRemoved(_ note: Notification) {
+        
+        // does the Notification contain a Waterfall object?
+        if let waterfall = note.object as? Waterfall {
+            
+            // is it this waterfall
+            if waterfall == _waterfall! {
+                
+                // YES, remove Waterfall property observers
+                observations(waterfall, paths: _waterfallKeyPaths, remove: true)
+            }
+        }
+    }
     
     // ----------------------------------------------------------------------------
     // MARK: - WaterfallStreamHandler protocol methods
@@ -309,16 +382,19 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
         // waterfall will be initialized after Panadapter, it may not be ready yet
         if let waterfall = _waterfall {
                         
-            // save AutoBlack & LineDuration from the dataframe
-            _waterfallGradient.autoBlackLevel = dataFrame.autoBlackLevel
+            // save LineDuration from the dataframe
             lineDuration = dataFrame.lineDuration
 
             // calculate the first & last bin numbers to be displayed
             startBinNumber = Int( (CGFloat(_start) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
             endBinNumber = Int( (CGFloat(_end) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
             
-            // load the new Gradient & recalc the levels
-            _gradient.calcLevels(autoBlackEnabled: waterfall.autoBlackEnabled, autoBlackLevel: dataFrame.autoBlackLevel, blackLevel: waterfall.blackLevel, colorGain: waterfall.colorGain)
+            // it's a hack but this gets the levels initialized
+            if _first {
+                _first = false
+                // recalc the levels
+                _gradient.calcLevels(autoBlackEnabled: waterfall.autoBlackEnabled, autoBlackLevel: waterfall.autoBlackLevel, blackLevel: waterfall.blackLevel, colorGain: waterfall.colorGain)
+            }
             
             // populate the current waterfall "line"
             let binsPtr = UnsafeMutablePointer<UInt16>(mutating: dataFrame.bins)

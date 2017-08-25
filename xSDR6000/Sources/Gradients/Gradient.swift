@@ -20,7 +20,7 @@ final class Gradient {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var gradientNames: [String] { get { return [String](_gradientDict.keys) } }
+//    var gradientNames: [String] { get { return [String](_gradientDict.keys) } }
 
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
@@ -38,10 +38,22 @@ final class Gradient {
     private let kRgbaBlack : GLuint = 0xFF000000        // Black in RGBA format
     private let kRgbaWhite : GLuint = 0xFFFFFFFF        // White in RGBA format
 
+    static func gradientNames() -> [String] {
+        
+        // find all of the *.tex resources
+        let gradientURLs = Bundle.urls(forResourcesWithExtension: "tex", subdirectory: nil, in: Bundle.main.bundleURL) ?? [URL]()
+        
+        // get the filenames
+        let names = gradientURLs.map( { $0.lastPathComponent.components(separatedBy: ".")[0] } )
+        
+        // return the list sorted ascending
+        return names.sorted { $0.localizedCaseInsensitiveCompare($1) == ComparisonResult.orderedAscending }
+    }
+    
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
-    init(_ name: String) {
+    init(_ index: Int) {
 
         // find all of the *.tex resources
         let gradientURLs = Bundle.urls(forResourcesWithExtension: "tex", subdirectory: nil, in: Bundle.main.bundleURL) ?? [URL]()
@@ -55,23 +67,23 @@ final class Gradient {
             // get the name
             _gradientDict[gradientName] = url
         }
-        // is the Gradient name valid?
-        if _gradientDict[name] == nil {
+        // is the Gradient index valid?
+        if index > 0 && index < _gradientDict.count {
         
-            // NO, load the default
-            loadGradient(Gradient.kDefault)
+            // YES, load it (by index)
+            loadGradient(index: index)
             
         } else {
         
-            // YES, load it
-            loadGradient(name)
+            // NO, load it (by name)
+            loadGradient(name: Gradient.kDefault)
         }
     }
     /// Load the named Gradient
     ///
     /// - Parameter name:   Gradient name
     ///
-    func loadGradient(_ name: String) {
+    func loadGradient(name: String) {
         
         // find the URL (if any)
         var url = _gradientDict[name]
@@ -84,6 +96,16 @@ final class Gradient {
             // copy the data and return it
             let _ = gradientData.copyBytes(to: UnsafeMutableBufferPointer(start: &_gradient[0], count: Gradient.kSize))
         }
+    }
+    /// Load the Gradient at the specified Index
+    ///
+    /// - Parameter name:   Gradient index
+    ///
+    func loadGradient(index: Int) {
+        
+        let names = [String](_gradientDict.keys).sorted { $0.localizedCaseInsensitiveCompare($1) == ComparisonResult.orderedAscending }
+        
+        loadGradient(name: names[index] )
     }
     /// Convert an intensity into a Gradient value
     ///

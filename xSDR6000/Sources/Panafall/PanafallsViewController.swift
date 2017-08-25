@@ -23,7 +23,6 @@ class PanafallsViewController: NSSplitViewController {
     fileprivate var _radioViewController: RadioViewController! { return representedObject as! RadioViewController }
         
     // constants
-    fileprivate let _waterfallGradient = WaterfallGradient.sharedInstance
     fileprivate let _log = (NSApp.delegate as! AppDelegate)
 
     fileprivate let kPanafallStoryboard = "Panafall"                        // Storyboard names
@@ -85,13 +84,13 @@ class PanafallsViewController: NSSplitViewController {
             #keyPath(Panadapter.minDbm),
             #keyPath(Panadapter.maxDbm)
     ]
-    fileprivate let _waterfallKeyPaths =                    // Waterfall keypaths to observe
-        [
-            #keyPath(Waterfall.autoBlackEnabled),
-            #keyPath(Waterfall.blackLevel),
-            #keyPath(Waterfall.colorGain),
-            #keyPath(Waterfall.gradientIndex)
-    ]
+//    fileprivate let _waterfallKeyPaths =                    // Waterfall keypaths to observe
+//        [
+//            #keyPath(Waterfall.autoBlackEnabled),
+//            #keyPath(Waterfall.blackLevel),
+//            #keyPath(Waterfall.colorGain),
+//            #keyPath(Waterfall.gradientIndex)
+//    ]
     /// Add / Remove property observations
     ///
     /// - Parameters:
@@ -147,24 +146,24 @@ class PanafallsViewController: NSSplitViewController {
                 _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
             }
             
-        case is Waterfall:
-            
-            let waterfall = object as! Waterfall
-            
-            switch keyPath! {
-                
-            case #keyPath(Waterfall.gradientIndex):
-                // load the new Gradient & recalc the levels
-                _waterfallGradient.loadGradient(waterfall)
-                fallthrough
-                
-            case #keyPath(Waterfall.autoBlackEnabled), #keyPath(Waterfall.blackLevel), #keyPath(Waterfall.colorGain):
-                // recalc the levels
-                _waterfallGradient.calcLevels(waterfall)
-                
-            default:
-                _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
-            }
+//        case is Waterfall:
+//            
+//            let waterfall = object as! Waterfall
+//            
+//            switch keyPath! {
+//                
+//            case #keyPath(Waterfall.gradientIndex):
+//                // load the new Gradient & recalc the levels
+//                _waterfallGradient.loadGradient(waterfall)
+//                fallthrough
+//                
+//            case #keyPath(Waterfall.autoBlackEnabled), #keyPath(Waterfall.blackLevel), #keyPath(Waterfall.colorGain):
+//                // recalc the levels
+//                _waterfallGradient.calcLevels(waterfall)
+//                
+//            default:
+//                _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
+//            }
             
         default:
             break
@@ -246,8 +245,8 @@ class PanafallsViewController: NSSplitViewController {
             // YES, log the event
             _log.msg("ID = \(waterfall.id)", level: .debug, function: #function, file: #file, line: #line)
 
-            // observe changes to Waterfall properties
-            observations(waterfall, paths: _waterfallKeyPaths)
+//            // observe changes to Waterfall properties
+//            observations(waterfall, paths: _waterfallKeyPaths)
 
 //            // find the Panafall Button View Controller for the Panafall containing the Waterfall
 //            for vc in self.childViewControllers where (((vc as! PanafallButtonViewController).representedObject) as! Params).panadapter!.id == waterfall.panadapterId {
@@ -297,8 +296,8 @@ class PanafallsViewController: NSSplitViewController {
             // YES, log the event
             _log.msg("ID = \(waterfall.id)", level: .debug, function: #function, file: #file, line: #line)
             
-            // remove Waterfall property observers
-            observations(waterfall, paths: _waterfallKeyPaths, remove: true)
+//            // remove Waterfall property observers
+//            observations(waterfall, paths: _waterfallKeyPaths, remove: true)
             
             waterfall.delegate = nil
 
@@ -320,8 +319,4 @@ class PanafallsViewController: NSSplitViewController {
             }
         }
     }
-
-    // ----------------------------------------------------------------------------
-    // MARK: - Delegate Methods
-    
 }
