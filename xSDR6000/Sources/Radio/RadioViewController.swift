@@ -37,10 +37,10 @@ final class RadioViewController : NSSplitViewController, RadioPickerDelegate {
 
     fileprivate let _opusManager = OpusManager()
     fileprivate let _log = (NSApp.delegate as! AppDelegate)
-    fileprivate let kGuiFirmwareSupport = "1.10.16.x"               // Radio firmware supported by this App
+    fileprivate let kGuiFirmwareSupport = "2.0.17.x"                // Radio firmware supported by this App
     fileprivate let kxLib6000Identifier = "net.k3tzr.xLib6000"      // Bundle identifier for xLib6000
-    fileprivate let kVoltageMeter = "+13.8B"                        // Short name of voltage meter
-    fileprivate let kPaTempMeter = "PATEMP"                         // Short name of temperature meter
+    fileprivate let kVoltageMeter = "+13.8b"                        // Short name of voltage meter
+    fileprivate let kPaTempMeter = "patemp"                         // Short name of temperature meter
     fileprivate let kVoltageTemperature = "VoltageTemp"             // Identifier of toolbar VoltageTemperature toolbarItem
     fileprivate let kSideStoryboard = "Side"                        // Storyboard names
     fileprivate let kRadioPickerIdentifier = "RadioPicker"          // Storyboard identifiers
