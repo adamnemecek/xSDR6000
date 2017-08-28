@@ -13,128 +13,127 @@ import xLib6000
 // MARK: - Gradient class implementation
 // --------------------------------------------------------------------------------
 
-typealias GradientArray = [GLuint]
-
 final class Gradient {
+    
+    enum GradientType: String {
+        case basic
+        case dark
+        case deuteranopia
+        case grayscale
+        case purple
+        case tritanopia
+    }
     
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-//    var gradientNames: [String] { get { return [String](_gradientDict.keys) } }
-
+    var colorMap: NSGradient!
+    
+    static let names = [
+        GradientType.basic.rawValue,
+        GradientType.dark.rawValue,
+        GradientType.deuteranopia.rawValue,
+        GradientType.grayscale.rawValue,
+        GradientType.purple.rawValue,
+        GradientType.tritanopia.rawValue
+    ]
+    
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    static let kSize = 256                              // number of steps in Gradient
-    static let kDefault = "Basic"
-
-    private var _gradientDict = [String: URL]()         // dictionary of Gradients [name : URL]
-    private var _gradient = [GLuint](repeating: 0, count: Gradient.kSize)
-
-    private var _lowThreshold : UInt16 = 0              // low Threshold
-    private var _highThreshold : UInt16 = 0             // high Threshold
-    private var _range: Float = 0.0
+    private var _lowThreshold: UInt16 = 0              // low Threshold
+    private var _highThreshold: UInt16 = 0             // high Threshold
+    private var _intensityRange: Float = 0.0
     
-    private let kRgbaBlack : GLuint = 0xFF000000        // Black in RGBA format
-    private let kRgbaWhite : GLuint = 0xFFFFFFFF        // White in RGBA format
+    private let kDefault = GradientType.basic
 
-    static func gradientNames() -> [String] {
-        
-        // find all of the *.tex resources
-        let gradientURLs = Bundle.urls(forResourcesWithExtension: "tex", subdirectory: nil, in: Bundle.main.bundleURL) ?? [URL]()
-        
-        // get the filenames
-        let names = gradientURLs.map( { $0.lastPathComponent.components(separatedBy: ".")[0] } )
-        
-        // return the list sorted ascending
-        return names.sorted { $0.localizedCaseInsensitiveCompare($1) == ComparisonResult.orderedAscending }
-    }
-    
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
     init(_ index: Int) {
-
-        // find all of the *.tex resources
-        let gradientURLs = Bundle.urls(forResourcesWithExtension: "tex", subdirectory: nil, in: Bundle.main.bundleURL) ?? [URL]()
-        
-        // build the gradients dictionary
-        for url in gradientURLs {
-            
-            // separate the name from the extension
-            let gradientName = url.lastPathComponent.components(separatedBy: ".")[0]
-            
-            // get the name
-            _gradientDict[gradientName] = url
-        }
-        // is the Gradient index valid?
-        if index > 0 && index < _gradientDict.count {
-        
-            // YES, load it (by index)
-            loadGradient(index: index)
-            
-        } else {
-        
-            // NO, load it (by name)
-            loadGradient(name: Gradient.kDefault)
-        }
-    }
-    /// Load the named Gradient
-    ///
-    /// - Parameter name:   Gradient name
-    ///
-    func loadGradient(name: String) {
-        
-        // find the URL (if any)
-        var url = _gradientDict[name]
-        
-        if url == nil { url = _gradientDict[Gradient.kDefault] }
-        
-            // get the URL's data (if any)
-        if let gradientData = try? Data(contentsOf: url!) {
-            
-            // copy the data and return it
-            let _ = gradientData.copyBytes(to: UnsafeMutableBufferPointer(start: &_gradient[0], count: Gradient.kSize))
-        }
+        loadMap(index)
     }
     /// Load the Gradient at the specified Index
     ///
-    /// - Parameter name:   Gradient index
+    /// - Parameter index:   Gradient index
     ///
-    func loadGradient(index: Int) {
+    func loadMap(_ index: Int) {
+        // is the Gradient index valid?
+        if index > 0 && index < Gradient.names.count {
+            
+            // YES, load it (by index)
+            loadMap( GradientType(rawValue: Gradient.names[index])! )
+            
+        } else {
+            
+            // NO, load it (by name)
+            loadMap(kDefault)
+        }
+    }
+    /// Load the specified Gradient Type
+    ///
+    /// - Parameter type:   Gradient type
+    ///
+    func loadMap(_ type: GradientType) {
         
-        let names = [String](_gradientDict.keys).sorted { $0.localizedCaseInsensitiveCompare($1) == ComparisonResult.orderedAscending }
-        
-        loadGradient(name: names[index] )
+        switch type {
+        case .basic:
+            colorMap = NSGradient.basic
+            
+        case .dark:
+            colorMap = NSGradient.dark
+            
+        case .deuteranopia:
+            colorMap = NSGradient.deuteranopia
+            
+        case .grayscale:
+            colorMap = NSGradient.grayscale
+            
+        case .purple:
+            colorMap = NSGradient.purple
+            
+        case .tritanopia:
+            colorMap = NSGradient.tritanopia
+        }
     }
     /// Convert an intensity into a Gradient value
     ///
     /// - Parameters:
     ///   - intensity:      the Intensity
-    /// - Returns:          the value from the Gradient
+    /// - Returns:          a GL_RGBA color from the Gradient
     ///
     func value(_ intensity: UInt16) -> GLuint {
-        var gradientValue: GLuint = 0
+        var index: CGFloat = 0.0
         
         if (intensity <= _lowThreshold) {
             
             // below blackLevel
-            gradientValue = _gradient[0]
+            index = 0
             
         } else if (intensity >= _highThreshold) {
             
             // above highLevel
-            gradientValue = _gradient[Gradient.kSize - 1]
+            index = 1.0
             
         } else {
-            
-            let diff = Float(intensity - _lowThreshold)
-            let gradientIndex = Int((diff / _range) * Float(Gradient.kSize))
-            
-            // get the color based on an adjusted Intensity (spread over the high-low threshold range)
-            gradientValue = _gradient[gradientIndex] 
+        
+            index = (CGFloat(intensity - _lowThreshold) / CGFloat(_intensityRange))
         }
-        return gradientValue
+        
+        let color = colorMap.interpolatedColor(atLocation: index)
+        
+        let red = UInt8(color.redComponent * 255.0)
+        let green = UInt8(color.greenComponent * 255.0)
+        let blue = UInt8(color.blueComponent * 255.0)
+        let alpha = UInt8(color.alphaComponent * 255.0)
+        
+        let alphax = GLuint(alpha) << 24
+        let bluex = GLuint(blue) << 16
+        let greenx = GLuint(green) << 8
+        let redx = GLuint(red)
+        
+        // return the GLuint (in GL_RGBA format)
+        return alphax + bluex + greenx + redx
     }
     /// Calculate the High & Low threshold values
     ///
@@ -147,28 +146,27 @@ final class Gradient {
     func calcLevels(autoBlackEnabled: Bool, autoBlackLevel: UInt32, blackLevel: Int, colorGain: Int) {
 
         // calculate the "effective" blackLevel
-        var effectiveBlackLevel = blackLevel
-        if autoBlackEnabled { effectiveBlackLevel = Int( (Float(autoBlackLevel)  / Float(UInt16.max - UInt16(autoBlackLevel))) * 130 ) }
+        let effectiveBlackLevel = (autoBlackEnabled ? Int( Float(autoBlackLevel)  / Float(UInt16.max) * 100 ) : blackLevel)
         
         // calculate the Threshold values
         _lowThreshold = calcLowThreshold(effectiveBlackLevel)
         _highThreshold = calcHighThreshold(_lowThreshold, colorGain: colorGain)
 
-        _range = Float(_highThreshold - _lowThreshold)
-}
+        _intensityRange = Float(_highThreshold - _lowThreshold)
+    }
 
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
     /// Calculate the Low end of the Gradient Color dynamic range
     ///
-    /// - Parameter blackLevel:     the BlackLevel
+    /// - Parameter blackLevel:     the BlackLevel (0 - 100)
     /// - Returns:                  the Low Threshold
     ///
     fileprivate func calcLowThreshold(_ blackLevel: Int) -> UInt16 {
         
         // map the 0-100 Black Level to an inverted 1.0 - 0.0
-        let invertedNormalizedBlackLevel = 1 - Double(blackLevel)/100
+        let invertedNormalizedBlackLevel = 1 - Double(blackLevel)/100.0
         
         // remap the value to give extra dynamic range on the low end of the slider
         //      NOTE: this leaves the values from 75-100 with no change
@@ -185,7 +183,7 @@ final class Gradient {
         
         // adjust high boundary from low + margin to max X^3 pattern
         // move from 0-100 space into [1, cuberoot(2^16) space]
-        let temp1 = (1 - Double(colorGain)/100) * pow(Double(UInt16.max - lowThreshold), 1.0/3.0)
+        let temp1 = ( 100 - Double(colorGain))/100.0 * pow(Double(UInt16.max - lowThreshold), 1.0/3.0)
         
         // now scale the value using the new value
         let temp2 = lowThreshold + UInt16(pow(temp1, 3))

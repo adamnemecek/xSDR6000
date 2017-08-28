@@ -240,3 +240,100 @@ extension NSBezierPath {
     }
 }
 
+extension NSGradient {
+    
+    // return a "basic" Gradient
+    static var basic: NSGradient {
+        get {
+            let colors = [
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0, green: 0, blue: 1, alpha: 1),           // blue
+                NSColor(red: 0, green: 1, blue: 1, alpha: 1),           // cyan
+                NSColor(red: 0, green: 1, blue: 0, alpha: 1),           // green
+                NSColor(red: 1, green: 1, blue: 0, alpha: 1),           // yellow
+                NSColor(red: 1, green: 0, blue: 0, alpha: 1),           // red
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1) ]          // white
+            let locations: Array<CGFloat> = [ 0.0, 0.15, 0.25, 0.35, 0.55, 0.90, 1.0 ]
+            return NSGradient(colors: colors, atLocations: locations, colorSpace: .sRGB)!
+        }
+    }
+    
+    // return a "dark" Gradient
+    static var dark: NSGradient {
+        get {
+            let colors = [
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0, green: 0, blue: 1, alpha: 1),           // blue
+                NSColor(red: 0, green: 1, blue: 0, alpha: 1),           // green
+                NSColor(red: 1, green: 0, blue: 0, alpha: 1),           // red
+                NSColor(red: 1, green: 0.71, blue: 0.76, alpha: 1)      // light pink
+            ]
+            let locations: Array<CGFloat> = [ 0.0, 0.65, 0.90, 0.95, 1.0 ]
+            return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
+        }
+    }
+    
+    // return a "deuteranopia" Gradient
+    static var deuteranopia: NSGradient {
+        get {
+            let colors = [
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0.03, green: 0.23, blue: 0.42, alpha: 1),  // dark blue
+                NSColor(red: 0.52, green: 0.63, blue: 0.84, alpha: 1),  // light blue
+                NSColor(red: 0.65, green: 0.59, blue: 0.45, alpha: 1),  // dark yellow
+                NSColor(red: 1, green: 1, blue: 0, alpha: 1),           // yellow
+                NSColor(red: 1, green: 1, blue: 0, alpha: 1),           // yellow
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
+            ]
+            let locations: Array<CGFloat> = [ 0.0, 0.15, 0.50, 0.65, 0.75, 0.95, 1.0 ]
+            return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
+        }
+    }
+    
+    // return a "grayscale" Gradient
+    static var grayscale: NSGradient {
+        get {
+            let colors = [
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
+            ]
+            let locations: Array<CGFloat> = [ 0.0, 1.0 ]
+            return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
+        }
+    }
+    
+    // return a "purple" Gradient
+    static var purple: NSGradient {
+        get {
+            let colors = [
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0, green: 0, blue: 1, alpha: 1),           // blue
+                NSColor(red: 0, green: 1, blue: 0, alpha: 1),           // green
+                NSColor(red: 1, green: 1, blue: 0, alpha: 1),           // yellow
+                NSColor(red: 1, green: 0, blue: 0, alpha: 1),           // red
+                NSColor(red: 0.5, green: 0, blue: 0.5, alpha: 1),       // purple
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
+            ]
+            let locations: Array<CGFloat> = [ 0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 1.0 ]
+            return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
+        }
+    }
+    
+    // return a "tritanopia" Gradient
+    static var tritanopia: NSGradient {
+        get {
+            let colors = [
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0, green: 0.27, blue: 0.32, alpha: 1),     // dark teal
+                NSColor(red: 0.42, green: 0.73, blue: 0.84, alpha: 1),  // light blue
+                NSColor(red: 0.29, green: 0.03, blue: 0.09, alpha: 1),  // dark red
+                NSColor(red: 1, green: 0, blue: 0, alpha: 1),           // red
+                NSColor(red: 0.84, green: 0.47, blue: 0.52, alpha: 1),  // light red
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
+            ]
+            let locations: Array<CGFloat> = [ 0.0, 0.15, 0.25, 0.45, 0.90, 0.95, 1.0 ]
+            return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
+        }
+    }
+}
+
