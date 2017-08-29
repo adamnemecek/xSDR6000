@@ -156,7 +156,7 @@ final class OpenGLTools {
                     
                     glGetShaderInfoLog(shader.handle!, GLsizei(logLength), &logLength, cLog)
                     
-                    let log = String(describing: cLog)
+                    let log = String(cString: cLog)
                     
                     shader.error = log.trimmingCharacters(in: CharacterSet(charactersIn: "\n") as CharacterSet)
                     
@@ -198,7 +198,7 @@ final class OpenGLTools {
                 
                 glGetProgramInfoLog(shaders[0].program!, GLsizei(logLength), &logLength, cLog)
                 
-                let log = String(describing: cLog)
+                let log = String(cString: cLog)
 
                 shaders[0].error = log.trimmingCharacters(in: CharacterSet(charactersIn: "\n") as CharacterSet)
                 free(cLog)
