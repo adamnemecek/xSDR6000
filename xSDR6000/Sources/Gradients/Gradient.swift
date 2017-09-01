@@ -7,7 +7,6 @@
 //
 
 import Cocoa
-import xLib6000
 
 // --------------------------------------------------------------------------------
 // MARK: - Gradient class implementation
@@ -28,6 +27,7 @@ final class Gradient {
     // MARK: - Internal properties
     
     var colorMap: NSGradient!
+    var glRgbaArray = [GLuint](repeating: 0, count: kSize)
     
     static let names = [
         GradientType.basic.rawValue,
@@ -46,6 +46,8 @@ final class Gradient {
     private var _intensityRange: Float = 0.0
     
     private let kDefault = GradientType.basic
+    
+    static let kSize = 1024
 
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
@@ -95,6 +97,8 @@ final class Gradient {
         case .tritanopia:
             colorMap = NSGradient.tritanopia
         }
+        // create the array of GL_RGBA values
+        makeArray()
     }
     /// Convert an intensity into a Gradient value
     ///
@@ -119,21 +123,38 @@ final class Gradient {
         
             index = (CGFloat(intensity - _lowThreshold) / CGFloat(_intensityRange))
         }
-        
+        // get the interpolated color
         let color = colorMap.interpolatedColor(atLocation: index)
         
-        let red = UInt8(color.redComponent * 255.0)
-        let green = UInt8(color.greenComponent * 255.0)
-        let blue = UInt8(color.blueComponent * 255.0)
-        let alpha = UInt8(color.alphaComponent * 255.0)
-        
-        let alphax = GLuint(alpha) << 24
-        let bluex = GLuint(blue) << 16
-        let greenx = GLuint(green) << 8
-        let redx = GLuint(red)
+        // capture the GL_RGBA values
+        let alpha = GLuint( UInt8( color.alphaComponent * CGFloat(UInt8.max) ) ) << 24
+        let blue = GLuint( UInt8( color.blueComponent * CGFloat(UInt8.max) ) ) << 16
+        let green = GLuint( UInt8( color.greenComponent * CGFloat(UInt8.max) ) ) << 8
+        let red = GLuint( UInt8( color.redComponent * CGFloat(UInt8.max) ) )
         
         // return the GLuint (in GL_RGBA format)
-        return alphax + bluex + greenx + redx
+        return alpha + blue + green + red
+    }
+    /// Create a GL_RGBA Array from the ColorMap
+    ///
+    func makeArray() {
+        
+        glRgbaArray.removeAll(keepingCapacity: true)
+        
+        for i in 0..<Gradient.kSize  {
+            
+            // get the interpolated color
+            let color = colorMap.interpolatedColor( atLocation: CGFloat(i)/CGFloat(Gradient.kSize) )
+            
+            // capture the GL_RGBA values
+            let alpha = GLuint( UInt8( color.alphaComponent * CGFloat(UInt8.max) ) ) << 24
+            let blue = GLuint( UInt8( color.blueComponent * CGFloat(UInt8.max) ) ) << 16
+            let green = GLuint( UInt8( color.greenComponent * CGFloat(UInt8.max) ) ) << 8
+            let red = GLuint( UInt8( color.redComponent * CGFloat(UInt8.max) ) )
+            
+            // append the GL_RGBA value
+            glRgbaArray.append(alpha + blue + green + red)
+        }
     }
     /// Calculate the High & Low threshold values
     ///
@@ -146,7 +167,7 @@ final class Gradient {
     func calcLevels(autoBlackEnabled: Bool, autoBlackLevel: UInt32, blackLevel: Int, colorGain: Int) {
 
         // calculate the "effective" blackLevel
-        let effectiveBlackLevel = (autoBlackEnabled ? Int( Float(autoBlackLevel)  / Float(UInt16.max) * 100 ) : blackLevel)
+        let effectiveBlackLevel = (autoBlackEnabled ? Int( Float(autoBlackLevel)  / Float(UInt16.max) * 75 ) : blackLevel)
         
         // calculate the Threshold values
         _lowThreshold = calcLowThreshold(effectiveBlackLevel)

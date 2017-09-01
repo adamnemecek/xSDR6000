@@ -34,12 +34,12 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var _radio: Radio { return params.radio }       // values derived from Params
     fileprivate var _panadapter: Panadapter? { return params.panadapter }
     fileprivate var _waterfall: Waterfall? { return _radio.waterfalls[_panadapter!.waterfallId] }
-
+    
     fileprivate var _center: Int {return _panadapter!.center }
     fileprivate var _bandwidth: Int { return _panadapter!.bandwidth }
     fileprivate var _start: Int { return _center - (_bandwidth/2) }
     fileprivate var _end: Int { return _center + (_bandwidth/2) }
-
+    
     fileprivate var _currentLine = [GLuint]()                           // current line in waterfall
 
     // OpenGL
@@ -47,14 +47,14 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var _vaoHandle: GLuint = 0                              // Vertex Array Object handle
     fileprivate var _verticesVboHandle: GLuint = 0                      // Vertex Buffer Object handle (vertices)
     fileprivate var _texCoordsVboHandle: GLuint = 0                     // Vertex Buffer Object handle (Texture coordinates)
-    fileprivate var _tboHandles = [GLuint](repeating: 0, count: 2)      // Texture Buffer Object handles
+    fileprivate var _tboHandle: GLuint = 0                              // Texture Buffer Object handle
     fileprivate var _texValuesLocation: GLint = 0                       // texValues uniform location
-    fileprivate var _gradientValuesLocation: GLint = 0                  // gradient uniform location
+    
     fileprivate var _shaders =                                          // array of Shader structs
         [
             ShaderStruct(name: "Waterfall", type: .Vertex),
             ShaderStruct(name: "Waterfall", type: .Fragment)
-        ]
+    ]
     
     //  Vertices    v3      v1     -1,1     |     1,1         Texture     v3      v1      0,1 |      1,1
     //  (-1 to +1)                          |                 (0 to 1)                        |
@@ -65,11 +65,11 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var vertices: [GLfloat] =                               // vertices & tex coords
         //    x     y     s      t
         [
-             1.0,  1.0,  1.0,  1.0,                                     // v1
-             1.0, -1.0,  1.0,  0.0,                                     // v2
+            1.0,  1.0,  1.0,  1.0,                                     // v1
+            1.0, -1.0,  1.0,  0.0,                                     // v2
             -1.0,  1.0,  0.0,  1.0,                                     // v3
             -1.0, -1.0,  0.0,  0.0                                      // v4
-        ]
+    ]
     
     fileprivate var _texture = [UInt8]()                                // waterfall texture
     fileprivate var _currentLineNumber: GLint = 0                       // line number (mod kTextureHeight)
@@ -77,12 +77,13 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var _stepValue: GLfloat = 0                             // space between lines
     fileprivate var _heightPercent: GLfloat = 0                         // percent of texture height being displayed
     fileprivate var _prepared = false                                   // whether prepareOpenGL has completed
+    fileprivate let _gradient = Gradient(0)                             // Gradient class
     fileprivate var _updateGradient = false                             // set when Gradient needs to be updated
     fileprivate var _updateLevels = false                               // set when Levels need to be updated
     
     // constants
     fileprivate let _log = (NSApp.delegate as! AppDelegate)
-
+    
     fileprivate let kTextureWidth: GLint = 4096                         // must be >= max number of Bins
     fileprivate let kTextureHeight: GLint = 2048                        // must be >= max number of lines
     fileprivate let _blackRGBA: GLuint = 0xFF000000                     // Black color in RGBA format
@@ -97,18 +98,16 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
     fileprivate var _autoBlackLevel: UInt32 = 0                         // calculated Black level from Radio
     fileprivate var _lineDuration = 100                                 // line duration in milliseconds
     
-    fileprivate var _gradient: Gradient!
-
     fileprivate var _first = true
 
     fileprivate var startBinNumber: Int {
         get { return _waterfallQ.sync { _startBinNumber } }
         set { _waterfallQ.sync(flags: .barrier) { _startBinNumber = newValue } } }
-
+    
     fileprivate var endBinNumber: Int {
         get { return _waterfallQ.sync { _endBinNumber } }
         set { _waterfallQ.sync(flags: .barrier) { _endBinNumber = newValue } } }
-
+    
     fileprivate var autoBlackLevel: UInt32 {
         get { return _waterfallQ.sync { _autoBlackLevel } }
         set { _waterfallQ.sync(flags: .barrier) { _autoBlackLevel = newValue } } }
@@ -218,13 +217,12 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
                      GLfloat( background.greenComponent ),
                      GLfloat( background.blueComponent ),
                      GLfloat( background.alphaComponent ))
-
-        // create & bind TBO's for the 2D & 1D textures
-        glGenTextures(2, &_tboHandles)
-        glBindTexture(GLenum(GL_TEXTURE_2D), _tboHandles[0])
-//        glBindTexture(GLenum(GL_TEXTURE_1D), _tboHandles[1])
         
-        // setup the 2D texture
+        // create & bind a TBO
+        glGenTextures(1, &_tboHandle)
+        glBindTexture(GLenum(GL_TEXTURE_2D), _tboHandle)
+        
+        // setup the texture
         glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MIN_FILTER), GL_LINEAR)
         glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_MAG_FILTER), GL_LINEAR)
         glTexParameteri(GLenum(GL_TEXTURE_2D), GLenum(GL_TEXTURE_WRAP_S), GL_REPEAT)
@@ -232,28 +230,12 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
         
         // load the 2D texture sampler (with all black)
         let tex = [GLuint](repeating: _blackRGBA, count: Int(kTextureWidth * kTextureHeight))
-        UnsafePointer<GLuint>(tex).withMemoryRebound(to: UInt8.self, capacity: Int(kTextureWidth * kTextureHeight)) { values in
+        UnsafePointer<GLuint>(tex).withMemoryRebound(to: UInt8.self, capacity: Int(kTextureWidth * kTextureHeight)) { _texture in
             
             glTexImage2D(GLenum(GL_TEXTURE_2D), 0, GL_RGBA, kTextureWidth, kTextureHeight, 0, GLenum(GL_RGBA),
-                         GLenum(GL_UNSIGNED_BYTE), values)
+                         GLenum(GL_UNSIGNED_BYTE), _texture)
         }
         
-//        // setup the 1D texture
-//        glTexParameteri(GLenum(GL_TEXTURE_1D), GLenum(GL_TEXTURE_MIN_FILTER), GL_LINEAR)
-//        glTexParameteri(GLenum(GL_TEXTURE_1D), GLenum(GL_TEXTURE_MAG_FILTER), GL_LINEAR)
-//        glTexParameteri(GLenum(GL_TEXTURE_1D), GLenum(GL_TEXTURE_WRAP_S), GL_REPEAT)
-//        glTexParameteri(GLenum(GL_TEXTURE_1D), GLenum(GL_TEXTURE_WRAP_T), GL_REPEAT)
-//
-        // create a Gradient
-        _gradient = Gradient(_waterfall?.gradientIndex ?? 0)
-        
-//        // load the 1D gradient sampler
-//        UnsafePointer<GLuint>(_gradient.array).withMemoryRebound(to: UInt8.self, capacity: 256) { values in
-//            
-//            glTexImage1D(GLenum(GL_TEXTURE_1D), 0, GL_RGBA, 256, 0, GLenum(GL_RGBA),
-//                         GLenum(GL_UNSIGNED_BYTE), values)
-//        }
-
         // setup a VBO for the vertices & tex coordinates
         glGenBuffers(1, &_verticesVboHandle)
         glBindBuffer(GLenum(GL_ARRAY_BUFFER), _verticesVboHandle)
@@ -275,10 +257,6 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
         _texValuesLocation = glGetUniformLocation(_shaders[0].program!, "texValues")
         glUniform1i(_texValuesLocation, GL_TEXTURE0)
         
-        // locate & identify the Gradient sampler
-        _gradientValuesLocation = glGetUniformLocation(_shaders[0].program!, "gradient")
-        glUniform1i(_gradientValuesLocation, GL_TEXTURE1)
-
         // put the program into effect
         glUseProgram(_shaders[0].program!)
         
@@ -423,12 +401,6 @@ final class WaterfallLayer: CAOpenGLLayer, CALayerDelegate, WaterfallStreamHandl
             for binNumber in 0..<dataFrame.numberOfBins {
                 
                 _currentLine[binNumber] = _gradient.value(binsPtr.advanced(by: binNumber).pointee)
-//                _currentLine[binNumber] = GLuint(binsPtr.advanced(by: binNumber).pointee)
-                
-//                let intensity = _currentLine[binNumber]
-//                let scaled = (Float(intensity)/Float(65536)) * Float(256)
-//
-//                Swift.print("\(intensity), \(scaled)")
             }
             // interact with the UI
             DispatchQueue.main.async { [unowned self] in                

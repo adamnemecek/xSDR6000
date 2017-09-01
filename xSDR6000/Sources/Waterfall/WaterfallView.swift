@@ -268,7 +268,7 @@ final class WaterfallView: NSView, CALayerDelegate {
     /// Draw the Waterfall Legend layer
     ///
     /// - Parameters:
-    ///   - layer:      the Layer
+    ///   - layer:      the CALayer
     ///   - ctx:        the CGContext
     ///
     func draw(_ layer: CALayer, in ctx: CGContext) {

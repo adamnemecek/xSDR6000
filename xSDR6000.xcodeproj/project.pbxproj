@@ -643,8 +643,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(USER_LIBRARY_DIR)/Frameworks",
-					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/xSDR6000/Embedded",
 				);
 				INFOPLIST_FILE = xSDR6000/Info.plist;
@@ -671,8 +669,6 @@
 				CURRENT_PROJECT_VERSION = 1;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
-					"$(USER_LIBRARY_DIR)/Frameworks",
-					"$(PROJECT_DIR)",
 					"$(PROJECT_DIR)/xSDR6000/Embedded",
 				);
 				INFOPLIST_FILE = xSDR6000/Info.plist;

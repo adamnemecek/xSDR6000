@@ -213,8 +213,7 @@ final class PanadapterLayer: CAOpenGLLayer, CALayerDelegate, PanadapterStreamHan
         
         // Compile the Shaders, create a ProgramID, link the Shaders to the Program
         if !_tools.loadShaders(&_shaders) {
-            // FIXME: do something if there is an error
-            _log.msg("\(_shaders[0].error!)", level: .severe, function: #function, file: #file, line: #line)
+            fatalError("Panadapter OpenGL Shader - \(_shaders[0].error!)")
         }
         
         // set a "Line" color
