@@ -160,16 +160,16 @@ SWIFT_CLASS("_TtC8xLib60009Amplifier")
 
 
 @interface Amplifier (SWIFT_EXTENSION(xLib6000))
-@end
-
-
-@interface Amplifier (SWIFT_EXTENSION(xLib6000))
 @property (nonatomic, copy) NSString * _Nonnull ant;
 @property (nonatomic, copy) NSString * _Nonnull ip;
 @property (nonatomic, copy) NSString * _Nonnull model;
 @property (nonatomic) BOOL operate;
 @property (nonatomic) NSInteger port;
 @property (nonatomic, copy) NSString * _Nonnull serialNumber;
+@end
+
+
+@interface Amplifier (SWIFT_EXTENSION(xLib6000))
 @end
 
 
@@ -263,10 +263,6 @@ SWIFT_CLASS("_TtC8xLib60009Equalizer")
 
 
 @interface Equalizer (SWIFT_EXTENSION(xLib6000))
-@end
-
-
-@interface Equalizer (SWIFT_EXTENSION(xLib6000))
 @property (nonatomic) BOOL eqEnabled;
 @property (nonatomic) NSInteger level63Hz;
 @property (nonatomic) NSInteger level125Hz;
@@ -276,6 +272,10 @@ SWIFT_CLASS("_TtC8xLib60009Equalizer")
 @property (nonatomic) NSInteger level2000Hz;
 @property (nonatomic) NSInteger level4000Hz;
 @property (nonatomic) NSInteger level8000Hz;
+@end
+
+
+@interface Equalizer (SWIFT_EXTENSION(xLib6000))
 @end
 
 
@@ -1155,14 +1155,14 @@ SWIFT_CLASS("_TtC8xLib60003Tnf")
 
 
 @interface Tnf (SWIFT_EXTENSION(xLib6000))
-@end
-
-
-@interface Tnf (SWIFT_EXTENSION(xLib6000))
 @property (nonatomic) NSInteger depth;
 @property (nonatomic) NSInteger frequency;
 @property (nonatomic) BOOL permanent;
 @property (nonatomic) NSInteger width;
+@end
+
+
+@interface Tnf (SWIFT_EXTENSION(xLib6000))
 @end
 
 
