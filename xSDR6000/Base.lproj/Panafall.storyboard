@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16F73" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
         <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
@@ -11,7 +11,7 @@
         <!--Panafall Button View Controller-->
         <scene sceneID="QPt-Bn-Nu6">
             <objects>
-                <viewController storyboardIdentifier="Button" id="euw-tc-dP2" customClass="PanafallButtonViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController storyboardIdentifier="Button" id="euw-tc-dP2" customClass="PanafallButtonViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" identifier="PanafallButton" id="aTE-Di-0an">
                         <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
@@ -22,7 +22,7 @@
                                     <segue destination="cCR-9u-87r" kind="embed" identifier="PanafallEmbed" id="EvA-Kz-a01"/>
                                 </connections>
                             </containerView>
-                            <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="a59-Gz-pgR" userLabel="Button View" customClass="PanafallButtonView" customModule="xFlex" customModuleProvider="target">
+                            <customView wantsLayer="YES" translatesAutoresizingMaskIntoConstraints="NO" id="a59-Gz-pgR" userLabel="Button View" customClass="PanafallButtonView" customModule="xSDR6000" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="75" height="300"/>
                                 <subviews>
                                     <stackView distribution="fill" orientation="vertical" alignment="centerX" horizontalStackHuggingPriority="249.99998474121094" verticalStackHuggingPriority="249.99998474121094" detachesHiddenViews="YES" translatesAutoresizingMaskIntoConstraints="NO" id="VxK-js-2Oq">
@@ -184,7 +184,7 @@
         <!--Panafall-->
         <scene sceneID="Bs3-gG-X1W">
             <objects>
-                <splitViewController storyboardIdentifier="Panafall" id="cCR-9u-87r" userLabel="Panafall" customClass="PanafallViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <splitViewController storyboardIdentifier="Panafall" id="cCR-9u-87r" userLabel="Panafall" customClass="PanafallViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <splitViewItems>
                         <splitViewItem id="wXf-R0-54b"/>
                         <splitViewItem id="dLv-AJ-50i"/>
@@ -207,14 +207,11 @@
         <scene sceneID="Xfj-eF-lNV">
             <objects>
                 <customObject id="WaM-Xb-K61" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
-                <viewController storyboardIdentifier="Panadapter" id="ywe-lT-40r" userLabel="Panadapter" customClass="PanadapterViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" identifier="Panadapter" id="Xjo-h3-79G" customClass="PanadapterView" customModule="xFlex" customModuleProvider="target">
+                <viewController storyboardIdentifier="Panadapter" id="ywe-lT-40r" userLabel="Panadapter" customClass="PanadapterViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" identifier="Panadapter" wantsLayer="YES" id="Xjo-h3-79G">
                         <rect key="frame" x="0.0" y="0.0" width="450" height="150"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </view>
-                    <connections>
-                        <outlet property="panadapterView" destination="Xjo-h3-79G" id="YZ5-Gy-bJP"/>
-                    </connections>
                 </viewController>
             </objects>
             <point key="canvasLocation" x="585" y="1155"/>
@@ -222,8 +219,8 @@
         <!--Waterfall-->
         <scene sceneID="2cg-6a-4c4">
             <objects>
-                <viewController storyboardIdentifier="Waterfall" id="3e5-8Z-HZ9" userLabel="Waterfall" customClass="WaterfallViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" identifier="Waterfall" id="N27-36-3j2" customClass="WaterfallView" customModule="xFlex" customModuleProvider="target">
+                <viewController storyboardIdentifier="Waterfall" id="3e5-8Z-HZ9" userLabel="Waterfall" customClass="WaterfallViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
+                    <view key="view" identifier="Waterfall" id="N27-36-3j2" customClass="WaterfallView" customModule="xSDR6000" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="451" height="150"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </view>
@@ -485,7 +482,7 @@
         <!--Band-->
         <scene sceneID="s8W-0Z-gzo">
             <objects>
-                <viewController id="gNn-vC-F4W" userLabel="Band" customClass="BandButtonViewController" customModule="xFlex" customModuleProvider="target" sceneMemberID="viewController">
+                <viewController id="gNn-vC-F4W" userLabel="Band" customClass="BandButtonViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <customView key="view" id="wcS-Su-wU7">
                         <rect key="frame" x="0.0" y="0.0" width="194" height="42"/>
                         <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>

@@ -36,7 +36,7 @@ final class PanafallViewController: NSSplitViewController {
     fileprivate var _hzPerUnit: CGFloat { return CGFloat(_end - _start) / view.frame.width }
     
     fileprivate var _panadapterViewController: PanadapterViewController? { return _panadapterSplitViewItem.viewController as? PanadapterViewController }
-    fileprivate var _panadapterView: PanadapterView? { return (_panadapterViewController?.view as? PanadapterView) }
+//    fileprivate var _panadapterView: PanadapterView? { return (_panadapterViewController?.view as? PanadapterView) }
     
     // gesture recognizer related
     fileprivate var _doubleClick: NSClickGestureRecognizer!
@@ -119,26 +119,26 @@ final class PanafallViewController: NSSplitViewController {
     ///
     func redrawFrequencyLegend() {
         
-        _panadapterViewController?.redrawFrequencyLegend()
+//        _panadapterViewController?.redrawFrequencyLegend()
     }
     /// Redraw the DbLegend
     ///
     func redrawDbLegend() {
         
-        _panadapterViewController?.redrawDbLegend()
+//        _panadapterViewController?.redrawDbLegend()
     }
     /// Redraw the Slice
     ///
     func redrawSlices() {
         
-        _panadapterViewController?.redrawSlices()
+//        _panadapterViewController?.redrawSlices()
     }
     /// Redraw all of the components
     ///
     public func redrawAll() {
         
         // redraw
-        _panadapterViewController?.redrawAll()
+//        _panadapterViewController?.redrawAll()
     }
     
     // ----------------------------------------------------------------------------
@@ -164,13 +164,13 @@ final class PanafallViewController: NSSplitViewController {
             
             // YES, make the Slice active
             slice.active = true
-            _panadapterView?.redrawSliceLayer(slice)
+//            _panadapterView?.redrawSliceLayer(slice)
             
         } else if let slice = _radio.findActiveSliceOn(_panadapter!.id) {
             
             // move the Slice
             slice.frequency = mouseFrequency
-            _panadapterView?.redrawSliceLayer(slice)
+//            _panadapterView?.redrawSliceLayer(slice)
         }
     }
     /// Respond to a Right Click gesture
@@ -309,7 +309,7 @@ final class PanafallViewController: NSSplitViewController {
             // YES, adjust the panafall center frequency (scroll the Panafall)
             _panadapter!.center += incr
 
-            _panadapterView?.redrawFrequencyLegendLayer()
+//            _panadapterView?.redrawFrequencyLegendLayer()
             
             // adjust the slice frequency (move the Slice)
             slice.frequency = slice.frequency + incr
@@ -317,7 +317,7 @@ final class PanafallViewController: NSSplitViewController {
             Swift.print("AFTER  slice = \(slice.frequency), center = \(_panadapter!.center), incr = \(incr)\n")
 
             // redraw all the slices
-            _panadapterView?.redrawSliceLayers()
+//            _panadapterView?.redrawSliceLayers()
             
         } else {
             
@@ -325,7 +325,7 @@ final class PanafallViewController: NSSplitViewController {
             slice.frequency = slice.frequency + incr
             
             // redraw the slice
-            _panadapterView?.redrawSliceLayer(slice)
+//            _panadapterView?.redrawSliceLayer(slice)
         }
         
     }
@@ -346,6 +346,6 @@ final class PanafallViewController: NSSplitViewController {
     override func splitViewDidResizeSubviews(_ notification: Notification) {
 
         // force a redraw
-        _panadapterView?.redrawAllLayers()
+//        _panadapterView?.redrawAllLayers()
     }
 }
