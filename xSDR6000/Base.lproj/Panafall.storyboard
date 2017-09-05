@@ -29,7 +29,7 @@
                                         <rect key="frame" x="0.0" y="90" width="75" height="200"/>
                                         <subviews>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aac-I1-ppC">
-                                                <rect key="frame" x="19" y="165" width="39" height="38"/>
+                                                <rect key="frame" x="18.5" y="165" width="39" height="38"/>
                                                 <buttonCell key="cell" type="round" bezelStyle="circular" image="NSStopProgressFreestandingTemplate" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="onk-FI-ikO">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="system"/>
@@ -49,7 +49,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="geb-DB-Cbj">
-                                                <rect key="frame" x="1" y="109" width="74" height="32"/>
+                                                <rect key="frame" x="0.5" y="109" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="+Tnf" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Ghh-Ib-kQb">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -59,7 +59,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="oUc-6q-4aW">
-                                                <rect key="frame" x="1" y="80" width="74" height="32"/>
+                                                <rect key="frame" x="0.5" y="80" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="Band" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="UXu-oU-zjw">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -69,7 +69,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="WtS-Dc-u17">
-                                                <rect key="frame" x="1" y="51" width="74" height="32"/>
+                                                <rect key="frame" x="0.5" y="51" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="Ant" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="n1O-IG-uy4">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -79,7 +79,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gCE-um-uTA">
-                                                <rect key="frame" x="1" y="22" width="74" height="32"/>
+                                                <rect key="frame" x="0.5" y="22" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="Disp" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Rp5-tf-g0l">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -89,7 +89,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Rf4-7B-G4e">
-                                                <rect key="frame" x="1" y="-7" width="74" height="32"/>
+                                                <rect key="frame" x="0.5" y="-7" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="Dax" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="jHH-ux-SlR">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -208,7 +208,7 @@
             <objects>
                 <customObject id="WaM-Xb-K61" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
                 <viewController storyboardIdentifier="Panadapter" id="ywe-lT-40r" userLabel="Panadapter" customClass="PanadapterViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" identifier="Panadapter" wantsLayer="YES" id="Xjo-h3-79G">
+                    <view key="view" identifier="Panadapter" wantsLayer="YES" id="Xjo-h3-79G" customClass="MTKView">
                         <rect key="frame" x="0.0" y="0.0" width="450" height="150"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </view>
@@ -321,7 +321,7 @@
                             <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KMI-Eo-tlQ" userLabel="Frequency">
                                 <rect key="frame" x="30" y="47" width="215" height="27"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" alignment="right" placeholderString="7.235.000" id="bld-KN-yIJ">
-                                    <font key="font" size="21" name="LatinWide"/>
+                                    <font key="font" metaFont="system" size="21"/>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>

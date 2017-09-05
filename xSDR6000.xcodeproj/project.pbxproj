@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		910F1BE31F5B28B300B5677A /* PanadapterRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910F1BE21F5B28B300B5677A /* PanadapterRenderer.swift */; };
 		91329A8C1F4F52410095DAE2 /* Gradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91329A8B1F4F52410095DAE2 /* Gradient.swift */; };
 		91D49E8A1F59F48D00D3D38B /* PanadapterShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 91D49E881F59F48D00D3D38B /* PanadapterShaders.metal */; };
 		91D49E8B1F59F48D00D3D38B /* PanadapterViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91D49E891F59F48D00D3D38B /* PanadapterViewController.swift */; };
@@ -88,6 +89,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		910F1BE21F5B28B300B5677A /* PanadapterRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PanadapterRenderer.swift; sourceTree = "<group>"; };
 		91329A8B1F4F52410095DAE2 /* Gradient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Gradient.swift; path = xSDR6000/Sources/Gradients/Gradient.swift; sourceTree = SOURCE_ROOT; };
 		91B16FD71CDF7F5E00600E02 /* xSDR6000.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = xSDR6000.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		91D49E881F59F48D00D3D38B /* PanadapterShaders.metal */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.metal; path = PanadapterShaders.metal; sourceTree = "<group>"; };
@@ -351,6 +353,7 @@
 			children = (
 				91D49E881F59F48D00D3D38B /* PanadapterShaders.metal */,
 				91D49E891F59F48D00D3D38B /* PanadapterViewController.swift */,
+				910F1BE21F5B28B300B5677A /* PanadapterRenderer.swift */,
 			);
 			name = "Panadapter Metal";
 			path = "xSDR6000/Sources/Panadapter Metal";
@@ -488,6 +491,7 @@
 				91FADE181F4A76DD00DEC52B /* WaterfallViewController.swift in Sources */,
 				91FADDFB1F4A75AE00DEC52B /* PanafallsViewController.swift in Sources */,
 				91FADE051F4A765A00DEC52B /* PhoneViewController.swift in Sources */,
+				910F1BE31F5B28B300B5677A /* PanadapterRenderer.swift in Sources */,
 				91D49E8A1F59F48D00D3D38B /* PanadapterShaders.metal in Sources */,
 				91FADE321F4A778700DEC52B /* OpenGLTools.swift in Sources */,
 				91FADE521F4A781800DEC52B /* OpusManager.swift in Sources */,
