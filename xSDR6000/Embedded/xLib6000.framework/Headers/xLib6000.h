@@ -18,5 +18,5 @@ FOUNDATION_EXPORT const unsigned char xLib6000VersionString[];
 //      version 7.6.1 as of 2017-06-24
 //      see https://github.com/robbiehanson/CocoaAsyncSocket
 
-#import <xLib6000/GCDAsyncSocket.h>
-#import <xLib6000/GCDAsyncUDPSocket.h>
+#import "xLib6000/GCDAsyncSocket.h"
+#import "xLib6000/GCDAsyncUDPSocket.h"

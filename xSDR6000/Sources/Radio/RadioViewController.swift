@@ -20,7 +20,16 @@ final class RadioViewController : NSSplitViewController, RadioPickerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    internal var activeRadio: RadioParameters?                      // Radio currently running
+    private(set) var activeRadio: RadioParameters? {                // Radio currently in use (if any)
+        didSet {
+            let title = (activeRadio == nil ? "" : " - Connected to \(activeRadio!.nickname ?? "") @ \(activeRadio!.ipAddress)")
+            DispatchQueue.main.async {
+                self.view.window?.title = "xSDR6000\(title)"
+            }
+        }
+    }
+
+    
     internal var radio: Radio?                                      // Radio class in use
 
     // ----------------------------------------------------------------------------
