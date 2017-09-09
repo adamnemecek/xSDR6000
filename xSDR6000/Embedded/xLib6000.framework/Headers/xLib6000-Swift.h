@@ -163,7 +163,7 @@ SWIFT_CLASS("_TtC8xLib60009Amplifier")
 @property (nonatomic, copy) NSString * _Nonnull ant;
 @property (nonatomic, copy) NSString * _Nonnull ip;
 @property (nonatomic, copy) NSString * _Nonnull model;
-@property (nonatomic) BOOL operate;
+@property (nonatomic, copy) NSString * _Nonnull mode;
 @property (nonatomic) NSInteger port;
 @property (nonatomic, copy) NSString * _Nonnull serialNumber;
 @end
@@ -478,6 +478,10 @@ SWIFT_CLASS("_TtC8xLib600010Panadapter")
 @property (nonatomic) NSInteger center;
 @property (nonatomic) NSInteger daxIqChannel;
 @property (nonatomic) NSInteger fps;
+@property (nonatomic) BOOL loggerDisplayEnabled;
+@property (nonatomic, copy) NSString * _Nonnull loggerDisplayIpAddress;
+@property (nonatomic) NSInteger loggerDisplayPort;
+@property (nonatomic) NSInteger loggerDisplayRadioNumber;
 @property (nonatomic) BOOL loopAEnabled;
 @property (nonatomic) BOOL loopBEnabled;
 @property (nonatomic) CGFloat maxDbm;
@@ -686,16 +690,45 @@ SWIFT_CLASS("_TtC8xLib60005Radio")
 /// \param data a Vita-49 packet as Data
 ///
 - (void)sendVitaData:(NSData * _Nullable)data;
-- (void)amplifierCreateWithIp:(NSString * _Nonnull)ip port:(NSInteger)port model:(NSString * _Nonnull)model serialNumber:(NSString * _Nonnull)serialNumber antennaPairs:(NSString * _Nonnull)antennaPairs;
-- (void)amplifierRemove;
-- (void)amplifierMode:(BOOL)mode;
+/// Create an Amplifier record
+/// \param ip Ip Address (dotted-decimal STring)
+///
+/// \param port Port number
+///
+/// \param model Model
+///
+/// \param serialNumber Serial number
+///
+/// \param antennaPairs antenna pairs
+///
+/// \param callback ReplyHandler (optional)
+///
+- (void)amplifierCreateWithIp:(NSString * _Nonnull)ip port:(NSInteger)port model:(NSString * _Nonnull)model serialNumber:(NSString * _Nonnull)serialNumber antennaPairs:(NSString * _Nonnull)antennaPairs callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
+/// Remove an Amplifier record
+/// \param callback ReplyHandler (optional)
+///
+- (void)amplifierRemoveWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
+/// Change the Amplifier Mode
+/// \param mode mode (String)
+///
+/// \param callback ReplyHandler (optional)
+///
+- (void)amplifierMode:(BOOL)mode callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Request a list of antenns
+/// \param callback ReplyHandler (optional)
+///
 - (void)antennaListRequestWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Clear the ATU
+/// \param callback ReplyHandler (optional)
+///
 - (void)atuClearWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Start the ATU
+/// \param callback ReplyHandler (optional)
+///
 - (void)atuStartWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Bypass the ATU
+/// \param callback ReplyHandler (optional)
+///
 - (void)atuBypassWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Create an Audio Stream
 /// \param channel DAX channel number
@@ -709,10 +742,21 @@ SWIFT_CLASS("_TtC8xLib60005Radio")
 /// Remove an Audio Stream
 /// \param id Audio Stream Id
 ///
+/// \param callback ReplyHandler (optional)
+///
 ///
 /// returns:
 /// Success / Failure
 - (BOOL)audioStreamRemove:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback SWIFT_WARN_UNUSED_RESULT;
+/// Return a list of Equalizer values
+/// \param eqType Equalizer type raw value of the enum)
+///
+/// \param callback ReplyHandler (optional)
+///
+///
+/// returns:
+/// Success / Failure
+- (BOOL)equalizerInfo:(NSString * _Nonnull)eqType callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback SWIFT_WARN_UNUSED_RESULT;
 /// Create an IQ Stream
 /// \param channel DAX channel number
 ///
@@ -738,14 +782,22 @@ SWIFT_CLASS("_TtC8xLib60005Radio")
 /// Remove an IQ Stream
 /// \param id IQ Stream Id
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)iqStreamRemove:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Create a Memory
+/// \param callback ReplyHandler (optional)
+///
 - (void)memoryCreateWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Remove a Memory
 /// \param id Memory Id
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)memoryRemove:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Request a list of Meters
+/// \param callback ReplyHandler (optional)
+///
 - (void)meterListRequestWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Create a Mic Audio Stream
 /// \param callback ReplyHandler (optional)
@@ -757,47 +809,74 @@ SWIFT_CLASS("_TtC8xLib60005Radio")
 /// Remove a Mic Audio Stream
 /// \param id Mic Audio Stream Id
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)micAudioStreamRemove:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Request a List of Mic sources
+/// \param callback ReplyHandler (optional)
+///
 - (void)micListRequestWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Create a Panafall
 /// \param dimensions Panafall dimensions
+///
+/// \param callback ReplyHandler (optional)
 ///
 - (void)panafallCreate:(CGSize)dimensions callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Remove a Panafall
 /// \param id Panafall Id
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)panafallRemove:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Delete a Global profile
 /// \param name profile name
+///
+/// \param callback ReplyHandler (optional)
 ///
 - (void)profileGlobalDelete:(NSString * _Nonnull)name callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Save a Global profile
 /// \param name profile name
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)profileGlobalSave:(NSString * _Nonnull)name callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Delete a Mic profile
 /// \param name profile name
+///
+/// \param callback ReplyHandler (optional)
 ///
 - (void)profileMicDelete:(NSString * _Nonnull)name callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Save a Mic profile
 /// \param name profile name
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)profileMicSave:(NSString * _Nonnull)name callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Delete a Transmit profile
 /// \param name profile name
+///
+/// \param callback ReplyHandler (optional)
 ///
 - (void)profileTransmitDelete:(NSString * _Nonnull)name callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Save a Transmit profile
 /// \param name profile name
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)profileTransmitSave:(NSString * _Nonnull)name callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
+/// Reset the Static Net Params
+/// \param callback ReplyHandler (optional)
+///
+- (void)staticNetParamsResetWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Turn Opus Rx On/Off
 /// \param value On/Off
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)remoteRxAudioRequest:(BOOL)value callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
-- (void)remoteTxAudioRequest:(BOOL)value callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Reboot the Radio
+/// \param callback ReplyHandler (optional)
+///
 - (void)rebootRequestWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Create a new Slice
 /// \param frequency frequenct (Hz)
@@ -806,35 +885,51 @@ SWIFT_CLASS("_TtC8xLib60005Radio")
 ///
 /// \param mode selected mode
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)sliceCreateWithFrequency:(NSInteger)frequency antenna:(NSString * _Nonnull)antenna mode:(NSString * _Nonnull)mode callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Create a new Slice
 /// \param panadapter selected panadapter
 ///
 /// \param frequency frequency (Hz)
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)sliceCreateWithPanadapter:(Panadapter * _Nonnull)panadapter frequency:(NSInteger)frequency callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Remove a Slice
 /// \param id Slice Id
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)sliceRemove:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
-/// <#Description#>
-/// \param id <#id description#>
+/// Requent the Slice frequency error values
+/// \param id Slice Id
+///
+/// \param callback ReplyHandler (optional)
 ///
 - (void)sliceErrorRequest:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Request a list of slice Stream Id’s
+/// \param callback ReplyHandler (optional)
+///
 - (void)sliceListRequestWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Create a Tnf
 /// \param frequency frequency (Hz)
 ///
 /// \param panadapter Panadapter Id
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)tnfCreateWithFrequency:(NSInteger)frequency panadapter:(Panadapter * _Nonnull)panadapter callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Remove a Tnf
 /// \param tnf Tnf Id
 ///
+/// \param callback ReplyHandler (optional)
+///
 - (void)tnfRemoveWithTnf:(Tnf * _Nonnull)tnf callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Turn MOX On/Off
 /// \param value On/Off
+///
+/// \param callback ReplyHandler (optional)
 ///
 - (void)transmitSet:(BOOL)value callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Create a Tx Audio Stream
@@ -846,6 +941,8 @@ SWIFT_CLASS("_TtC8xLib60005Radio")
 - (BOOL)txAudioStreamCreateWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback SWIFT_WARN_UNUSED_RESULT;
 /// Remove a Tx Audio Stream
 /// \param id TxAudioStream Id
+///
+/// \param callback ReplyHandler (optional)
 ///
 - (void)txAudioStreamRemove:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 /// Request the elapsed uptime
@@ -868,6 +965,8 @@ SWIFT_CLASS("_TtC8xLib60005Radio")
 - (BOOL)xvtrCreateWithCallback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback SWIFT_WARN_UNUSED_RESULT;
 /// Remove an Xvtr
 /// \param id Xvtr Id
+///
+/// \param callback ReplyHandler (optional)
 ///
 - (void)xvtrRemove:(NSString * _Nonnull)id callback:(void (^ _Nullable)(NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull, NSString * _Nonnull))callback;
 @property (nonatomic) BOOL apfEnabled;
