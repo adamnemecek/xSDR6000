@@ -9,71 +9,153 @@
 import simd
 import MetalKit
 import Cocoa
-import xLib6000
-import SwiftyUserDefaults
 
-public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStreamHandler {
-
-    // ----------------------------------------------------------------------------
-    // MARK: - Internal properties
+public final class PanadapterRenderer : NSObject, MTKViewDelegate {
+    
+    let kFill = false
+    
+    struct Vertex {
+        var coord: vector_uint2
+        var texCoord: float2
+    }
+    
+    struct Uniforms {
+        var maxValue: Float
+        var numberOfPoints: Float
+        var color: float3
+    }
     
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
-        
-    fileprivate var _mtkView: MTKView!
-    fileprivate var _device: MTLDevice!
-    fileprivate var _commandQueue: MTLCommandQueue!
     
-    fileprivate var _dataFrame: PanadapterFrame?
-
-    fileprivate let _vertexData: [Float] = [                 // the vertices
-        -1.0, -1.0, 0.0,
-        0.0, 1.0, 0.0,
-        1.0, -1.0, 0.0
+    fileprivate var _vertices: [Vertex] =
+        [
+            Vertex(coord: vector_uint2(  0, 15_000), texCoord: float2(0.0, 0.0)),    // 0
+            Vertex(coord: vector_uint2(  1, 28_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2(  2, 60_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2(  3, 30_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2(  4, 42_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2(  5, 37_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2(  6, 12_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2(  7, 14_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2(  8, 34_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2(  9, 29_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2( 10,  9_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2( 11,      0), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2( 12, 14_000), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2( 13, 22_500), texCoord: float2(0.0, 0.0)),
+            Vertex(coord: vector_uint2( 14, 10_000), texCoord: float2(0.0, 0.0)),   // 14
+            
+            Vertex(coord: vector_uint2(  0,      0), texCoord: float2(0.0, 1.0)),   // 15
+            Vertex(coord: vector_uint2(  1,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2(  2,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2(  3,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2(  4,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2(  5,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2(  6,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2(  7,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2(  8,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2(  9,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2( 10,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2( 11,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2( 12,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2( 13,      0), texCoord: float2(0.0, 1.0)),
+            Vertex(coord: vector_uint2( 14,      0), texCoord: float2(0.0, 1.0))    // 29
     ]
-    fileprivate var _vertexBuffer: MTLBuffer!                // buffer accessible to the GPU
-    fileprivate var _pipelineState: MTLRenderPipelineState!
-
-    fileprivate var _clearColor: MTLClearColor!
+    
+    fileprivate var _indicesNoFill: [UInt16] =
+        [
+            0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
+    ]
+    
+    fileprivate var _indicesFill: [UInt16] =
+        [
+            15,0,16,1,17,2,18,3,19,4,20,5,21,6,22,7,23,8,24,9,25,10,26,11,27,12,28,13,29,14
+    ]
+    
+    fileprivate var _uniforms: Uniforms!
+    
+    fileprivate weak var _view              :MTKView!
+    fileprivate let _device                 :MTLDevice?
+    fileprivate let _commandQueue           :MTLCommandQueue
+    fileprivate let _renderPipelineState    :MTLRenderPipelineState
+    fileprivate var _vertexBuffer           :MTLBuffer!
+    fileprivate var _uniformBuffer          :MTLBuffer!
+    fileprivate var _indexBuffer            :MTLBuffer!
+    fileprivate var _clearColor             :MTLClearColor!
+    fileprivate let _samplerState           :MTLSamplerState
+    fileprivate let _texture                :MTLTexture
     
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
-    init(mtkView: MTKView, panadapter: Panadapter) {
-        super.init()
+    init?(mtkView: MTKView) {
         
-        _mtkView = mtkView
-        _mtkView.enableSetNeedsDisplay = true
+        _view = mtkView
         
-        _device = mtkView.device
-        _commandQueue = _device.makeCommandQueue()
+        // use the RGBA format.
+        _view.colorPixelFormat = .bgra8Unorm
         
-        // create a Vertex Buffer of the required size
-        let dataSize = _vertexData.count * MemoryLayout.size(ofValue: _vertexData[0])       // size in bytes
-        _vertexBuffer = _device.makeBuffer(bytes: _vertexData, length: dataSize)
-
-        // use the Default Library to make shader variables
-        let defaultLibrary = _device.newDefaultLibrary()!
-        let fragmentProgram = defaultLibrary.makeFunction(name: "basic_fragment")           // fragment shader
-        let vertexProgram = defaultLibrary.makeFunction(name: "basic_vertex")               // vertex shader
+        // get the clear color
+        let background = NSColor(srgbRed: 0.0, green: 0.0, blue: 0.0, alpha: 1.0)
+        _view.clearColor = MTLClearColor(red: Double(background.redComponent),
+                                         green: Double(background.greenComponent),
+                                         blue: Double(background.blueComponent),
+                                         alpha: Double(background.alphaComponent))
         
-        // describe the rendering pipeline
-        let pipelineStateDescriptor = MTLRenderPipelineDescriptor()
-        pipelineStateDescriptor.vertexFunction = vertexProgram                              // assign the vertex shader to this pipeline
-        pipelineStateDescriptor.fragmentFunction = fragmentProgram                          // assign the fragment shader to this pipeline
-        pipelineStateDescriptor.colorAttachments[0].pixelFormat = .bgra8Unorm               // configure the pixel format of the colorAttachment
+        //        _view.enableSetNeedsDisplay = true
         
-        // create the pipeline state
-        _pipelineState = try! _device.makeRenderPipelineState(descriptor: pipelineStateDescriptor)
+        _uniforms = Uniforms(maxValue: 60_000.0, numberOfPoints: Float(_indicesNoFill.count), color: [0.7, 0.7, 0.0])
         
-        // get the background color
-         let background = Defaults[.spectrumBackground]
-        _mtkView.clearColor = MTLClearColor(red: Double(background.redComponent),
-                                            green: Double(background.greenComponent),
-                                            blue: Double(background.blueComponent),
-                                            alpha: Double(background.alphaComponent))
-
-        panadapter.delegate = self
+        // Ask for the default Metal device; this represents our GPU.
+        _device = MTLCreateSystemDefaultDevice()
+        if let device = _device {
+            
+            // Create the command queue we will be using to submit work to the GPU.
+            _commandQueue = device.makeCommandQueue()
+            
+            // Compile the functions and other state into a pipeline object.
+            do {
+                _renderPipelineState = try PanadapterRenderer.buildRenderPipelineWithDevice(device, view: mtkView)
+            }
+            catch {
+                fatalError("Unable to compile render pipeline state")
+            }
+            
+            do {
+                _texture = try PanadapterRenderer.buildTexture(name: "1x16", device)
+            }
+            catch {
+                fatalError("Unable to load texture from main bundle")
+            }
+            
+            // Make a texture sampler that wraps in both directions and performs bilinear filtering
+            _samplerState = PanadapterRenderer.buildSamplerStateWithDevice(device, addressMode: .clampToEdge, filter: .linear)
+            
+            super.init()
+            
+            // create a Vertex Buffer for Vertices
+            let dataSize = _vertices.count * MemoryLayout.size(ofValue: _vertices[0])
+            _vertexBuffer = device.makeBuffer(bytes: _vertices, length: dataSize)
+            
+            // create a Vertex Buffer for Uniforms
+            let uniformSize = MemoryLayout.size(ofValue: _uniforms)
+            _uniformBuffer = device.makeBuffer(bytes: &_uniforms, length: uniformSize)
+            
+            // create an Index Buffer of the required size & type (Fill or NoFill)
+            let indexSize = _indicesFill.count * MemoryLayout.size(ofValue: _indicesFill[0])
+            _indexBuffer = device.makeBuffer(bytes: _indicesFill, length: indexSize)
+            
+            // set this renderer as the view's delegate
+            _view.delegate = self
+            
+            // set the view's device
+            _view.device = _device
+            
+        } else {
+            
+            fatalError("Metal is not supported")
+        }
     }
     
     // ----------------------------------------------------------------------------
@@ -85,60 +167,108 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     ///
     public func draw(in view: MTKView) {
         
-        // Create a new command buffer for each renderpass to the current drawable
+        // create a command buffer
         let commandBuffer = _commandQueue.makeCommandBuffer()
         commandBuffer.label = "MyCommand"
         
-        // Obtain a renderPassDescriptor generated from the view's drawable textures
+        // Ask the view for a configured render pass descriptor
         let renderPassDescriptor = view.currentRenderPassDescriptor
         
-        // If we've gotten a renderPassDescriptor we can render to the drawable, otherwise we'll
-        //   skip any rendering this frame because we have no drawable to draw to
-        if renderPassDescriptor != nil
-        {
+        if let renderPassDescriptor = renderPassDescriptor {
             
-            // use a render command encoder to tell Metal to draw our objects,
-            let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor!)
+            // Create a render encoder
+            let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
             
-            renderEncoder.label = "MyRenderEncoder"
+            renderEncoder.pushDebugGroup("Draw TriangleStrip")
             
-            renderEncoder.setRenderPipelineState(_pipelineState)                                                 // state
-            renderEncoder.setVertexBuffer(_vertexBuffer, offset: 0, at: 0)                                       // vertices
-            renderEncoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: 3, instanceCount: 1)     // draw
+            // Set the pipeline state
+            renderEncoder.setRenderPipelineState(_renderPipelineState)
+            
+            // Bind the buffer containing the vertices
+            renderEncoder.setVertexBuffer(_vertexBuffer, offset: 0, at: 0)
+            
+            // Bind the buffer containing the uniforms
+            renderEncoder.setVertexBuffer(_uniformBuffer, offset: 0, at: 1)
+            
+            // Bind our texture so we can sample from it in the fragment shader
+            renderEncoder.setFragmentTexture(_texture, at: 0)
+            
+            // Bind our sampler state so we can use it to sample the texture in the fragment shader
+            renderEncoder.setFragmentSamplerState(_samplerState, at: 0)
+            
+            //            renderEncoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: _vertices.count)
+            
+            // draw the points as a filled line
+            renderEncoder.drawIndexedPrimitives(type: .triangleStrip, indexCount: _indicesFill.count, indexType: .uint16, indexBuffer: _indexBuffer, indexBufferOffset: 0)
+            
+            renderEncoder.popDebugGroup()
             
             // indicate we're finished using this encoder
             renderEncoder.endEncoding()
             
             // Add a final command to present the drawable to the screen
             commandBuffer.present(view.currentDrawable!)
+            
+            // Finalize rendering here & push the command buffer to the GPU
+            commandBuffer.commit()
         }
-        
-        // Finalize rendering here & push the command buffer to the GPU
-        commandBuffer.commit()
     }
-    /// <#Description#>
+    /// Respond to changes in view size
     ///
     /// - Parameters:
     ///   - view:       an MTKView
     ///   - size:       the new size
     ///
     public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
-//        Swift.print("Resized -> \(_mtkView.frame.origin.x), \(_mtkView.frame.origin.y), \(_mtkView.frame.width), \(_mtkView.frame.height)")
-        
-//        _viewport = MTLViewport(originX: 0.0, originY: 0.0, width: Double(_mtkView.frame.width), height: Double(_mtkView.frame.height), znear: 0, zfar: 1.0 )
     }
-    //
-    // Process the UDP Stream Data for the Panadapter
-    //
-    public func panadapterStreamHandler(_ dataFrame: PanadapterFrame) {
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Class methods
+    
+    /// Build a render Pipeline State
+    ///
+    /// - Parameters:
+    ///   - device:         the MTLDevice
+    ///   - view:           the MTKView
+    /// - Returns:          an MTLRenderPipelineState
+    /// - Throws:           an error creating the return value
+    ///
+    class func buildRenderPipelineWithDevice(_ device: MTLDevice, view: MTKView) throws -> MTLRenderPipelineState {
+        // The default library contains all of the shader functions that were compiled into our app bundle
+        let library = device.newDefaultLibrary()!
         
-        DispatchQueue.main.async {
-            
-            self._dataFrame = dataFrame
-            autoreleasepool {
-                
-                self._mtkView.needsDisplay = true
-            }
+        // Retrieve the functions that will comprise our pipeline
+        let vertexFunction = library.makeFunction(name: "pan_vertex")
+        let fragmentFunction = library.makeFunction(name: "pan_fragment")
+        
+        // A render pipeline descriptor describes the configuration of our programmable pipeline
+        let pipelineDescriptor = MTLRenderPipelineDescriptor()
+        pipelineDescriptor.label = "Render Pipeline"
+        pipelineDescriptor.vertexFunction = vertexFunction
+        pipelineDescriptor.fragmentFunction = fragmentFunction
+        pipelineDescriptor.colorAttachments[0].pixelFormat = view.colorPixelFormat
+        
+        return try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
+    }
+    class func buildTexture(name: String, _ device: MTLDevice) throws -> MTLTexture {
+        let textureLoader = MTKTextureLoader(device: device)
+        let asset = NSDataAsset.init(name: name)
+        if let data = asset?.data {
+            return try textureLoader.newTexture(with: data, options: [:])
+        } else {
+            fatalError("Could not load image \(name) from an asset catalog in the main bundle")
         }
+    }
+    
+    class func buildSamplerStateWithDevice(_ device: MTLDevice,
+                                           addressMode: MTLSamplerAddressMode,
+                                           filter: MTLSamplerMinMagFilter) -> MTLSamplerState
+    {
+        let samplerDescriptor = MTLSamplerDescriptor()
+        samplerDescriptor.sAddressMode = addressMode
+        samplerDescriptor.tAddressMode = addressMode
+        samplerDescriptor.minFilter = filter
+        samplerDescriptor.magFilter = filter
+        return device.makeSamplerState(descriptor: samplerDescriptor)
     }
 }

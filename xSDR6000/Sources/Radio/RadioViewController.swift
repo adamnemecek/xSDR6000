@@ -419,22 +419,32 @@ final class RadioViewController : NSSplitViewController, RadioPickerDelegate {
             // if found, get the units
             if self._voltageTempMonitor != nil {
                 
+                // check for unknown Units
+                guard let token = Meter.Units(rawValue: meter.units) else {
+                    
+                    // unknown Units, log it and ignore it
+                    self._log.msg("Unknown units - \(meter.units) on Meter \(meter.name)", level: .debug, function: #function, file: #file, line: #line)
+                    return
+                }
                 // make a short version of the Units
                 var shortUnits = ""
-                switch meter.units.lowercased() {
+                
+                switch token {
                     
-                case "volts":
-                    shortUnits = "v"
-                    
-                case "degc":
-                    shortUnits = "c"
-                    
-                case "amps":
+                case .amps:
                     shortUnits = "a"
-                    
-                default:
-                    break
-                }
+                case .dbfs:
+                    shortUnits = "f"
+                case .dbm:
+                    shortUnits = "d"
+                case .degc:
+                    shortUnits = "c"
+                case .swr:
+                    shortUnits = "s"
+                case .volts:
+                    shortUnits = "v"
+                 }
+                
                 // set the value & units
                 if meter.name == self.kVoltageMeter {
                     
