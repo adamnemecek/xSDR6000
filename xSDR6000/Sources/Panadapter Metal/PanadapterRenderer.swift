@@ -6,72 +6,39 @@
 //  Copyright © 2017 Douglas Adams. All rights reserved.
 //
 
+import xLib6000
 import simd
 import MetalKit
 import Cocoa
 
-public final class PanadapterRenderer : NSObject, MTKViewDelegate {
+public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStreamHandler {
     
-    let kFill = false
+    enum Style {
+        case line
+        case fill
+        case fillWithTexture
+    }
     
     struct Vertex {
-        var coord: vector_uint2
-        var texCoord: float2
+        var y:  ushort
+        //        var texCoord: float2
     }
     
     struct Uniforms {
-        var maxValue: Float
-        var numberOfPoints: Float
-        var color: float3
+        var delta:          Float
+        var height:         Float
+        var color:          float4
+        var textureEnable:  Bool
     }
     
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _vertices: [Vertex] =
-        [
-            Vertex(coord: vector_uint2(  0, 15_000), texCoord: float2(0.0, 0.0)),    // 0
-            Vertex(coord: vector_uint2(  1, 28_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2(  2, 60_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2(  3, 30_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2(  4, 42_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2(  5, 37_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2(  6, 12_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2(  7, 14_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2(  8, 34_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2(  9, 29_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2( 10,  9_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2( 11,      0), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2( 12, 14_000), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2( 13, 22_500), texCoord: float2(0.0, 0.0)),
-            Vertex(coord: vector_uint2( 14, 10_000), texCoord: float2(0.0, 0.0)),   // 14
-            
-            Vertex(coord: vector_uint2(  0,      0), texCoord: float2(0.0, 1.0)),   // 15
-            Vertex(coord: vector_uint2(  1,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2(  2,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2(  3,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2(  4,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2(  5,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2(  6,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2(  7,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2(  8,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2(  9,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2( 10,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2( 11,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2( 12,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2( 13,      0), texCoord: float2(0.0, 1.0)),
-            Vertex(coord: vector_uint2( 14,      0), texCoord: float2(0.0, 1.0))    // 29
-    ]
+    fileprivate var _vertices: [ushort] =  [ushort](repeating: 0, count: 6000)
     
-    fileprivate var _indicesNoFill: [UInt16] =
-        [
-            0,1,2,3,4,5,6,7,8,9,10,11,12,13,14
-    ]
+    fileprivate var _verticesCount = 0
     
-    fileprivate var _indicesFill: [UInt16] =
-        [
-            15,0,16,1,17,2,18,3,19,4,20,5,21,6,22,7,23,8,24,9,25,10,26,11,27,12,28,13,29,14
-    ]
+    fileprivate var _indicesNoFill = [UInt16](repeating: 0, count: 3000)
     
     fileprivate var _uniforms: Uniforms!
     
@@ -85,6 +52,12 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate {
     fileprivate var _clearColor             :MTLClearColor!
     fileprivate let _samplerState           :MTLSamplerState
     fileprivate let _texture                :MTLTexture
+    
+    fileprivate var _verticesNumber = 0
+    
+//    fileprivate var _style = Style.line
+//    fileprivate var _style = Style.fill
+    fileprivate var _style = Style.fillWithTexture
     
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
@@ -103,9 +76,18 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate {
                                          blue: Double(background.blueComponent),
                                          alpha: Double(background.alphaComponent))
         
-        //        _view.enableSetNeedsDisplay = true
+        _view.enableSetNeedsDisplay = true
         
-        _uniforms = Uniforms(maxValue: 60_000.0, numberOfPoints: Float(_indicesNoFill.count), color: [0.7, 0.7, 0.0])
+        // populate the indices used for style == .line
+        for i in 0..<_indicesNoFill.count {
+            _indicesNoFill[i] = UInt16(( 2 * i) + 1)
+        }
+        
+        // set the uniforms
+        //      delta is derived from the number of "real" vertices
+        //      height is the height (pixels) of the view
+        //      color is the line / fill color
+        _uniforms = Uniforms( delta: 2.0/(Float(_view.frame.width) - 1.0), height: Float(_view.frame.height), color: [0.7, 0.7, 0.0, 0.7], textureEnable: _style == .fillWithTexture )
         
         // Ask for the default Metal device; this represents our GPU.
         _device = MTLCreateSystemDefaultDevice()
@@ -135,16 +117,16 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate {
             super.init()
             
             // create a Vertex Buffer for Vertices
-            let dataSize = _vertices.count * MemoryLayout.size(ofValue: _vertices[0])
+            let dataSize = _vertices.count * MemoryLayout.stride(ofValue: _vertices[0])
             _vertexBuffer = device.makeBuffer(bytes: _vertices, length: dataSize)
             
             // create a Vertex Buffer for Uniforms
-            let uniformSize = MemoryLayout.size(ofValue: _uniforms)
+            let uniformSize = MemoryLayout.stride(ofValue: _uniforms)
             _uniformBuffer = device.makeBuffer(bytes: &_uniforms, length: uniformSize)
             
             // create an Index Buffer of the required size & type (Fill or NoFill)
-            let indexSize = _indicesFill.count * MemoryLayout.size(ofValue: _indicesFill[0])
-            _indexBuffer = device.makeBuffer(bytes: _indicesFill, length: indexSize)
+            let indexSize = _indicesNoFill.count * MemoryLayout.stride(ofValue: _indicesNoFill[0])
+            _indexBuffer = device.makeBuffer(bytes: _indicesNoFill, length: indexSize)
             
             // set this renderer as the view's delegate
             _view.delegate = self
@@ -179,7 +161,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate {
             // Create a render encoder
             let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
             
-            renderEncoder.pushDebugGroup("Draw TriangleStrip")
+            renderEncoder.pushDebugGroup("Draw LineStrip")
             
             // Set the pipeline state
             renderEncoder.setRenderPipelineState(_renderPipelineState)
@@ -196,10 +178,17 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate {
             // Bind our sampler state so we can use it to sample the texture in the fragment shader
             renderEncoder.setFragmentSamplerState(_samplerState, at: 0)
             
-            //            renderEncoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: _vertices.count)
-            
-            // draw the points as a filled line
-            renderEncoder.drawIndexedPrimitives(type: .triangleStrip, indexCount: _indicesFill.count, indexType: .uint16, indexBuffer: _indexBuffer, indexBufferOffset: 0)
+            // use the aappropriate draw method
+            if _style == .line {
+                
+                // Line drawing
+                renderEncoder.drawIndexedPrimitives(type: .lineStrip, indexCount: _verticesCount, indexType: .uint16, indexBuffer: _indexBuffer, indexBufferOffset: 0)
+                
+            } else {
+                
+                // Filled line (with or without Texture)
+                renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: _verticesCount * 2)
+            }
             
             renderEncoder.popDebugGroup()
             
@@ -220,6 +209,14 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate {
     ///   - size:       the new size
     ///
     public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
+
+        _uniforms = Uniforms( delta: 2.0/(Float(_view.frame.width) - 1.0), height: Float(_view.frame.height), color: [0.7, 0.7, 0.0, 0.7], textureEnable: _style == .fillWithTexture )
+
+        // re-create a Vertex Buffer for Uniforms
+        let uniformSize = MemoryLayout.stride(ofValue: _uniforms)
+        _uniformBuffer = _device!.makeBuffer(bytes: &_uniforms, length: uniformSize)
+
+        Swift.print("\(_view.frame.width),\(_view.frame.height)")
     }
     
     // ----------------------------------------------------------------------------
@@ -270,5 +267,42 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate {
         samplerDescriptor.minFilter = filter
         samplerDescriptor.magFilter = filter
         return device.makeSamplerState(descriptor: samplerDescriptor)
+    }
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - PanadapterStreamHandler protocol methods
+    //
+    //  DataFrame Layout: (see xLib6000 PanadapterFrame)
+    //
+    //  public var startingBinIndex: Int                    // Index of first bin
+    //  public var numberOfBins: Int                        // Number of bins
+    //  public var binSize: Int                             // Bin size in bytes
+    //  public var frameIndex: Int                          // Frame index
+    //  public var bins: [UInt16]                           // Array of bin values
+    //
+    
+    //
+    // Process the UDP Stream Data for the Panadapter
+    //
+    public func panadapterStreamHandler(_ dataFrame: PanadapterFrame) {
+        
+        // dataFrame.numberOfBins is the number of points (horizontal) for the spectrum waveform
+        _verticesCount = dataFrame.numberOfBins
+        
+        Swift.print("bins = \(_verticesCount)")
+        
+        // the dataFrame.bins contain the y-values (vertical) for the spectrum waveform
+        // put them into the Vertex Buffer
+        //      * 2 because of the synthetic points on the 0 axis to allow .fill or .fillWithTexture style
+        _vertexBuffer.contents().copyBytes(from: dataFrame.bins, count: _verticesCount * 2 * MemoryLayout<ushort>.stride)
+        
+        DispatchQueue.main.async {
+            
+            autoreleasepool {
+                
+                // force a redraw
+                self._view.needsDisplay = true
+            }
+        }
     }
 }

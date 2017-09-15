@@ -22,6 +22,7 @@ class PanadapterViewController: NSViewController {
     fileprivate var _params: Params { return representedObject as! Params }
     
     fileprivate var _panadapter: Panadapter? { return _params.panadapter }
+    
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
@@ -53,7 +54,19 @@ class PanadapterViewController: NSViewController {
         }
         
         _view.delegate = _renderer
-        _view.preferredFramesPerSecond = 60
+//        _view.preferredFramesPerSecond = 60
+
+        _panadapter?.delegate = _renderer
+    }
+
+    /// View did layout
+    ///
+    override func viewDidLayout() {
+        
+        // tell the Panadapter to tell the Radio the current dimensions
+        _panadapter?.panDimensions = CGSize(width: _view.frame.width, height: _view.frame.height)
+        
+        Swift.print("\(_view.frame.width), \(_view.frame.height)")
     }
 
     // ----------------------------------------------------------------------------
@@ -62,32 +75,5 @@ class PanadapterViewController: NSViewController {
     // ----------------------------------------------------------------------------
     // MARK: - Notification methods
     
-    // ----------------------------------------------------------------------------
-    // MARK: - PanadapterStreamHandler protocol methods
-    //
-    //  DataFrame Layout: (see xLib6000 PanadapterFrame)
-    //
-    //  public var startingBinIndex: Int                    // Index of first bin
-    //  public var numberOfBins: Int                        // Number of bins
-    //  public var binSize: Int                             // Bin size in bytes
-    //  public var frameIndex: Int                          // Frame index
-    //  public var bins: [UInt16]                           // Array of bin values
-    //
-    
-//    //
-//    // Process the UDP Stream Data for the Panadapter
-//    //
-//    func panadapterStreamHandler(_ dataFrame: PanadapterFrame) {
-//
-//        DispatchQueue.main.async {
-//            
-//            autoreleasepool {
-//                
-//                self._dataFrame = dataFrame
-//                
-//                self.render()
-//            }
-//        }
-//    }
 }
 
