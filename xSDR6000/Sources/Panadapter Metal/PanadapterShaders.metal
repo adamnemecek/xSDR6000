@@ -16,14 +16,16 @@ struct VertexInput {
 struct Uniforms {
     float   delta;
     float   height;
-    float4  color;
+    float4  spectrumColor;
+    float4  gridColor;
     bool    textureEnable;
 };
 
 struct VertexOutput {
     float4  coord [[ position ]];
     float2  texCoord;
-    float4  color;
+    float4  spectrumColor;
+    float4  gridColor;
     bool    textureEnable;
 };
 
@@ -68,7 +70,8 @@ vertex VertexOutput pan_vertex(const device VertexInput* vertices [[ buffer(0) ]
     
     // send values to the fragment stage
     v_out.coord = float4( xCoord, yCoord, 0.0, 1.0);
-    v_out.color = uniforms.color;
+    v_out.spectrumColor = uniforms.spectrumColor;
+    v_out.gridColor = uniforms.gridColor;
     v_out.textureEnable = uniforms.textureEnable;
     
     // calculate the texture coordinates
@@ -99,12 +102,12 @@ fragment float4 pan_fragment( VertexOutput in [[ stage_in ]],
     if (in.textureEnable == false) {
         
         // NO, use the uniform color
-        return in.color;
+        return in.spectrumColor;
     
     } else {
         
         // YES, combine the texture with the uniform color
-        return float4( tex2d.sample(sampler2d, in.texCoord).rgba) * float4(in.color.rgb, 1.0);
+        return float4( tex2d.sample(sampler2d, in.texCoord).rgba) * float4(in.spectrumColor.rgb, 1.0);
     }
     
 }
