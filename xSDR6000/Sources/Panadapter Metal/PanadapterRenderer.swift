@@ -35,9 +35,13 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         case fill
         case fillWithTexture
     }
-    // layout of a Vertex
+    // layout of a spectrum Vertex
     struct Vertex {
         var y:  ushort
+    }
+    // layout of a Grid Vertex
+    struct GridVertex {
+        var coord: float2
     }
     // layout of the Uniforms
     struct Uniforms {
@@ -58,13 +62,85 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     fileprivate var _indicesNoFill          = [UInt16](repeating: 0, count: PanadapterRenderer.kVertexCount)
     fileprivate var _verticesCount          = PanadapterRenderer.kVertexCount
     
+    fileprivate var _gridVertices: [GridVertex]!
+//        = [
+//        -0.9, -1.0,
+//        -0.9,  1.0,
+//        -0.8, -1.0,
+//        -0.8,  1.0,
+//        -0.7, -1.0,
+//        -0.7,  1.0,
+//        -0.6, -1.0,
+//        -0.6,  1.0,
+//        -0.5, -1.0,
+//        -0.5,  1.0,
+//        -0.4, -1.0,
+//        -0.4,  1.0,
+//        -0.3, -1.0,
+//        -0.3,  1.0,
+//        -0.2, -1.0,
+//        -0.2,  1.0,
+//        -0.1, -1.0,
+//        -0.1,  1.0,
+//         0.0, -1.0,
+//         0.0,  1.0,
+//         0.1, -1.0,
+//         0.1,  1.0,
+//         0.2, -1.0,
+//         0.2,  1.0,
+//         0.3, -1.0,
+//         0.3,  1.0,
+//         0.4, -1.0,
+//         0.4,  1.0,
+//         0.5, -1.0,
+//         0.5,  1.0,
+//         0.6, -1.0,
+//         0.6,  1.0,
+//         0.7, -1.0,
+//         0.7,  1.0,
+//         0.8, -1.0,
+//         0.8,  1.0,
+//         0.9, -1.0,
+//         0.9,  1.0,
+//         
+//        -1.0, -0.8,
+//         1.0, -0.8,
+//          
+//        -1.0, -0.6,
+//         1.0, -0.6,
+//          
+//        -1.0, -0.4,
+//         1.0, -0.4,
+//          
+//        -1.0, -0.2,
+//         1.0, -0.2,
+//          
+//        -1.0,  0.0,
+//         1.0,  0.0,
+//          
+//        -1.0,  0.2,
+//         1.0,  0.2,
+//         
+//        -1.0,  0.4,
+//         1.0,  0.4,
+//         
+//        -1.0,  0.6,
+//         1.0,  0.6,
+//         
+//        -1.0,  0.8,
+//         1.0,  0.8
+//    ]
+    
     fileprivate weak var _view              :MTKView!
     fileprivate let _device                 :MTLDevice?
     fileprivate let _commandQueue           :MTLCommandQueue
-    fileprivate let _renderPipelineState    :MTLRenderPipelineState
+    fileprivate let _spectrumRps            :MTLRenderPipelineState
+    fileprivate let _gridRps                :MTLRenderPipelineState
     fileprivate var _vertexBuffer           :MTLBuffer!
+    fileprivate var _gridVertexBuffer       :MTLBuffer!
     fileprivate var _uniformBuffer          :MTLBuffer!
     fileprivate var _indexBuffer            :MTLBuffer!
+    fileprivate var _gridIndexBuffer        :MTLBuffer!
     fileprivate var _clearColor             :MTLClearColor!
     fileprivate let _samplerState           :MTLSamplerState
     fileprivate let _texture                :MTLTexture
@@ -137,10 +213,16 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         _commandQueue = device.makeCommandQueue()
         
         // Compile the functions and other state into a pipeline object.
-        guard let renderPipelineState =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: mtkView) else {
+        guard let spectrumRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: mtkView, vertexShader: "pan_vertex", fragmentShader: "pan_fragment") else {
             fatalError("Unable to compile render pipeline state on \(String(describing: device.name))")
         }
-        _renderPipelineState = renderPipelineState
+        _spectrumRps = spectrumRps
+        
+        // Compile the functions and other state into a pipeline object.
+        guard let gridRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: mtkView, vertexShader: "grid_vertex", fragmentShader: "grid_fragment") else {
+            fatalError("Unable to compile render pipeline state on \(String(describing: device.name))")
+        }
+        _gridRps = gridRps
         
         // create a texture
         guard let texture =  try? PanadapterRenderer.texture(forDevice: device, asset: PanadapterRenderer.kTextureAsset) else {
@@ -153,6 +235,9 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         
         super.init()
         
+        // populate the Grid Vertices
+        _gridVertices = makeGrid(xOffset: 0, xIncrement: 0.1, yOffset: 0, yIncrement: 0.2)
+        
         // create a Vertex Buffer for Vertices
         let dataSize = _vertices.count * MemoryLayout.stride(ofValue: _vertices[0])
         _vertexBuffer = device.makeBuffer(bytes: _vertices, length: dataSize)
@@ -164,6 +249,10 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         // create an Index Buffer
         let indexSize = _indicesNoFill.count * MemoryLayout.stride(ofValue: _indicesNoFill[0])
         _indexBuffer = device.makeBuffer(bytes: _indicesNoFill, length: indexSize)
+        
+        // create a Vertex Buffer for Grid Vertices
+        let gridDataSize = _vertices.count * MemoryLayout.stride(ofValue: _gridVertices[0])
+        _gridVertexBuffer = device.makeBuffer(bytes: _gridVertices, length: gridDataSize)
         
         // set this renderer as the view's delegate
         _view.delegate = self
@@ -193,20 +282,21 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
             renderEncoder.pushDebugGroup("Spectrum")
             
             // Set the pipeline state
-            renderEncoder.setRenderPipelineState(_renderPipelineState)
+            renderEncoder.setRenderPipelineState(_spectrumRps)
             
             // Bind the buffer containing the vertices (position 0)
             renderEncoder.setVertexBuffer(_vertexBuffer, offset: 0, at: 0)
             
             // Bind the buffer containing the uniforms (position 1)
             renderEncoder.setVertexBuffer(_uniformBuffer, offset: 0, at: 1)
-            
+
             // Bind the texture for the Fragment shader
             renderEncoder.setFragmentTexture(_texture, at: 0)
             
             // Bind the sampler state for the Fragment shader
             renderEncoder.setFragmentSamplerState(_samplerState, at: 0)
-            
+
+            // ----------------------------------------------------------------------------
             // *** DRAW the Spectrum ***
             
             // Line or Fill style?
@@ -220,20 +310,23 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
                 // Fill (with or without Texture)
                 renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: _verticesCount * 2)
             }
-
             renderEncoder.popDebugGroup()
             
-            // *** DRAW the horizontal Grid ***
-            renderEncoder.pushDebugGroup("Grid horizontal")
-            // TODO: add code
-            renderEncoder.popDebugGroup()
-            
-            
-            // *** DRAW the vertical Grid ***
+            // ----------------------------------------------------------------------------
+            // *** DRAW the Grid ***
             renderEncoder.pushDebugGroup("Grid vertical")
-            // TODO: add code
+
+            // Set the pipeline state
+            renderEncoder.setRenderPipelineState(_gridRps)
+            
+            // Bind the buffer containing the Grid vertices (position 0)
+            renderEncoder.setVertexBuffer(_gridVertexBuffer, offset: 0, at: 0)
+            
+            renderEncoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: _gridVertices.count)
+            
             renderEncoder.popDebugGroup()
             
+            // ----------------------------------------------------------------------------
 
             // finish using this encoder
             renderEncoder.endEncoding()
@@ -268,6 +361,33 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     }
     
     // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
+    private func makeGrid(xOffset: Float, xIncrement: Float, yOffset: Float, yIncrement: Float) -> [GridVertex] {
+        var grid = [GridVertex]()
+        
+        // calculate the starting x location
+        var xLocation: Float = -1.0 + xOffset
+        
+        // create vertical lines
+        while xLocation <= 1.0 {
+            grid.append(GridVertex(coord: float2(x: xLocation, y: -1.0)))
+            grid.append(GridVertex(coord: float2(x: xLocation, y:  1.0)))
+            xLocation += xIncrement
+        }
+        // calculate the starting y location
+        var yLocation: Float = -1.0 + yOffset
+        
+        // create horizontal lines
+        while yLocation <= 1.0 {
+            grid.append(GridVertex(coord: float2(x: -1.0, y: yLocation)))
+            grid.append(GridVertex(coord: float2(x:  1.0, y: yLocation)))
+            yLocation += yIncrement
+        }
+        return grid
+    }
+    
+    // ----------------------------------------------------------------------------
     // MARK: - Class methods
     
     /// Build a render Pipeline State
@@ -278,14 +398,14 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     /// - Returns:          an MTLRenderPipelineState
     /// - Throws:           an error creating the return value
     ///
-    class func renderPipeline(forDevice device: MTLDevice, view: MTKView) throws -> MTLRenderPipelineState {
+    class func renderPipeline(forDevice device: MTLDevice, view: MTKView, vertexShader: String, fragmentShader: String) throws -> MTLRenderPipelineState {
         
         // get the default library
         let library = device.newDefaultLibrary()!
         
         // get the functions vertex & fragment functions that were compiled into the library
-        let vertexFunction = library.makeFunction(name: "pan_vertex")
-        let fragmentFunction = library.makeFunction(name: "pan_fragment")
+        let vertexFunction = library.makeFunction(name: vertexShader)
+        let fragmentFunction = library.makeFunction(name: fragmentShader)
         
         // create a render pipeline descriptor
         let pipelineDescriptor = MTLRenderPipelineDescriptor()
