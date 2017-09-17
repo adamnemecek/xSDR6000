@@ -61,75 +61,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     fileprivate var _vertices               = [UInt16](repeating: 0, count: PanadapterRenderer.kVertexCount * 2)
     fileprivate var _indicesNoFill          = [UInt16](repeating: 0, count: PanadapterRenderer.kVertexCount)
     fileprivate var _verticesCount          = PanadapterRenderer.kVertexCount
-    
-    fileprivate var _gridVertices: [GridVertex]!
-//        = [
-//        -0.9, -1.0,
-//        -0.9,  1.0,
-//        -0.8, -1.0,
-//        -0.8,  1.0,
-//        -0.7, -1.0,
-//        -0.7,  1.0,
-//        -0.6, -1.0,
-//        -0.6,  1.0,
-//        -0.5, -1.0,
-//        -0.5,  1.0,
-//        -0.4, -1.0,
-//        -0.4,  1.0,
-//        -0.3, -1.0,
-//        -0.3,  1.0,
-//        -0.2, -1.0,
-//        -0.2,  1.0,
-//        -0.1, -1.0,
-//        -0.1,  1.0,
-//         0.0, -1.0,
-//         0.0,  1.0,
-//         0.1, -1.0,
-//         0.1,  1.0,
-//         0.2, -1.0,
-//         0.2,  1.0,
-//         0.3, -1.0,
-//         0.3,  1.0,
-//         0.4, -1.0,
-//         0.4,  1.0,
-//         0.5, -1.0,
-//         0.5,  1.0,
-//         0.6, -1.0,
-//         0.6,  1.0,
-//         0.7, -1.0,
-//         0.7,  1.0,
-//         0.8, -1.0,
-//         0.8,  1.0,
-//         0.9, -1.0,
-//         0.9,  1.0,
-//         
-//        -1.0, -0.8,
-//         1.0, -0.8,
-//          
-//        -1.0, -0.6,
-//         1.0, -0.6,
-//          
-//        -1.0, -0.4,
-//         1.0, -0.4,
-//          
-//        -1.0, -0.2,
-//         1.0, -0.2,
-//          
-//        -1.0,  0.0,
-//         1.0,  0.0,
-//          
-//        -1.0,  0.2,
-//         1.0,  0.2,
-//         
-//        -1.0,  0.4,
-//         1.0,  0.4,
-//         
-//        -1.0,  0.6,
-//         1.0,  0.6,
-//         
-//        -1.0,  0.8,
-//         1.0,  0.8
-//    ]
+    fileprivate var _gridVertices           :[GridVertex]!
     
     fileprivate weak var _view              :MTKView!
     fileprivate let _device                 :MTLDevice?
@@ -150,7 +82,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     
     fileprivate var _spectrumColor          :float4!
     fileprivate var _gridColor              :float4!
-    
+
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
@@ -181,34 +113,6 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         // use the RGBA format.
         _view.colorPixelFormat = .bgra8Unorm
         
-        // get & set the clear color
-        var color = Defaults[.spectrumBackground]
-        _view.clearColor = MTLClearColor(red: Double(color.redComponent),
-                                         green: Double(color.greenComponent),
-                                         blue: Double(color.blueComponent),
-                                         alpha: Double(color.alphaComponent))
-        
-        // get the color for the Spectrum
-        color = Defaults[.spectrum]
-        _spectrumColor = float4(Float(color.redComponent),
-                                Float(color.greenComponent),
-                                Float(color.blueComponent),
-                                Float(color.alphaComponent))
-        
-        // get the color for the Grid Lines
-        color = Defaults[.gridLines]
-        _gridColor = float4(Float(color.redComponent),
-                            Float(color.greenComponent),
-                            Float(color.blueComponent),
-                            Float(color.alphaComponent))
-        
-        // set the uniforms
-        _uniforms = Uniforms( delta: 2.0/(Float(_view.frame.width) - 1.0),
-                              height: Float(_view.frame.height),
-                              spectrumColor: _spectrumColor,
-                              gridColor: _gridColor,
-                              textureEnable: _style == .fillWithTexture )
-        
         // create the command queue
         _commandQueue = device.makeCommandQueue()
         
@@ -235,6 +139,9 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         
         super.init()
         
+        // get & set the clear color
+        setClearColor()
+
         // populate the Grid Vertices
         _gridVertices = makeGrid(xOffset: 0, xIncrement: 0.1, yOffset: 0, yIncrement: 0.2)
         
@@ -244,7 +151,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         
         // create a Vertex Buffer for Uniforms
         let uniformSize = MemoryLayout.stride(ofValue: _uniforms)
-        _uniformBuffer = device.makeBuffer(bytes: &_uniforms, length: uniformSize)
+        _uniformBuffer = device.makeBuffer(length: uniformSize)
         
         // create an Index Buffer
         let indexSize = _indicesNoFill.count * MemoryLayout.stride(ofValue: _indicesNoFill[0])
@@ -253,6 +160,9 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         // create a Vertex Buffer for Grid Vertices
         let gridDataSize = _vertices.count * MemoryLayout.stride(ofValue: _gridVertices[0])
         _gridVertexBuffer = device.makeBuffer(bytes: _gridVertices, length: gridDataSize)
+                
+        // load all of the Uniforms
+        updateUniforms()
         
         // set this renderer as the view's delegate
         _view.delegate = self
@@ -314,7 +224,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
             
             // ----------------------------------------------------------------------------
             // *** DRAW the Grid ***
-            renderEncoder.pushDebugGroup("Grid vertical")
+            renderEncoder.pushDebugGroup("Grid")
 
             // Set the pipeline state
             renderEncoder.setRenderPipelineState(_gridRps)
@@ -346,24 +256,23 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     ///
     public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
 
-        _uniforms = Uniforms( delta: 2.0/(Float(_view.frame.width) - 1.0),
-                              height: Float(_view.frame.height),
-                              spectrumColor: _spectrumColor,
-                              gridColor: _gridColor,
-                              textureEnable: _style == .fillWithTexture )
-
-
-        // FIXME: update the uniforms rather than re-creating
-        
-        // re-create a Vertex Buffer for Uniforms
-        let uniformSize = MemoryLayout.stride(ofValue: _uniforms)
-        _uniformBuffer = _device!.makeBuffer(bytes: &_uniforms, length: uniformSize)
+        // update all of the uniform values
+        updateUniforms()
     }
     
     // ----------------------------------------------------------------------------
-    // MARK: - Private methods
+    // MARK: - Internal methods
     
-    private func makeGrid(xOffset: Float, xIncrement: Float, yOffset: Float, yIncrement: Float) -> [GridVertex] {
+    /// Create vertices for a Grid (in normalized clip space coordinates)
+    ///
+    /// - Parameters:
+    ///   - xOffset:        initial offset in x (pixels from left)
+    ///   - xIncrement:     x increment between vertical lines (pixels)
+    ///   - yOffset:        initial offset in y (pixels from bottom)
+    ///   - yIncrement:     y increment between horizontal lines (pixels)
+    /// - Returns:          an array of GridVertex (pixels)
+    ///
+    func makeGrid(xOffset: Float, xIncrement: Float, yOffset: Float, yIncrement: Float) -> [GridVertex] {
         var grid = [GridVertex]()
         
         // calculate the starting x location
@@ -386,7 +295,46 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         }
         return grid
     }
-    
+    /// Set the Clear Color with the value from the Preferences
+    ///
+    func setClearColor() {
+        
+        // get & set the clear color
+        let color = Defaults[.spectrumBackground]
+        _view.clearColor = MTLClearColor(red: Double(color.redComponent),
+                                         green: Double(color.greenComponent),
+                                         blue: Double(color.blueComponent),
+                                         alpha: Double(color.alphaComponent))
+    }
+    /// Update all of the uniform values
+    ///
+    func updateUniforms() {
+        
+        // get the color for the Spectrum
+        var color = Defaults[.spectrum]
+        _spectrumColor = float4(Float(color.redComponent),
+                                Float(color.greenComponent),
+                                Float(color.blueComponent),
+                                Float(color.alphaComponent))
+        
+        // get the color for the Grid Lines
+        color = Defaults[.gridLines]
+        _gridColor = float4(Float(color.redComponent),
+                            Float(color.greenComponent),
+                            Float(color.blueComponent),
+                            Float(color.alphaComponent))
+        
+        // set the uniforms
+        _uniforms = Uniforms( delta: 2.0/(Float(_view.frame.width) - 1.0),
+                              height: Float(_view.frame.height),
+                              spectrumColor: _spectrumColor,
+                              gridColor: _gridColor,
+                              textureEnable: _style == .fillWithTexture )
+        
+        // update the Uniforms buffer
+        let bufferPtr = _uniformBuffer.contents()
+        memcpy(bufferPtr, &_uniforms, MemoryLayout<Uniforms>.size)
+    }
     // ----------------------------------------------------------------------------
     // MARK: - Class methods
     

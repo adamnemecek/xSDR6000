@@ -331,9 +331,9 @@
 		91D49E871F59F48D00D3D38B /* Panadapter Metal */ = {
 			isa = PBXGroup;
 			children = (
-				91D49E881F59F48D00D3D38B /* PanadapterShaders.metal */,
 				91D49E891F59F48D00D3D38B /* PanadapterViewController.swift */,
 				910F1BE21F5B28B300B5677A /* PanadapterRenderer.swift */,
+				91D49E881F59F48D00D3D38B /* PanadapterShaders.metal */,
 			);
 			name = "Panadapter Metal";
 			path = "xSDR6000/Sources/Panadapter Metal";

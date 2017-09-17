@@ -9,11 +9,19 @@
 #include <metal_stdlib>
 using namespace metal;
 
-struct VertexInput {
+// --------------------------------------------------------------------------------
+// MARK: - Shader structures
+// --------------------------------------------------------------------------------
+
+struct VertexInput {                    // vertices for spectrum draw calls
     ushort  y;
 };
 
-struct Uniforms {
+struct GridVertex {                     // vertices fro grid draw calls
+    float2  coord;
+};
+
+struct Uniforms {                       // common uniforms
     float   delta;
     float   height;
     float4  spectrumColor;
@@ -21,13 +29,17 @@ struct Uniforms {
     bool    textureEnable;
 };
 
-struct VertexOutput {
+struct VertexOutput {                   // common vertex output
     float4  coord [[ position ]];
     float2  texCoord;
     float4  spectrumColor;
     float4  gridColor;
     bool    textureEnable;
 };
+
+// --------------------------------------------------------------------------------
+// MARK: - Shaders for Panadapter Spectrum draw calls
+// --------------------------------------------------------------------------------
 
 // Vertex Shader
 //
@@ -113,14 +125,9 @@ fragment float4 pan_fragment( VertexOutput in [[ stage_in ]],
     
 }
 
-
-
-struct GridVertex {
-    float2  coord;
-};
-
-
-
+// --------------------------------------------------------------------------------
+// MARK: - Shaders for Panadapter Grid draw calls
+// --------------------------------------------------------------------------------
 
 // Vertex Shader
 //
@@ -160,9 +167,7 @@ fragment float4 grid_fragment( VertexOutput in [[ stage_in ]],
                              texture2d<float, access::sample> tex2d [[texture(0)]],
                              sampler sampler2d [[sampler(0)]])
 {
-    
     // use the Grid color
     return in.gridColor;
-    
 }
 
