@@ -212,7 +212,7 @@
                         <rect key="frame" x="0.0" y="0.0" width="450" height="150"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="om2-ub-bLY" userLabel="Frequency Legend">
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="om2-ub-bLY" userLabel="Frequency Legend" customClass="PanadapterFrequencyLegend" customModule="xSDR6000" customModuleProvider="target">
                                 <rect key="frame" x="0.0" y="0.0" width="450" height="20"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="20" id="KNA-RT-pDk"/>
@@ -221,13 +221,15 @@
                             <customView translatesAutoresizingMaskIntoConstraints="NO" id="H7C-IT-74M" userLabel="Spectrum" customClass="MTKView">
                                 <rect key="frame" x="0.0" y="20" width="450" height="130"/>
                                 <subviews>
-                                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="nfG-Su-jVB" userLabel="Db Legend">
+                                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="nfG-Su-jVB" userLabel="Db Legend" customClass="PanadapterDbmLegend" customModule="xSDR6000" customModuleProvider="target">
                                         <rect key="frame" x="420" y="0.0" width="30" height="130"/>
+                                        <constraints>
+                                            <constraint firstAttribute="width" constant="30" id="iyt-te-aJO"/>
+                                        </constraints>
                                     </customView>
                                 </subviews>
                                 <constraints>
                                     <constraint firstAttribute="bottom" secondItem="nfG-Su-jVB" secondAttribute="bottom" id="7CM-cD-Zfm"/>
-                                    <constraint firstItem="nfG-Su-jVB" firstAttribute="leading" secondItem="H7C-IT-74M" secondAttribute="leading" constant="420" id="DjH-aW-3eD"/>
                                 </constraints>
                             </customView>
                         </subviews>
