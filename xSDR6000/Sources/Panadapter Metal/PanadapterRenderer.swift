@@ -52,30 +52,32 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         var textureEnable:  Bool
     }
     
-    static let kVertexCount     = 3_000
+    static let kMaxVertexCount  = 3_000
     static let kTextureAsset    = "1x16"
     
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _vertices               = [UInt16](repeating: 0, count: PanadapterRenderer.kVertexCount * 2)
-    fileprivate var _indicesNoFill          = [UInt16](repeating: 0, count: PanadapterRenderer.kVertexCount)
-    fileprivate var _verticesCount          = PanadapterRenderer.kVertexCount
+    fileprivate var _vertices               = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount * 2)
+    fileprivate var _indicesNoFill          = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount)
+    fileprivate var _indicesFill            = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount * 2)
+    fileprivate var _verticesCount          = PanadapterRenderer.kMaxVertexCount
     fileprivate var _gridVertices           :[GridVertex]!
     
-    fileprivate weak var _view              :MTKView!
     fileprivate let _device                 :MTLDevice?
-    fileprivate let _commandQueue           :MTLCommandQueue
-    fileprivate let _spectrumRps            :MTLRenderPipelineState
-    fileprivate let _gridRps                :MTLRenderPipelineState
+    fileprivate weak var _view              :MTKView!
+    fileprivate var _commandQueue           :MTLCommandQueue!
+    fileprivate var _spectrumRps            :MTLRenderPipelineState!
+    fileprivate var _gridRps                :MTLRenderPipelineState!
     fileprivate var _vertexBuffer           :MTLBuffer!
     fileprivate var _gridVertexBuffer       :MTLBuffer!
     fileprivate var _uniformBuffer          :MTLBuffer!
-    fileprivate var _indexBuffer            :MTLBuffer!
+    fileprivate var _indexBufferNoFill      :MTLBuffer!
+    fileprivate var _indexBufferFill        :MTLBuffer!
     fileprivate var _gridIndexBuffer        :MTLBuffer!
     fileprivate var _clearColor             :MTLClearColor!
-    fileprivate let _samplerState           :MTLSamplerState
-    fileprivate let _texture                :MTLTexture
+    fileprivate var _samplerState           :MTLSamplerState!
+    fileprivate var _texture                :MTLTexture!
 
     fileprivate var _uniforms               :Uniforms!
     fileprivate var _style                  :Style!
@@ -96,71 +98,33 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         }
         _device = device
         
+        super.init()
+        
         _view = mtkView
+        
+        // choose a drawing style
+        _style = Style.fillWithTexture
         
         // redraw whenever needsDisplay is set
         _view.enableSetNeedsDisplay = true
         
-        // choose a drawing style
-        _style = Style.line
-        
-        // populate the indices used for style == .line
-        for i in 0..<PanadapterRenderer.kVertexCount {
-            // 1,3,5...(2n-1)
-            _indicesNoFill[i] = UInt16(( 2 * i) + 1)
-        }
-        
         // use the RGBA format.
         _view.colorPixelFormat = .bgra8Unorm
         
-        // create the command queue
-        _commandQueue = device.makeCommandQueue()
+        setupState(device: device, view: _view)
         
-        // Compile the functions and other state into a pipeline object.
-        guard let spectrumRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: mtkView, vertexShader: "pan_vertex", fragmentShader: "pan_fragment") else {
-            fatalError("Unable to compile render pipeline state on \(String(describing: device.name))")
-        }
-        _spectrumRps = spectrumRps
-        
-        // Compile the functions and other state into a pipeline object.
-        guard let gridRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: mtkView, vertexShader: "grid_vertex", fragmentShader: "grid_fragment") else {
-            fatalError("Unable to compile render pipeline state on \(String(describing: device.name))")
-        }
-        _gridRps = gridRps
-        
-        // create a texture
-        guard let texture =  try? PanadapterRenderer.texture(forDevice: device, asset: PanadapterRenderer.kTextureAsset) else {
-            fatalError("Unable to load texture (\(PanadapterRenderer.kTextureAsset)) from main bundle")
-        }
-        _texture = texture
-        
-        // create a texture sampler
-        _samplerState = PanadapterRenderer.samplerState(forDevice: device, addressMode: .clampToEdge, filter: .linear)
-        
-        super.init()
-        
-        // get & set the clear color
+        // set the clear color
         setClearColor()
-
+        
+        // setup indices for indexed drawing
+        setupIndices()
+        
         // populate the Grid Vertices
         _gridVertices = makeGrid(xOffset: 0, xIncrement: 0.1, yOffset: 0, yIncrement: 0.2)
         
-        // create a Vertex Buffer for Vertices
-        let dataSize = _vertices.count * MemoryLayout.stride(ofValue: _vertices[0])
-        _vertexBuffer = device.makeBuffer(bytes: _vertices, length: dataSize)
-        
-        // create a Vertex Buffer for Uniforms
-        let uniformSize = MemoryLayout.stride(ofValue: _uniforms)
-        _uniformBuffer = device.makeBuffer(length: uniformSize)
-        
-        // create an Index Buffer
-        let indexSize = _indicesNoFill.count * MemoryLayout.stride(ofValue: _indicesNoFill[0])
-        _indexBuffer = device.makeBuffer(bytes: _indicesNoFill, length: indexSize)
-        
-        // create a Vertex Buffer for Grid Vertices
-        let gridDataSize = _vertices.count * MemoryLayout.stride(ofValue: _gridVertices[0])
-        _gridVertexBuffer = device.makeBuffer(bytes: _gridVertices, length: gridDataSize)
-                
+        // create & populate the needed MTLBuffers
+        setupBuffers(device: device)
+
         // load all of the Uniforms
         updateUniforms()
         
@@ -213,12 +177,12 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
             if _style == .line {
                 
                 // Line
-                renderEncoder.drawIndexedPrimitives(type: .lineStrip, indexCount: _verticesCount, indexType: .uint16, indexBuffer: _indexBuffer, indexBufferOffset: 0)
+                renderEncoder.drawIndexedPrimitives(type: .lineStrip, indexCount: _verticesCount, indexType: .uint16, indexBuffer: _indexBufferNoFill, indexBufferOffset: 0)
                 
             } else {
                 
                 // Fill (with or without Texture)
-                renderEncoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: _verticesCount * 2)
+                renderEncoder.drawIndexedPrimitives(type: .triangleStrip, indexCount: _verticesCount * 2, indexType: .uint16, indexBuffer: _indexBufferFill, indexBufferOffset: 0)
             }
             renderEncoder.popDebugGroup()
             
@@ -263,6 +227,81 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
+    /// Setup RenderPipeline, Texture & Sampler state
+    ///
+    /// - Parameters:
+    ///   - device: <#device description#>
+    ///   - view: <#view description#>
+    func setupState(device: MTLDevice, view: MTKView) {
+        
+        // create the command queue
+        _commandQueue = device.makeCommandQueue()
+        
+        // Compile the functions and other state into a pipeline object.
+        guard let spectrumRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: view, vertexShader: "pan_vertex", fragmentShader: "pan_fragment") else {
+            fatalError("Unable to compile render pipeline state on \(String(describing: device.name))")
+        }
+        _spectrumRps = spectrumRps
+        
+        // Compile the functions and other state into a pipeline object.
+        guard let gridRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: view, vertexShader: "grid_vertex", fragmentShader: "grid_fragment") else {
+            fatalError("Unable to compile render pipeline state on \(String(describing: device.name))")
+        }
+        _gridRps = gridRps
+        
+        // create a texture
+        guard let texture =  try? PanadapterRenderer.texture(forDevice: device, asset: PanadapterRenderer.kTextureAsset) else {
+            fatalError("Unable to load texture (\(PanadapterRenderer.kTextureAsset)) from main bundle")
+        }
+        _texture = texture
+        
+        // create a texture sampler
+        _samplerState = PanadapterRenderer.samplerState(forDevice: device, addressMode: .clampToEdge, filter: .linear)
+    }
+    
+    /// Populate the indexed drawing arrays
+    ///
+    func setupIndices() {
+        
+        // populate the indices used for style == .line
+        for i in 0..<PanadapterRenderer.kMaxVertexCount {
+            // 0,1,2...n-1
+            _indicesNoFill[i] = UInt16(i)
+        }
+        
+        // populate the indices used for style == .fill || style == .fillWithTexture
+        for i in 0..<PanadapterRenderer.kMaxVertexCount {
+            // n,0,n+1,1,...2n-1,n-1
+            _indicesFill[2 * i] = UInt16(PanadapterRenderer.kMaxVertexCount + i)
+            _indicesFill[(2 * i) + 1] = UInt16(i)
+        }
+    }
+    /// Create & Populate the MTLBuffers
+    ///
+    /// - Parameter device:     the MTLDevice
+    ///
+    func setupBuffers(device: MTLDevice) {
+        
+        // create a Vertex Buffer for Vertices
+        let dataSize = _vertices.count * MemoryLayout.stride(ofValue: _vertices[0])
+        _vertexBuffer = device.makeBuffer(bytes: _vertices, length: dataSize)
+        
+        // create a Vertex Buffer for Uniforms
+        let uniformSize = MemoryLayout.stride(ofValue: _uniforms)
+        _uniformBuffer = device.makeBuffer(length: uniformSize)
+        
+        // create an Index Buffer
+        var indexSize = _indicesNoFill.count * MemoryLayout.stride(ofValue: _indicesNoFill[0])
+        _indexBufferNoFill = device.makeBuffer(bytes: _indicesNoFill, length: indexSize)
+        
+        // create an Index Buffer
+        indexSize = _indicesFill.count * MemoryLayout.stride(ofValue: _indicesFill[0])
+        _indexBufferFill = device.makeBuffer(bytes: _indicesFill, length: indexSize)
+        
+        // create a Vertex Buffer for Grid Vertices
+        let gridDataSize = _vertices.count * MemoryLayout.stride(ofValue: _gridVertices[0])
+        _gridVertexBuffer = device.makeBuffer(bytes: _gridVertices, length: gridDataSize)
+    }
     /// Create vertices for a Grid (in normalized clip space coordinates)
     ///
     /// - Parameters:
@@ -439,9 +478,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         
         // the dataFrame.bins contain the y-values (vertical) for the spectrum waveform
         // put them into the Vertex Buffer
-        //      * 2 because of the "synthetic" points on the 0 axis to allow .fill or .fillWithTexture style
-        //      see the note at the top of this file
-        _vertexBuffer.contents().copyBytes(from: dataFrame.bins, count: _verticesCount * 2 * MemoryLayout<ushort>.stride)
+        _vertexBuffer.contents().copyBytes(from: dataFrame.bins, count: _verticesCount * MemoryLayout<ushort>.stride)
         
         DispatchQueue.main.async {
             

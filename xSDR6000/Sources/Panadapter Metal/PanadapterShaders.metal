@@ -62,64 +62,67 @@ vertex VertexOutput pan_vertex(const device VertexInput* vertices [[ buffer(0) ]
     
     unsigned int effectiveVertexId;
     
-    // calculate an effectiveVertexID value that matches the data layout
-    effectiveVertexId = (vertexId - (vertexId % 2)) / 2;
-    
-    // use the effective Vertex Id to calculate the x coordinate
-    xCoord = (uniforms.delta * effectiveVertexId) - 1;
-    
-    // is this a "real" or a "synthetic" vertex?
-    if (vertexId % 2 == 0) {
+    // is this a "real" vertex?
+    if (vertexId < 3000) {
+
+        // YES, y values must be flipped and normalized
+        yCoord = -(( 2.0 * vertices[vertexId].y)/uniforms.height) + 1;
         
-        // "synthetic" (even numbered vertex), y values are always -1 (i.e. no signal)
-        // these are the triangle vertices that are on the zero intensity line
-        yCoord = - 1;
-    
+        // use the vertexId "as-is"
+        effectiveVertexId = vertexId;
+        
+        // set the texture coordinate to the bright side of the texture
+        v_out.texCoord = float2(0.0, 0.0);
+        
     } else {
         
-        // "real" (odd numbered vertex), y values must be flipped and normalized
-        yCoord = -(( 2.0 * vertices[vertexId].y)/uniforms.height) + 1;
+        // YES, y value is always the bottom line
+        yCoord = - 1;
+
+        // calculate an effective vertexId
+        effectiveVertexId = vertexId - 3000;
+        
+        // set the texture coordinate to the dark side of the texture
+        v_out.texCoord = float2(0.0, 1.0);
     }
     
-    // send values to the fragment stage
+    // normalize the coordinates to clip space
+    
+    // calculate the x coordinate
+    xCoord = (uniforms.delta * effectiveVertexId) - 1;
+    
+    
+    // send the clip space coords to the fragment shader
     v_out.coord = float4( xCoord, yCoord, 0.0, 1.0);
+    
+    // pass the other uniforms to the fragment shader
     v_out.spectrumColor = uniforms.spectrumColor;
     v_out.gridColor = uniforms.gridColor;
     v_out.textureEnable = uniforms.textureEnable;
     
-    // calculate the texture coordinates
-    if (vertexId % 2 == 0) {
-        v_out.texCoord = float2(0.0, 1.0);
-    } else {
-        v_out.texCoord = float2(0.0, 0.0);
-    }
-    
     return v_out;
 }
 
-// Fragment Shader
-//
+// Fragment Shader with no input parameters
 //  Parameters:
 //      in:         VertexOutput struct
-//      tex2d:      a 2d texture
-//      sampler2d:  the sampler for the texture
 //
 //  Returns:
-//      a float4 vector of the fragment's color (always black in this example)
+//      the fragment color
 //
 fragment float4 pan_fragment( VertexOutput in [[ stage_in ]],
                              texture2d<float, access::sample> tex2d [[texture(0)]],
                              sampler sampler2d [[sampler(0)]])
 {
-    // are we drawing the texture?
+    // is texturing enabled?
     if (in.textureEnable == false) {
         
-        // NO, use the uniform color
+        // NO, use a simple color
         return in.spectrumColor;
-    
+        
     } else {
         
-        // YES, combine the texture with the uniform color
+        // YES, blend in the texture
         return float4( tex2d.sample(sampler2d, in.texCoord).rgba) * float4(in.spectrumColor.rgb, 1.0);
     }
     
