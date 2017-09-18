@@ -42,3 +42,7 @@ https://github.com/radex/SwiftyUserDefaults
 OpusOSX:
 
 https://opus-codec.org/downloads/
+
+xLib6000:
+
+https://github.com/DougPA/xLib6000
