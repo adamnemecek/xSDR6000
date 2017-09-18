@@ -22,3 +22,23 @@ project.
 
 An executable is contained in the Release if you would rather not build
 from sources.
+
+==========================================================================
+
+FRAMEWORK CREDITS:
+
+AudioLibrary: 
+
+http://www.w7ay.net/site/Software/Audio%20Library/index.html
+
+XCGLogger & ObjcExceptionBridging:
+
+https://github.com/DaveWoodCom/XCGLogger
+
+SwiftyUserDefaults:
+
+https://github.com/radex/SwiftyUserDefaults
+
+OpusOSX:
+
+https://opus-codec.org/downloads/
