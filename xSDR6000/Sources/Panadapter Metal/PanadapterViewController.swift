@@ -11,8 +11,28 @@ import SwiftyUserDefaults
 import xLib6000
 import MetalKit
 
+typealias BandwidthParamTuple = (high: Int, low: Int, spacing: Int, format: String)
+
 class PanadapterViewController: NSViewController {
     
+    static let kBandwidthParams: [BandwidthParamTuple] =    // spacing & format vs Bandwidth
+        [   //      Bandwidth               Legend
+            //  high         low      spacing   format
+            (15_000_000, 10_000_000, 1_000_000, "%0.0f"),           // 15.00 -> 10.00 Mhz
+            (10_000_000,  5_000_000,   400_000, "%0.1f"),           // 10.00 ->  5.00 Mhz
+            ( 5_000_000,   2_000_000,  200_000, "%0.1f"),           //  5.00 ->  2.00 Mhz
+            ( 2_000_000,   1_000_000,  100_000, "%0.1f"),           //  2.00 ->  1.00 Mhz
+            ( 1_000_000,     500_000,   50_000, "%0.2f"),           //  1.00 ->  0.50 Mhz
+            (   500_000,     400_000,   40_000, "%0.2f"),           //  0.50 ->  0.40 Mhz
+            (   400_000,     200_000,   20_000, "%0.2f"),           //  0.40 ->  0.20 Mhz
+            (   200_000,     100_000,   10_000, "%0.2f"),           //  0.20 ->  0.10 Mhz
+            (   100_000,      40_000,    4_000, "%0.3f"),           //  0.10 ->  0.04 Mhz
+            (    40_000,      20_000,    2_000, "%0.3f"),           //  0.04 ->  0.02 Mhz
+            (    20_000,      10_000,    1_000, "%0.3f"),           //  0.02 ->  0.01 Mhz
+            (    10_000,       5_000,      500, "%0.4f"),           //  0.01 ->  0.005 Mhz
+            (    5_000,            0,      400, "%0.4f")            //  0.005 -> 0 Mhz
+    ]
+
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
@@ -20,12 +40,21 @@ class PanadapterViewController: NSViewController {
     // MARK: - Private properties
     
     @IBOutlet weak var _spectrumView: MTKView!
-    @IBOutlet weak var _frequencyLegendView: NSView!
-    @IBOutlet weak var _dbLegendView: NSView!
+    @IBOutlet weak var _frequencyLegendView: PanadapterFrequencyLegend!
+    @IBOutlet weak var _dbLegendView: PanadapterDbLegend!
     
     fileprivate var _params: Params { return representedObject as! Params }
-    
+
+    fileprivate var _center: Int {return _panadapter!.center }
+    fileprivate var _bandwidth: Int { return _panadapter!.bandwidth }
+    fileprivate var _start: Int { return _center - (_bandwidth/2) }
+    fileprivate var _end: Int  { return _center + (_bandwidth/2) }
+    fileprivate var _hzPerUnit: CGFloat { return CGFloat(_end - _start) / view.frame.width }
+
     fileprivate var _panadapter: Panadapter? { return _params.panadapter }
+
+    fileprivate var _bandwidthParam: BandwidthParamTuple {         // given Bandwidth, return a Spacing & a Format
+        get { return PanadapterViewController.kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? PanadapterViewController.kBandwidthParams[0] } }
     
     // constants
     fileprivate let _log                    = (NSApp.delegate as! AppDelegate)
@@ -46,6 +75,12 @@ class PanadapterViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // give the Frequency Legend access to the params 
+        _frequencyLegendView.params = _params
+//        _frequencyLegendView.bandwidthParams = _bandwidthParams
+
+        _dbLegendView.params = _params
+        
         _spectrumView.device = MTLCreateSystemDefaultDevice()
         
         guard _spectrumView.device != nil else {
@@ -65,6 +100,9 @@ class PanadapterViewController: NSViewController {
         // begin observing Defaults
         observations(UserDefaults.standard, paths: _defaultsKeyPaths)
         
+        // begin observing Panadapter
+        observations(_panadapter!, paths: _panadapterKeyPaths)
+
         // add notification subscriptions
         addNotifications()
     }
@@ -77,6 +115,25 @@ class PanadapterViewController: NSViewController {
         _panadapter?.panDimensions = CGSize(width: _spectrumView.frame.width, height: _spectrumView.frame.height)
     }
     
+    
+//    func frequencyLegendParams(bandwidth: Int) -> FrequencyLegendParams {
+//        
+//        let params =  kFrequencyParamTuples.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? kFrequencyParamTuples[0]
+//
+//        
+//        // calculate the spacings
+//        let freqRange = _end - _start
+//        let firstFrequency = _start + params.spacing - (_start - ( (_start / params.spacing) * params.spacing))
+//        
+//        return FrequencyLegendParams(firstFrequency: firstFrequency,
+//                                     frequencyIncrement: params.spacing,
+//                                     xOffset: CGFloat(firstFrequency - _start) / _hzPerUnit,
+//                                     xIncrement: CGFloat(params.spacing) / _hzPerUnit,
+//                                     count: freqRange / params.spacing,
+//                                     format: params.format)
+//    }
+    
+    
     // ----------------------------------------------------------------------------
     // MARK: - Observation Methods
     
@@ -84,6 +141,10 @@ class PanadapterViewController: NSViewController {
         "gridLines",
         "spectrum",
         "spectrumBackground",
+    ]
+
+    fileprivate let _panadapterKeyPaths = [           // Panadapter keypaths to observe
+        #keyPath(Panadapter.bandwidth),
     ]
     
     /// Add / Remove property observations
@@ -120,6 +181,10 @@ class PanadapterViewController: NSViewController {
         case "spectrumBackground":
             _renderer.setClearColor()
             
+        case #keyPath(Panadapter.bandwidth):
+//            _frequencyLegendView.bandwidthParams = _bandwidthParams
+            break
+            
         default:
             _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
         }
@@ -149,6 +214,9 @@ class PanadapterViewController: NSViewController {
                 
                 // YES, remove Defaults property observers
                 observations(Defaults, paths: _defaultsKeyPaths, remove: true)
+
+                // YES, remove Panadapter property observers
+                observations(panadapter, paths: _panadapterKeyPaths, remove: true)
             }
         }
     }

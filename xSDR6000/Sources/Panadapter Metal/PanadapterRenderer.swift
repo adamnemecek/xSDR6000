@@ -7,7 +7,6 @@
 //
 
 import xLib6000
-import simd
 import MetalKit
 import Cocoa
 import SwiftyUserDefaults
@@ -22,11 +21,8 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
 //
 //  As input, the renderer expects an array of UInt16 intensity values. The intensity values are
 //  scaled by the radio to be between zero and Panadapter.yPixels. The values are inverted
-//  i.e. Panadapter.yPixels is zero intensity and zero is maximum intensity. The Panadapter sends
-//  an array of size Panadapter.xPixels * 2. The even numbered entries are all zero, these
-//  entries are required to create "synthetic" points along the x axis for rendering as triangle
-//  strips when a "filled" style is selected. They are ignored (by using indexing) when a "line"
-//  style is selected.
+//  i.e. the value of Panadapter.yPixels is zero intensity and a value of zero is maximum intensity.
+//  The Panadapter sends an array of size Panadapter.xPixels.
 // 
     
     // Style of the drawing
@@ -84,6 +80,12 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     
     fileprivate var _spectrumColor          :float4!
     fileprivate var _gridColor              :float4!
+    
+    fileprivate var _gridIncrementX         :Float = 0.0
+    fileprivate var _gridOffsetX            :Float = 0.0
+    fileprivate var _gridIncrementY         :Float = 0.0
+    fileprivate var _gridOffsetY            :Float = 0.0
+    
 
     // ----------------------------------------------------------------------------
     // MARK: - Initialization

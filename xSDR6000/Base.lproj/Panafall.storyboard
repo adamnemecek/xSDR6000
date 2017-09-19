@@ -209,27 +209,28 @@
                 <customObject id="WaM-Xb-K61" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
                 <viewController storyboardIdentifier="Panadapter" id="ywe-lT-40r" userLabel="Panadapter" customClass="PanadapterViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <view key="view" identifier="Panadapter" wantsLayer="YES" id="Xjo-h3-79G">
-                        <rect key="frame" x="0.0" y="0.0" width="450" height="150"/>
+                        <rect key="frame" x="0.0" y="0.0" width="450" height="120"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="om2-ub-bLY" userLabel="Frequency Legend" customClass="PanadapterFrequencyLegend" customModule="xSDR6000" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="0.0" width="450" height="20"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="20" id="KNA-RT-pDk"/>
-                                </constraints>
-                            </customView>
                             <customView translatesAutoresizingMaskIntoConstraints="NO" id="H7C-IT-74M" userLabel="Spectrum" customClass="MTKView">
-                                <rect key="frame" x="0.0" y="20" width="450" height="130"/>
+                                <rect key="frame" x="0.0" y="20" width="450" height="100"/>
                                 <subviews>
-                                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="nfG-Su-jVB" userLabel="Db Legend" customClass="PanadapterDbmLegend" customModule="xSDR6000" customModuleProvider="target">
-                                        <rect key="frame" x="420" y="0.0" width="30" height="130"/>
+                                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="nfG-Su-jVB" userLabel="Db Legend" customClass="PanadapterDbLegend" customModule="xSDR6000" customModuleProvider="target">
+                                        <rect key="frame" x="410" y="0.0" width="40" height="100"/>
                                         <constraints>
-                                            <constraint firstAttribute="width" constant="30" id="iyt-te-aJO"/>
+                                            <constraint firstAttribute="width" constant="40" id="iyt-te-aJO"/>
                                         </constraints>
                                     </customView>
                                 </subviews>
                                 <constraints>
                                     <constraint firstAttribute="bottom" secondItem="nfG-Su-jVB" secondAttribute="bottom" id="7CM-cD-Zfm"/>
+                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="100" id="OEi-b4-yCY"/>
+                                </constraints>
+                            </customView>
+                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="om2-ub-bLY" userLabel="Frequency Legend" customClass="PanadapterFrequencyLegend" customModule="xSDR6000" customModuleProvider="target">
+                                <rect key="frame" x="0.0" y="0.0" width="450" height="20"/>
+                                <constraints>
+                                    <constraint firstAttribute="height" constant="20" id="j4d-De-qW5"/>
                                 </constraints>
                             </customView>
                         </subviews>
@@ -239,7 +240,6 @@
                             <constraint firstItem="H7C-IT-74M" firstAttribute="leading" secondItem="Xjo-h3-79G" secondAttribute="leading" id="HY8-bX-K70"/>
                             <constraint firstItem="H7C-IT-74M" firstAttribute="top" secondItem="Xjo-h3-79G" secondAttribute="top" id="OTx-vi-Jzc"/>
                             <constraint firstItem="om2-ub-bLY" firstAttribute="top" secondItem="H7C-IT-74M" secondAttribute="bottom" id="aSu-RJ-QjJ"/>
-                            <constraint firstItem="H7C-IT-74M" firstAttribute="bottom" secondItem="om2-ub-bLY" secondAttribute="top" id="af5-lR-Szq"/>
                             <constraint firstAttribute="trailing" secondItem="H7C-IT-74M" secondAttribute="trailing" id="h47-76-vmF"/>
                             <constraint firstAttribute="bottom" secondItem="om2-ub-bLY" secondAttribute="bottom" id="iMW-yd-j59"/>
                             <constraint firstItem="nfG-Su-jVB" firstAttribute="top" secondItem="Xjo-h3-79G" secondAttribute="top" id="tVB-Af-Hh3"/>
