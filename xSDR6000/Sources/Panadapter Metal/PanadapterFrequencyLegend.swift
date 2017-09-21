@@ -15,8 +15,14 @@ import SwiftyUserDefaults
 // --------------------------------------------------------------------------------
 
 final class PanadapterFrequencyLegend: NSView {
-
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Internal properties
+    
     var params: Params!                                             // Radio & Panadapter references
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Private properties
     
     fileprivate var _radio: Radio { return params.radio }           // values derived from Params
     fileprivate var _panadapter: Panadapter? { return params.panadapter }
@@ -34,6 +40,15 @@ final class PanadapterFrequencyLegend: NSView {
     fileprivate var _font = NSFont(name: "Monaco", size: 12.0)
     fileprivate var _attributes = [String:AnyObject]()              // Font & Size for the Frequency Legend
     fileprivate var _fontHeight: CGFloat = 0
+
+    fileprivate var _panLeft: NSPanGestureRecognizer!
+    fileprivate var _xStart: CGFloat = 0
+    fileprivate var _newCursor: NSCursor?
+    fileprivate let kLeftButton = 0x01                              // button masks
+
+    fileprivate var _initialClickPoint: CGFloat = 0.0
+    fileprivate var _markPercent: CGFloat = 0.0
+    fileprivate var _markFreq: CGFloat = 0.0
     
     // ----------------------------------------------------------------------------
     // MARK: - Overridden methods
@@ -46,6 +61,11 @@ final class PanadapterFrequencyLegend: NSView {
 
         // calculate a typical font height
         _fontHeight = "123.456".size(withAttributes: _attributes).height
+
+        // Pan (Left Button)
+        _panLeft = NSPanGestureRecognizer(target: self, action: #selector(panLeft(_:)))
+        _panLeft.buttonMask = kLeftButton
+        addGestureRecognizer(_panLeft)
     }
     /// Draw the Frequency Legend
     ///
@@ -107,5 +127,105 @@ final class PanadapterFrequencyLegend: NSView {
 //        if Defaults[.showMarkers] {
 //            drawBandMarkers() }
         
+    }
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Internal methods
+    
+    /// Force the view to redraw
+    ///
+    func redraw() {
+        
+        DispatchQueue.main.async {
+            self.needsDisplay = true
+        }
+    }
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
+    /// Respond to Pan gesture (left mouse down)
+    ///
+    /// - Parameter gr:         the Pan Gesture Recognizer
+    ///
+    @objc fileprivate func panLeft(_ gr: NSPanGestureRecognizer) {
+
+        // update panadapter bandwidth & center
+        func update(_ xStart: CGFloat, _ xCurrent: CGFloat) {
+            
+            Swift.print("xStart = \(xStart), xCurrent = \(xCurrent)")
+            
+            let end = CGFloat(_end)                     // end frequency (Hz)
+            let start = CGFloat(_start)                 // start frequency (Hz)
+            let bandwidth = CGFloat(_bandwidth)         // bandwidth (hz)
+            
+            // calculate the % change, + = greater bw, - = lesser bw
+            let deltaPercent = ((xStart - xCurrent) / frame.width)
+
+            // calculate the new bandwidth (Hz)
+            let newBandwidth = (1 + deltaPercent) * bandwidth
+            
+            Swift.print("newBandwidth = \(newBandwidth)")
+            
+            // calculate adjustments to start * end
+            let bandwidthDifference = newBandwidth - bandwidth
+            let endAdjust = bandwidthDifference / 2.0
+            let startAdjust = -endAdjust
+            let newStart = start + startAdjust
+            let newEnd = end + endAdjust
+            
+            let newMarkPercent = (_markFreq - newStart) / newBandwidth
+            let markError = newMarkPercent - _markPercent
+            let freqError = markError * newBandwidth
+            
+            Swift.print("freqError = \(freqError)")
+            
+            let finalStart = newStart + freqError
+            let finalEnd = newEnd + freqError
+            let newCenter = finalStart + (finalEnd - finalStart) / 2.0
+            
+            Swift.print("newCenter = \(newCenter)")
+            
+            // adjust the bandwidth & center values (Hz)
+            _panadapter!.center = Int(newCenter)
+            _panadapter!.bandwidth = Int(newBandwidth)
+            
+            // redraw the legend
+            redraw()
+        }
+        
+        let xCurrent = gr.location(in: self).x
+        
+        switch gr.state {
+        case .began:
+            // save the start location
+            _xStart = xCurrent
+            // calculate original mark params
+            _markPercent = xCurrent / frame.width
+            _markFreq = (_markPercent * CGFloat(_bandwidth)) + CGFloat(_start)
+
+            Swift.print("width = \(frame.width), markPercent = \(_markPercent), markFreq = \(_markFreq)")
+            
+            // set the cursor
+            _newCursor = NSCursor.resizeLeftRight()
+            _newCursor!.push()
+            
+        case .changed:
+            // update the panadapter params
+            update(_xStart, xCurrent)
+            
+            // use the current (intermediate) location as the start
+            _xStart = xCurrent
+            
+        case .ended:
+            // update the panadapter params
+            update(_xStart, xCurrent)
+            
+            // restore the cursor
+            _newCursor!.pop()
+            
+        default:
+            break
+        }
     }
 }

@@ -33,13 +33,17 @@ final class PanadapterDbLegend: NSView {
     fileprivate var _attributes = [String:AnyObject]()          // Font & Size for the db Legend
     fileprivate var _fontHeight: CGFloat = 0                    // height of typical label
     
-    fileprivate var _panLeftButton: NSPanGestureRecognizer!
+    fileprivate var _spacings = [String]()                      // legend spacing choices
+
+    fileprivate var _panLeft: NSPanGestureRecognizer!
+    fileprivate var _clickRight: NSClickGestureRecognizer!
     fileprivate var _panStart: NSPoint?
     fileprivate var _dbmTop = false
     fileprivate var _newCursor: NSCursor?
 
     fileprivate let kFormat = " %4.0f"
     fileprivate let kXPosition: CGFloat = 0.0
+    fileprivate let kRightButton = 0x02
     fileprivate let kLeftButton = 0x01                          // button masks
 
     // ----------------------------------------------------------------------------
@@ -55,11 +59,19 @@ final class PanadapterDbLegend: NSView {
         
         // the view background will be transparent
 
+        // get the list of possible spacings
+        _spacings = Defaults[.dbLegendSpacings]
+        
         // Pan (Left Button)
-        _panLeftButton = NSPanGestureRecognizer(target: self, action: #selector(panLeftButton(_:)))
-        _panLeftButton.buttonMask = kLeftButton
-        addGestureRecognizer(_panLeftButton)
-}
+        _panLeft = NSPanGestureRecognizer(target: self, action: #selector(panLeft(_:)))
+        _panLeft.buttonMask = kLeftButton
+        addGestureRecognizer(_panLeft)
+
+        // Click (Right Button)
+        _clickRight = NSClickGestureRecognizer(target: self, action: #selector(clickRight(_:)))
+        _clickRight.buttonMask = kRightButton
+        addGestureRecognizer(_clickRight)
+    }
     /// Draw the Db Legend
     ///
     ///
@@ -98,11 +110,46 @@ final class PanadapterDbLegend: NSView {
         }
         _path.strokeRemove()
     }
+    /// respond to Right Click gesture
+    ///
+    /// - Parameter gr:         the Click Gesture Recognizer
+    ///
+    @objc fileprivate func clickRight(_ gr: NSClickGestureRecognizer) {
+        var item: NSMenuItem!
+        
+        // get the "click" coordinates and convert to this View
+        let location = gr.location(in: self)
+        
+        // create the popup menu
+        let menu = NSMenu(title: "Spacings")
+        
+        // populate the popup menu of Spacings
+        for i in 0..<_spacings.count {
+            item = menu.insertItem(withTitle: "\(_spacings[i]) dbm", action: #selector(legendSpacing(_:)), keyEquivalent: "", at: i)
+            item.tag = Int(_spacings[i]) ?? 0
+            item.target = self
+        }
+        // display the popup
+        menu.popUp(positioning: menu.item(at: 0), at: location, in: self)
+    }
+    /// respond to the Context Menu selection
+    ///
+    /// - Parameter sender:     the Context Menu
+    ///
+    @objc fileprivate func legendSpacing(_ sender: NSMenuItem) {
+        
+        // set the Db Legend spacing
+        Defaults[.dbLegendSpacing] = String(sender.tag, radix: 10)
+        
+        // force a redraw
+        redraw()
+        
+    }
     /// Respond to Pan gesture (left mouse down)
     ///
-    /// - Parameter gr: the Pan Gesture Recognizer
+    /// - Parameter gr:         the Pan Gesture Recognizer
     ///
-    @objc fileprivate func panLeftButton(_ gr: NSPanGestureRecognizer) {
+    @objc fileprivate func panLeft(_ gr: NSPanGestureRecognizer) {
         
         let location = gr.location(in: self)
         

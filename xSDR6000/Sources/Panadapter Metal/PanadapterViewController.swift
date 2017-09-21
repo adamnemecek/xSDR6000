@@ -56,6 +56,11 @@ class PanadapterViewController: NSViewController {
     fileprivate var _bandwidthParam: BandwidthParamTuple {         // given Bandwidth, return a Spacing & a Format
         get { return PanadapterViewController.kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? PanadapterViewController.kBandwidthParams[0] } }
     
+    fileprivate var _panLeft: NSPanGestureRecognizer!
+    fileprivate var _xStart: CGFloat = 0
+    fileprivate var _newCursor: NSCursor?
+    fileprivate let kLeftButton = 0x01                              // button masks
+
     // constants
     fileprivate let _log                    = (NSApp.delegate as! AppDelegate)
     
@@ -105,6 +110,11 @@ class PanadapterViewController: NSViewController {
 
         // add notification subscriptions
         addNotifications()
+
+        // Pan (Left Button)
+        _panLeft = NSPanGestureRecognizer(target: self, action: #selector(panLeft(_:)))
+        _panLeft.buttonMask = kLeftButton
+        view.addGestureRecognizer(_panLeft)
     }
 
     /// View did layout
@@ -133,6 +143,52 @@ class PanadapterViewController: NSViewController {
 //                                     format: params.format)
 //    }
     
+    /// Respond to Pan gesture (left mouse down)
+    ///
+    /// - Parameter gr:         the Pan Gesture Recognizer
+    ///
+    @objc fileprivate func panLeft(_ gr: NSPanGestureRecognizer) {
+        
+        // update panadapter center
+        func update(_ xStart: CGFloat, _ xCurrent: CGFloat) {
+            let xDelta = xCurrent - xStart
+            
+            // adjust the center
+            _panadapter!.center = _panadapter!.center - Int(xDelta * _hzPerUnit)
+            
+            // redraw the frequency legend
+            _frequencyLegendView.redraw()
+        }
+        
+        let xCurrent = gr.location(in: view).x
+        
+        switch gr.state {
+        case .began:
+            // save the start location
+            _xStart = xCurrent
+            
+            // set the cursor
+            _newCursor = NSCursor.resizeLeftRight()
+            _newCursor!.push()
+            
+        case .changed:
+            // update the panadapter params
+            update(_xStart, xCurrent)
+            
+            // use the current (intermediate) location as the start
+            _xStart = xCurrent
+            
+        case .ended:
+            // update the panadapter params
+            update(_xStart, xCurrent)
+            
+            // restore the cursor
+            _newCursor!.pop()
+            
+        default:
+            break
+        }
+    }
     
     // ----------------------------------------------------------------------------
     // MARK: - Observation Methods
