@@ -42,13 +42,12 @@ final class PanadapterFrequencyLegend: NSView {
     fileprivate var _fontHeight: CGFloat = 0
 
     fileprivate var _panLeft: NSPanGestureRecognizer!
-    fileprivate var _xStart: CGFloat = 0
     fileprivate var _newCursor: NSCursor?
     fileprivate let kLeftButton = 0x01                              // button masks
 
-    fileprivate var _initialClickPoint: CGFloat = 0.0
-    fileprivate var _markPercent: CGFloat = 0.0
-    fileprivate var _markFreq: CGFloat = 0.0
+    fileprivate var _xPrevious: CGFloat = 0
+    fileprivate var _startPercent: CGFloat = 0.0
+    fileprivate var _startFreq: CGFloat = 0.0
     
     // ----------------------------------------------------------------------------
     // MARK: - Overridden methods
@@ -151,42 +150,30 @@ final class PanadapterFrequencyLegend: NSView {
     @objc fileprivate func panLeft(_ gr: NSPanGestureRecognizer) {
 
         // update panadapter bandwidth & center
-        func update(_ xStart: CGFloat, _ xCurrent: CGFloat) {
+        func update(_ xPrevious: CGFloat, _ xCurrent: CGFloat) {
             
-            Swift.print("xStart = \(xStart), xCurrent = \(xCurrent)")
-            
+            // CGFloat versions of params
             let end = CGFloat(_end)                     // end frequency (Hz)
             let start = CGFloat(_start)                 // start frequency (Hz)
             let bandwidth = CGFloat(_bandwidth)         // bandwidth (hz)
             
             // calculate the % change, + = greater bw, - = lesser bw
-            let deltaPercent = ((xStart - xCurrent) / frame.width)
+            let delta = ((xPrevious - xCurrent) / frame.width)
 
             // calculate the new bandwidth (Hz)
-            let newBandwidth = (1 + deltaPercent) * bandwidth
+            let newBandwidth = (1 + delta) * bandwidth
             
-            Swift.print("newBandwidth = \(newBandwidth)")
+            // calculate adjustments to start & end
+            let adjust = (newBandwidth - bandwidth) / 2.0
+            let newStart = start - adjust
+            let newEnd = end + adjust
             
-            // calculate adjustments to start * end
-            let bandwidthDifference = newBandwidth - bandwidth
-            let endAdjust = bandwidthDifference / 2.0
-            let startAdjust = -endAdjust
-            let newStart = start + startAdjust
-            let newEnd = end + endAdjust
+            // calculate adjustment to the center
+            let newStartPercent = (_startFreq - newStart) / newBandwidth
+            let freqError = (newStartPercent - _startPercent) * newBandwidth
+            let newCenter = (newStart + freqError) + (newEnd - newStart) / 2.0
             
-            let newMarkPercent = (_markFreq - newStart) / newBandwidth
-            let markError = newMarkPercent - _markPercent
-            let freqError = markError * newBandwidth
-            
-            Swift.print("freqError = \(freqError)")
-            
-            let finalStart = newStart + freqError
-            let finalEnd = newEnd + freqError
-            let newCenter = finalStart + (finalEnd - finalStart) / 2.0
-            
-            Swift.print("newCenter = \(newCenter)")
-            
-            // adjust the bandwidth & center values (Hz)
+            // adjust the center & bandwidth values (Hz)
             _panadapter!.center = Int(newCenter)
             _panadapter!.bandwidth = Int(newBandwidth)
             
@@ -198,28 +185,27 @@ final class PanadapterFrequencyLegend: NSView {
         
         switch gr.state {
         case .began:
-            // save the start location
-            _xStart = xCurrent
-            // calculate original mark params
-            _markPercent = xCurrent / frame.width
-            _markFreq = (_markPercent * CGFloat(_bandwidth)) + CGFloat(_start)
-
-            Swift.print("width = \(frame.width), markPercent = \(_markPercent), markFreq = \(_markFreq)")
+            // save the starting x coordinate
+            _xPrevious = xCurrent
             
+            // calculate start's percent of width & it's frequency
+            _startPercent = xCurrent / frame.width
+            _startFreq = (_startPercent * CGFloat(_bandwidth)) + CGFloat(_start)
+
             // set the cursor
             _newCursor = NSCursor.resizeLeftRight()
             _newCursor!.push()
             
         case .changed:
             // update the panadapter params
-            update(_xStart, xCurrent)
+            update(_xPrevious, xCurrent)
             
             // use the current (intermediate) location as the start
-            _xStart = xCurrent
+            _xPrevious = xCurrent
             
         case .ended:
             // update the panadapter params
-            update(_xStart, xCurrent)
+            update(_xPrevious, xCurrent)
             
             // restore the cursor
             _newCursor!.pop()
