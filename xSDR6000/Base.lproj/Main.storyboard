@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" initialViewController="B8D-0N-5wS">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
         <capability name="stacking Non-gravity area distributions on NSStackView" minToolsVersion="7.0" minSystemVersion="10.11"/>
     </dependencies>
@@ -716,7 +716,7 @@
             <objects>
                 <windowController storyboardIdentifier="MainWindow" id="B8D-0N-5wS" userLabel="Main Window" customClass="MainWindowController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
                     <window key="window" title="xSDR6000" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" restorable="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="xSDR6000MainWindow" animationBehavior="default" id="IQv-IB-iLA">
-                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" unifiedTitleAndToolbar="YES"/>
+                        <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
                         <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
                         <rect key="contentRect" x="30" y="240" width="945" height="300"/>
                         <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
@@ -975,6 +975,9 @@
                                 <toolbarItem reference="PJI-AR-W8E"/>
                             </defaultToolbarItems>
                         </toolbar>
+                        <connections>
+                            <outlet property="delegate" destination="B8D-0N-5wS" id="yMA-2y-5PZ"/>
+                        </connections>
                     </window>
                     <connections>
                         <outlet property="cwxEnabled" destination="Yu1-bq-afA" id="eZD-5W-cuv"/>
@@ -1006,8 +1009,12 @@
                     <splitView key="splitView" misplaced="YES" dividerStyle="thin" vertical="YES" id="oU9-Vu-xiy">
                         <rect key="frame" x="0.0" y="0.0" width="958" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <connections>
+                            <outlet property="delegate" destination="2ro-LE-ZBU" id="Irk-62-UBB"/>
+                        </connections>
                     </splitView>
                     <connections>
+                        <outlet property="splitView" destination="oU9-Vu-xiy" id="oE0-D8-B5p"/>
                         <segue destination="uMM-BY-Dcg" kind="relationship" relationship="splitItems" id="pWq-XP-uqr"/>
                         <segue destination="Jdb-W6-QFS" kind="relationship" relationship="splitItems" id="tRw-H5-yZM"/>
                     </connections>
@@ -1027,8 +1034,12 @@
                     <splitView key="splitView" dividerStyle="thin" id="Ctb-uG-jWF">
                         <rect key="frame" x="0.0" y="0.0" width="387" height="256"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <connections>
+                            <outlet property="delegate" destination="Jdb-W6-QFS" id="9iC-VR-LgG"/>
+                        </connections>
                     </splitView>
                     <connections>
+                        <outlet property="splitView" destination="Ctb-uG-jWF" id="L3l-su-gNC"/>
                         <segue destination="Ng6-KG-b9V" kind="relationship" relationship="splitItems" id="Y6O-hV-Nop"/>
                         <segue destination="eTd-vG-cpu" kind="relationship" relationship="splitItems" id="1Sz-zd-u7q"/>
                     </connections>
@@ -1437,6 +1448,7 @@ DQ
                         </subviews>
                         <constraints>
                             <constraint firstItem="1jg-SV-UXd" firstAttribute="top" secondItem="XbF-E3-hPg" secondAttribute="bottom" constant="20" symbolic="YES" id="0El-Ok-sgh"/>
+                            <constraint firstAttribute="trailing" relation="greaterThanOrEqual" secondItem="aVp-1V-K1i" secondAttribute="trailing" constant="20" symbolic="YES" id="0IY-08-KLo"/>
                             <constraint firstItem="XbF-E3-hPg" firstAttribute="leading" secondItem="aVp-1V-K1i" secondAttribute="leading" id="5nF-1Z-xtz"/>
                             <constraint firstItem="XbF-E3-hPg" firstAttribute="centerX" secondItem="Slt-jk-lYw" secondAttribute="centerX" id="Xcq-ed-rjS"/>
                             <constraint firstItem="1jg-SV-UXd" firstAttribute="baseline" secondItem="Slt-jk-lYw" secondAttribute="baseline" id="cOd-Ej-gZj"/>
@@ -1466,9 +1478,12 @@ DQ
                     <splitView key="splitView" autosaveName="Panafalls" dividerStyle="thin" id="Mfh-In-tH1">
                         <rect key="frame" x="0.0" y="0.0" width="945" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <connections>
+                            <outlet property="delegate" destination="uMM-BY-Dcg" id="xfg-ZZ-BWN"/>
+                        </connections>
                     </splitView>
                     <connections>
-                        <outlet property="view" destination="Mfh-In-tH1" id="F0v-NU-lud"/>
+                        <outlet property="splitView" destination="Mfh-In-tH1" id="VUV-qw-XYq"/>
                     </connections>
                 </splitViewController>
                 <customObject id="LJk-F1-rPo" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>

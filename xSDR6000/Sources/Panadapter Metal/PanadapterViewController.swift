@@ -105,8 +105,8 @@ class PanadapterViewController: NSViewController {
         // begin observing Defaults
         observations(UserDefaults.standard, paths: _defaultsKeyPaths)
         
-        // begin observing Panadapter
-        observations(_panadapter!, paths: _panadapterKeyPaths)
+//        // begin observing Panadapter
+//        observations(_panadapter!, paths: _panadapterKeyPaths)
 
         // add notification subscriptions
         addNotifications()
@@ -125,23 +125,8 @@ class PanadapterViewController: NSViewController {
         _panadapter?.panDimensions = CGSize(width: _spectrumView.frame.width, height: _spectrumView.frame.height)
     }
     
-    
-//    func frequencyLegendParams(bandwidth: Int) -> FrequencyLegendParams {
-//        
-//        let params =  kFrequencyParamTuples.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? kFrequencyParamTuples[0]
-//
-//        
-//        // calculate the spacings
-//        let freqRange = _end - _start
-//        let firstFrequency = _start + params.spacing - (_start - ( (_start / params.spacing) * params.spacing))
-//        
-//        return FrequencyLegendParams(firstFrequency: firstFrequency,
-//                                     frequencyIncrement: params.spacing,
-//                                     xOffset: CGFloat(firstFrequency - _start) / _hzPerUnit,
-//                                     xIncrement: CGFloat(params.spacing) / _hzPerUnit,
-//                                     count: freqRange / params.spacing,
-//                                     format: params.format)
-//    }
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
     
     /// Respond to Pan gesture (left mouse down)
     ///
@@ -199,9 +184,9 @@ class PanadapterViewController: NSViewController {
         "spectrumBackground",
     ]
 
-    fileprivate let _panadapterKeyPaths = [           // Panadapter keypaths to observe
-        #keyPath(Panadapter.bandwidth),
-    ]
+//    fileprivate let _panadapterKeyPaths = [           // Panadapter keypaths to observe
+//        #keyPath(Panadapter.bandwidth),
+//    ]
     
     /// Add / Remove property observations
     ///
@@ -237,9 +222,9 @@ class PanadapterViewController: NSViewController {
         case "spectrumBackground":
             _renderer.setClearColor()
             
-        case #keyPath(Panadapter.bandwidth):
+//        case #keyPath(Panadapter.bandwidth):
 //            _frequencyLegendView.bandwidthParams = _bandwidthParams
-            break
+//            break
             
         default:
             _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
@@ -271,8 +256,8 @@ class PanadapterViewController: NSViewController {
                 // YES, remove Defaults property observers
                 observations(Defaults, paths: _defaultsKeyPaths, remove: true)
 
-                // YES, remove Panadapter property observers
-                observations(panadapter, paths: _panadapterKeyPaths, remove: true)
+//                // YES, remove Panadapter property observers
+//                observations(panadapter, paths: _panadapterKeyPaths, remove: true)
             }
         }
     }

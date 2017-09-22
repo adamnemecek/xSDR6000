@@ -203,6 +203,20 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
             renderEncoder.popDebugGroup()
             
             // ----------------------------------------------------------------------------
+            // *** DRAW the Tnf(s) ***
+//            renderEncoder.pushDebugGroup("Tnf")
+//            
+//            // Set the pipeline state
+//            renderEncoder.setRenderPipelineState(_tnfRps)
+//            
+//            // Bind the buffer containing the Grid vertices (position 0)
+//            renderEncoder.setVertexBuffer(_gridVertexBuffer, offset: 0, at: 0)
+//            
+//            renderEncoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: _gridVertices.count)
+//            
+//            renderEncoder.popDebugGroup()
+            
+            // ----------------------------------------------------------------------------
 
             // finish using this encoder
             renderEncoder.endEncoding()

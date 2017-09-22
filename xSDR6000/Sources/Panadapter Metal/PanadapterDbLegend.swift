@@ -80,12 +80,6 @@ final class PanadapterDbLegend: NSView {
         // setup the Legend color
         _attributes[NSForegroundColorAttributeName] = Defaults[.frequencyLegend]
 
-//        // set Line Width, Color & Dash
-//        _path.lineWidth = CGFloat(Defaults[.gridLineWidth])
-//        Defaults[.gridLines].set()
-//        let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
-//        _path.setLineDash( dash, count: 2, phase: 0 )
-        
         // get the spacing between legends
         let dbSpacing = CGFloat(Defaults[.dbLegendSpacing])
         
