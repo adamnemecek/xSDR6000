@@ -14,10 +14,15 @@ using namespace metal;
 // --------------------------------------------------------------------------------
 
 struct VertexInput {                    // vertices for spectrum draw calls
-    ushort  y;
+    ushort  i;
 };
 
-struct GridVertex {                     // vertices fro grid draw calls
+struct TnfVertex {                      // vertices for tnf draw calls
+    float2  coord;
+    float4  color;
+};
+
+struct StdVertex {                      // vertices for grid, slice, freq draw calls
     float2  coord;
 };
 
@@ -26,6 +31,7 @@ struct Uniforms {                       // common uniforms
     float   height;
     float4  spectrumColor;
     float4  gridColor;
+    float4  tnfInactiveColor;
     bool    textureEnable;
 };
 
@@ -34,6 +40,7 @@ struct VertexOutput {                   // common vertex output
     float2  texCoord;
     float4  spectrumColor;
     float4  gridColor;
+    float4  tnfInactiveColor;
     bool    textureEnable;
 };
 
@@ -61,13 +68,15 @@ vertex VertexOutput pan_vertex(const device VertexInput* vertices [[ buffer(0) ]
     float yCoord;
     
     unsigned int effectiveVertexId;
+    float intensity;
     
     // is this a "real" vertex?
     if (vertexId < 3000) {
 
+        intensity = float(vertices[vertexId].i);
         // YES, y values must be flipped and normalized
-        yCoord = -(( 2.0 * vertices[vertexId].y)/uniforms.height) + 1;
-        
+        yCoord = -( (2.0 * intensity/uniforms.height ) - 1 );
+
         // use the vertexId "as-is"
         effectiveVertexId = vertexId;
         
@@ -85,19 +94,14 @@ vertex VertexOutput pan_vertex(const device VertexInput* vertices [[ buffer(0) ]
         // set the texture coordinate to the dark side of the texture
         v_out.texCoord = float2(0.0, 1.0);
     }
-    
-    // normalize the coordinates to clip space
-    
-    // calculate the x coordinate
-    xCoord = (uniforms.delta * effectiveVertexId) - 1;
-    
-    
+    // calculate the x coordinate  & normalize to clip space
+    xCoord = ((float(effectiveVertexId) * uniforms.delta) * 2) - 1 ;
+
     // send the clip space coords to the fragment shader
     v_out.coord = float4( xCoord, yCoord, 0.0, 1.0);
     
     // pass the other uniforms to the fragment shader
     v_out.spectrumColor = uniforms.spectrumColor;
-    v_out.gridColor = uniforms.gridColor;
     v_out.textureEnable = uniforms.textureEnable;
     
     return v_out;
@@ -129,7 +133,7 @@ fragment float4 pan_fragment( VertexOutput in [[ stage_in ]],
 }
 
 // --------------------------------------------------------------------------------
-// MARK: - Shaders for Panadapter Grid draw calls
+// MARK: - Shaders for Panadapter Grid, Slice & Frequency draw calls
 // --------------------------------------------------------------------------------
 
 // Vertex Shader
@@ -142,7 +146,7 @@ fragment float4 pan_fragment( VertexOutput in [[ stage_in ]],
 //  Returns:
 //      a VertexOutput struct
 //
-vertex VertexOutput grid_vertex(const device GridVertex* vertices [[ buffer(0) ]],
+vertex VertexOutput std_vertex(const device StdVertex* vertices [[ buffer(0) ]],
                                unsigned int vertexId [[ vertex_id ]],
                                constant Uniforms &uniforms [[ buffer(1) ]])
 {
@@ -166,11 +170,66 @@ vertex VertexOutput grid_vertex(const device GridVertex* vertices [[ buffer(0) ]
 //  Returns:
 //      a float4 vector of the fragment's color (always black in this example)
 //
-fragment float4 grid_fragment( VertexOutput in [[ stage_in ]],
+fragment float4 std_fragment( VertexOutput in [[ stage_in ]],
                              texture2d<float, access::sample> tex2d [[texture(0)]],
                              sampler sampler2d [[sampler(0)]])
 {
     // use the Grid color
     return in.gridColor;
+}
+
+
+// --------------------------------------------------------------------------------
+// MARK: - Shaders for Panadapter Tnf draw calls
+// --------------------------------------------------------------------------------
+
+// Vertex Shader
+//
+//  Parameters:
+//      vertices:       an array of vertices at position 0 (in problem space, ushort i.e. 16-bit unsigned)
+//      vertexId:       a system generated vertex index
+//      uniforms:       the unifirm struct at position 1
+//
+//  Returns:
+//      a VertexOutput struct
+//
+vertex VertexOutput tnf_vertex(const device TnfVertex* vertices [[ buffer(0) ]],
+                               unsigned int vertexId [[ vertex_id ]],
+                               constant Uniforms &uniforms [[ buffer(1) ]])
+{
+    
+    VertexOutput v_out;
+    float percent;
+    float xCoord;
+    
+    // percent = (tnf freq - start freq) / (freq range)
+//    percent = (float(uniforms.start) - vertices[vertexId].coord.x) / (uniforms.end - uniforms.start);
+    // normalize the % to an x coordinate in clip space
+//    xCoord = ( percent * 2) - 1;
+    
+    // send values to the fragment stage
+//    v_out.coord = float4( xCoord, vertices[vertexId].coord.y, 0.0, 1.0);
+    v_out.gridColor = vertices[vertexId].color;
+    
+    return v_out;
+}
+
+// Fragment Shader
+//
+//  Parameters:
+//      in:         VertexOutput struct
+//      tex2d:      a 2d texture
+//      sampler2d:  the sampler for the texture
+//
+//  Returns:
+//      a float4 vector of the fragment's color (always black in this example)
+//
+fragment float4 tnf_fragment( VertexOutput in [[ stage_in ]],
+                             texture2d<float, access::sample> tex2d [[texture(0)]],
+                             sampler sampler2d [[sampler(0)]])
+{
+    // use the Grid color
+    return in.gridColor;
+    //    return float4(1.0, 1.0, 1.0, 1.0);
 }
 

@@ -74,6 +74,7 @@ final class PanadapterDbLegend: NSView {
     }
     /// Draw the Db Legend
     ///
+    /// - Parameter dirtyRect:      the rect to draw
     ///
     override func draw(_ dirtyRect: NSRect) {
         
@@ -104,6 +105,22 @@ final class PanadapterDbLegend: NSView {
         }
         _path.strokeRemove()
     }
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Internal methods
+    
+    /// Force the view to redraw
+    ///
+    func redraw() {
+        
+        DispatchQueue.main.async {
+            self.needsDisplay = true
+        }
+    }
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
     /// respond to Right Click gesture
     ///
     /// - Parameter gr:         the Click Gesture Recognizer
@@ -198,14 +215,6 @@ final class PanadapterDbLegend: NSView {
             
         default:
             break
-        }
-    }
-    
-    func redraw() {
-        
-        DispatchQueue.main.async {
-            
-            self.needsDisplay = true
         }
     }
 }

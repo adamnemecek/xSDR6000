@@ -22,7 +22,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
 //  As input, the renderer expects an array of UInt16 intensity values. The intensity values are
 //  scaled by the radio to be between zero and Panadapter.yPixels. The values are inverted
 //  i.e. the value of Panadapter.yPixels is zero intensity and a value of zero is maximum intensity.
-//  The Panadapter sends an array of size Panadapter.xPixels.
+//  The Panadapter sends an array of size Panadapter.xPixels (same as frame.width).
 // 
     
     // Style of the drawing
@@ -32,61 +32,84 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         case fillWithTexture
     }
     // layout of a spectrum Vertex
-    struct Vertex {
-        var y:  ushort
+    struct SpectrumVertex {
+        var i                   :ushort                 // intensity
     }
-    // layout of a Grid Vertex
-    struct GridVertex {
-        var coord: float2
+    // layout of a Tnf Vertex
+    struct TnfVertex {
+        var coord               :float2                 // x,y coordinates
+        var color               :float4                 // color
+    }
+    // layout of a Grid, Slice or Frequency Line Vertex
+    struct StdVertex {
+        var coord               :float2                 // x,y coordinates
     }
     // layout of the Uniforms
     struct Uniforms {
-        var delta:          Float
-        var height:         Float
-        var spectrumColor:  float4
-        var gridColor:      float4
-        var textureEnable:  Bool
+        var delta               :Float                  // distance between x coordinates
+        var height              :Float                  // height of view (yPixels)
+        var spectrumColor       :float4                 // spectrum color
+        var gridColor           :float4                 // grid color
+        var tnfInactiveColor    :float4                 // inactive Tnf color
+        var textureEnable       :Bool                   // texture enabled
     }
     
     static let kMaxVertexCount  = 3_000
     static let kTextureAsset    = "1x16"
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Public properties
     
+    var tnfVertices                                 = [TnfVertex]()
+    var uniforms                                    :Uniforms!
+
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _vertices               = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount * 2)
-    fileprivate var _indicesNoFill          = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount)
-    fileprivate var _indicesFill            = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount * 2)
-    fileprivate var _verticesCount          = PanadapterRenderer.kMaxVertexCount
-    fileprivate var _gridVertices           :[GridVertex]!
+    fileprivate var _spectrumVertices               = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount * 2)
+    fileprivate var _spectrumVerticesCount          = PanadapterRenderer.kMaxVertexCount
+    fileprivate var _spectrumVerticesBuffer         :MTLBuffer!
+    fileprivate var _spectrumRps                    :MTLRenderPipelineState!
     
-    fileprivate let _device                 :MTLDevice?
-    fileprivate weak var _view              :MTKView!
-    fileprivate var _commandQueue           :MTLCommandQueue!
-    fileprivate var _spectrumRps            :MTLRenderPipelineState!
-    fileprivate var _gridRps                :MTLRenderPipelineState!
-    fileprivate var _vertexBuffer           :MTLBuffer!
-    fileprivate var _gridVertexBuffer       :MTLBuffer!
-    fileprivate var _uniformBuffer          :MTLBuffer!
-    fileprivate var _indexBufferNoFill      :MTLBuffer!
-    fileprivate var _indexBufferFill        :MTLBuffer!
-    fileprivate var _gridIndexBuffer        :MTLBuffer!
-    fileprivate var _clearColor             :MTLClearColor!
-    fileprivate var _samplerState           :MTLSamplerState!
-    fileprivate var _texture                :MTLTexture!
+    fileprivate var _spectrumIndicesFill            = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount * 2)
+    fileprivate var _spectrumIndicesBufferFill      :MTLBuffer!
+    fileprivate var _spectrumIndicesNoFill          = [UInt16](repeating: 0, count: PanadapterRenderer.kMaxVertexCount)
+    fileprivate var _spectrumIndicesBufferNoFill    :MTLBuffer!
+    
+    fileprivate var _gridVertices                   :[StdVertex]!
+    fileprivate var _gridVerticesBuffer             :MTLBuffer!
+    fileprivate var _gridIndexBuffer                :MTLBuffer!
+    fileprivate var _stdRps                         :MTLRenderPipelineState!
+    
+    fileprivate var _sliceVertices                  :[StdVertex]!
+    fileprivate var _sliceVerticesBuffer            :MTLBuffer!
 
-    fileprivate var _uniforms               :Uniforms!
-    fileprivate var _style                  :Style!
+    fileprivate var _tnfVerticesBuffer              :MTLBuffer?
+    fileprivate var _tnfRps                         :MTLRenderPipelineState!
     
-    fileprivate var _spectrumColor          :float4!
-    fileprivate var _gridColor              :float4!
-    
-    fileprivate var _gridIncrementX         :Float = 0.0
-    fileprivate var _gridOffsetX            :Float = 0.0
-    fileprivate var _gridIncrementY         :Float = 0.0
-    fileprivate var _gridOffsetY            :Float = 0.0
-    
+    fileprivate var _uniformsBuffer                 :MTLBuffer?
 
+    fileprivate var _texture                        :MTLTexture!
+    fileprivate var _samplerState                   :MTLSamplerState!
+
+    fileprivate let _device                         :MTLDevice?
+    fileprivate weak var _view                      :MTKView!
+    fileprivate var _commandQueue                   :MTLCommandQueue!
+    fileprivate var _clearColor                     :MTLClearColor!
+    fileprivate var _spectrumColor                  :float4!
+    fileprivate var _gridColor                      :float4!
+
+    fileprivate var _style                          :Style!
+    
+    fileprivate var _gridIncrementX                 :Float = 0.0
+    fileprivate var _gridOffsetX                    :Float = 0.0
+    fileprivate var _gridIncrementY                 :Float = 0.0
+    fileprivate var _gridOffsetY                    :Float = 0.0
+        
+    fileprivate let kxLowIndex                      = 0
+    fileprivate let kxHighIndex                     = 4
+
+    
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
@@ -105,7 +128,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         _view = mtkView
         
         // choose a drawing style
-        _style = Style.fillWithTexture
+        _style = Style.line
         
         // redraw whenever needsDisplay is set
         _view.enableSetNeedsDisplay = true
@@ -123,13 +146,14 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         
         // populate the Grid Vertices
         _gridVertices = makeGrid(xOffset: 0, xIncrement: 0.1, yOffset: 0, yIncrement: 0.2)
-        
+                
         // create & populate the needed MTLBuffers
         setupBuffers(device: device)
-
-        // load all of the Uniforms
-        updateUniforms()
         
+        // setup the Uniforms
+        populateUniforms()
+        updateUniformsBuffer()
+
         // set this renderer as the view's delegate
         _view.delegate = self
     }
@@ -149,75 +173,26 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         
         // Ask the view for a configured render pass descriptor
         let renderPassDescriptor = view.currentRenderPassDescriptor
-        
         if let renderPassDescriptor = renderPassDescriptor {
             
             // Create a render encoder
             let renderEncoder = commandBuffer.makeRenderCommandEncoder(descriptor: renderPassDescriptor)
             
-            renderEncoder.pushDebugGroup("Spectrum")
-            
-            // Set the pipeline state
-            renderEncoder.setRenderPipelineState(_spectrumRps)
-            
-            // Bind the buffer containing the vertices (position 0)
-            renderEncoder.setVertexBuffer(_vertexBuffer, offset: 0, at: 0)
-            
-            // Bind the buffer containing the uniforms (position 1)
-            renderEncoder.setVertexBuffer(_uniformBuffer, offset: 0, at: 1)
-
-            // Bind the texture for the Fragment shader
-            renderEncoder.setFragmentTexture(_texture, at: 0)
-            
-            // Bind the sampler state for the Fragment shader
-            renderEncoder.setFragmentSamplerState(_samplerState, at: 0)
-
-            // ----------------------------------------------------------------------------
-            // *** DRAW the Spectrum ***
-            
-            // Line or Fill style?
-            if _style == .line {
-                
-                // Line
-                renderEncoder.drawIndexedPrimitives(type: .lineStrip, indexCount: _verticesCount, indexType: .uint16, indexBuffer: _indexBufferNoFill, indexBufferOffset: 0)
-                
-            } else {
-                
-                // Fill (with or without Texture)
-                renderEncoder.drawIndexedPrimitives(type: .triangleStrip, indexCount: _verticesCount * 2, indexType: .uint16, indexBuffer: _indexBufferFill, indexBufferOffset: 0)
-            }
-            renderEncoder.popDebugGroup()
-            
-            // ----------------------------------------------------------------------------
             // *** DRAW the Grid ***
-            renderEncoder.pushDebugGroup("Grid")
-
-            // Set the pipeline state
-            renderEncoder.setRenderPipelineState(_gridRps)
+            drawGrid( encoder: renderEncoder )
             
-            // Bind the buffer containing the Grid vertices (position 0)
-            renderEncoder.setVertexBuffer(_gridVertexBuffer, offset: 0, at: 0)
-            
-            renderEncoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: _gridVertices.count)
-            
-            renderEncoder.popDebugGroup()
-            
-            // ----------------------------------------------------------------------------
             // *** DRAW the Tnf(s) ***
-//            renderEncoder.pushDebugGroup("Tnf")
-//            
-//            // Set the pipeline state
-//            renderEncoder.setRenderPipelineState(_tnfRps)
-//            
-//            // Bind the buffer containing the Grid vertices (position 0)
-//            renderEncoder.setVertexBuffer(_gridVertexBuffer, offset: 0, at: 0)
-//            
-//            renderEncoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: _gridVertices.count)
-//            
-//            renderEncoder.popDebugGroup()
+//            drawTnfs( encoder: renderEncoder )
             
-            // ----------------------------------------------------------------------------
+            // *** DRAW the Slice Outline(s) ***
+//            drawSlices( encoder: renderEncoder )
 
+            // *** DRAW the Slice Frequency Line(s) ***
+//            drawFrequencyLines( encoder: renderEncoder )
+
+            // *** DRAW the Spectrum ***
+            drawSpectrum( encoder: renderEncoder )
+            
             // finish using this encoder
             renderEncoder.endEncoding()
             
@@ -236,19 +211,226 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     ///
     public func mtkView(_ view: MTKView, drawableSizeWillChange size: CGSize) {
 
-        // update all of the uniform values
-        updateUniforms()
+        let adjSize = _view.convertFromBacking(size)
+
+        // update the height & width
+        uniforms.height = Float(adjSize.height)
+        
+        // calculate delta
+        uniforms.delta = Float( 1.0 / (adjSize.width - 1.0) )
+
+        // copy the values to the Uniforms buffer
+        updateUniformsBuffer()
     }
     
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
+    /// Set the Clear Color with the value from the Preferences
+    ///
+    func setClearColor() {
+        
+        // get & set the clear color
+        let color = Defaults[.spectrumBackground]
+        _view.clearColor = MTLClearColor(red: Double(color.redComponent),
+                                         green: Double(color.greenComponent),
+                                         blue: Double(color.blueComponent),
+                                         alpha: Double(color.alphaComponent))
+    }
+    /// Update the Tnf values
+    ///
+    func updateTnfs() {
+        
+        if tnfVertices.count != 0 {
+            
+            // create a Buffer for Tnf Vertices
+            let tnfDataSize = tnfVertices.count * MemoryLayout.stride(ofValue: tnfVertices[0])
+            _tnfVerticesBuffer = _device!.makeBuffer(bytes: tnfVertices, length: tnfDataSize)
+        
+        } else {
+            
+            _tnfVerticesBuffer = nil
+        }
+    }
+    /// Populate uniform values
+    ///
+    func populateUniforms() {
+        
+        // get the color for the Spectrum
+        var color = Defaults[.spectrum]
+        let spectrumColor = float4(Float(color.redComponent),
+                                   Float(color.greenComponent),
+                                   Float(color.blueComponent),
+                                   Float(color.alphaComponent))
+        
+        // get the color for the Grid Lines
+        color = Defaults[.gridLines]
+        let gridColor = float4(Float(color.redComponent),
+                               Float(color.greenComponent),
+                               Float(color.blueComponent),
+                               Float(color.alphaComponent))
+        
+        // get the color for the Inactive Tnf
+        color = Defaults[.tnfInactive]
+        let tnfInactiveColor = float4(Float(color.redComponent),
+                                      Float(color.greenComponent),
+                                      Float(color.blueComponent),
+                                      Float(color.alphaComponent))
+        
+
+        // populate the uniforms
+        
+        let adjSize = _view.convertFromBacking(_view.drawableSize)
+        
+        uniforms = Uniforms(delta: Float(1.0 / (adjSize.width - 1.0)),
+                            height: Float(adjSize.height),
+                            spectrumColor: spectrumColor,
+                            gridColor: gridColor,
+                            tnfInactiveColor: tnfInactiveColor,
+                            textureEnable: _style != .line)
+    }
+    
+    func updateUniformsBuffer() {
+        
+        let uniformSize = MemoryLayout.stride(ofValue: uniforms)
+
+        // has the Uniforms buffer been created?
+        if _uniformsBuffer == nil {
+
+            // NO, create one
+            _uniformsBuffer = _device!.makeBuffer(length: uniformSize)
+        }
+        
+        // update the Uniforms buffer
+        let bufferPtr = _uniformsBuffer!.contents()
+        memcpy(bufferPtr, &uniforms, uniformSize)
+    }
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
+    /// Draw the Grid
+    ///
+    /// - Parameter encoder:        a Render Encoder
+    ///
+    private func drawGrid(encoder: MTLRenderCommandEncoder) {
+        
+        encoder.pushDebugGroup("Grid")
+        
+        // use the Grid pipeline state
+        encoder.setRenderPipelineState(_stdRps)
+        
+        // bind the buffer containing the Grid vertices (position 0)
+        encoder.setVertexBuffer(_gridVerticesBuffer, offset: 0, at: 0)
+        
+        // bind the buffer containing the uniforms (position 1)
+        encoder.setVertexBuffer(_uniformsBuffer, offset: 0, at: 1)
+        
+        // draw
+        encoder.drawPrimitives(type: .line, vertexStart: 0, vertexCount: _gridVertices.count)
+        
+        encoder.popDebugGroup()
+    }
+    /// Draw the Tnf's (if any)
+    ///
+    /// - Parameter encoder:        a Render Encoder
+    ///
+    private func drawTnfs(encoder: MTLRenderCommandEncoder) {
+        
+//        if _tnfVerticesBuffer != nil {
+//
+//            encoder.pushDebugGroup("Tnf")
+//
+//            // use the Tnf pipeline state
+//            encoder.setRenderPipelineState(_tnfRps)
+//
+//            // bind the buffer containing the Tnf vertices (position 0)
+//            encoder.setVertexBuffer(_tnfVerticesBuffer, offset: 0, at: 0)
+//
+//            // draw
+//            encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: tnfVertices.count)
+//
+//            encoder.popDebugGroup()
+//        }
+    }
+    /// Draw the Slices (if any)
+    ///
+    /// - Parameter encoder:        a Render Encoder
+    ///
+    private func drawSlices(encoder: MTLRenderCommandEncoder) {
+        
+//        encoder.pushDebugGroup("Slice")
+//        
+//        // use the Slice pipeline state
+//        encoder.setRenderPipelineState(_stdRps)
+//        
+//        // bind the buffer containing the Slice vertices (position 0)
+//        encoder.setVertexBuffer(_sliceVerticesBuffer, offset: 0, at: 0)
+//        
+//        // draw
+//        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: _sliceVertices.count)
+//        
+//        encoder.popDebugGroup()
+    }
+    /// Draw the Slice Frequency lines (if any)
+    ///
+    /// - Parameter encoder:        a Render Encoder
+    ///
+    private func drawFrequencyLines(encoder: MTLRenderCommandEncoder) {
+        
+//        encoder.pushDebugGroup("Slice")
+//        
+//        // use the Slice pipeline state
+//        encoder.setRenderPipelineState(_stdRps)
+//        
+//        // bind the buffer containing the Slice vertices (position 0)
+//        encoder.setVertexBuffer(_sliceVerticesBuffer, offset: 0, at: 0)
+//        
+//        // draw
+//        encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: _sliceVertices.count)
+//        
+//        encoder.popDebugGroup()
+    }
+    /// Draw the Spectrum
+    ///
+    /// - Parameter encoder:        a Render Encoder
+    ///
+    private func drawSpectrum(encoder: MTLRenderCommandEncoder) {
+        
+        encoder.pushDebugGroup("Spectrum")
+        
+        // use the Spectrum pipeline state
+        encoder.setRenderPipelineState(_spectrumRps)
+        
+        // bind the buffer containing the Spectrum vertices (position 0)
+        encoder.setVertexBuffer(_spectrumVerticesBuffer, offset: 0, at: 0)
+        
+        // bind the Spectrum texture for the Fragment shader
+        encoder.setFragmentTexture(_texture, at: 0)
+        
+        // bind the sampler state for the Fragment shader
+        encoder.setFragmentSamplerState(_samplerState, at: 0)
+        
+        // Line or Fill style?
+        if _style == .line {
+            
+            // Draw as a Line
+            encoder.drawIndexedPrimitives(type: .lineStrip, indexCount: _spectrumVerticesCount, indexType: .uint16, indexBuffer: _spectrumIndicesBufferNoFill, indexBufferOffset: 0)
+            
+        } else {
+            
+            // Draw filled (with or without Texture)
+            encoder.drawIndexedPrimitives(type: .triangleStrip, indexCount: _spectrumVerticesCount * 2, indexType: .uint16, indexBuffer: _spectrumIndicesBufferFill, indexBufferOffset: 0)
+        }
+        encoder.popDebugGroup()
+    }
     /// Setup RenderPipeline, Texture & Sampler state
     ///
     /// - Parameters:
-    ///   - device: <#device description#>
-    ///   - view: <#view description#>
-    func setupState(device: MTLDevice, view: MTKView) {
+    ///   - device:         the Metal device
+    ///   - view:           the Metal Kit view
+    ///
+    private func setupState(device: MTLDevice, view: MTKView) {
         
         // create the command queue
         _commandQueue = device.makeCommandQueue()
@@ -260,10 +442,16 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         _spectrumRps = spectrumRps
         
         // Compile the functions and other state into a pipeline object.
-        guard let gridRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: view, vertexShader: "grid_vertex", fragmentShader: "grid_fragment") else {
+        guard let tnfRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: view, vertexShader: "tnf_vertex", fragmentShader: "tnf_fragment") else {
             fatalError("Unable to compile render pipeline state on \(String(describing: device.name))")
         }
-        _gridRps = gridRps
+        _tnfRps = tnfRps
+
+        // Compile the functions and other state into a pipeline object.
+        guard let stdRps =  try? PanadapterRenderer.renderPipeline(forDevice: device, view: view, vertexShader: "std_vertex", fragmentShader: "std_fragment") else {
+            fatalError("Unable to compile render pipeline state on \(String(describing: device.name))")
+        }
+        _stdRps = stdRps
         
         // create a texture
         guard let texture =  try? PanadapterRenderer.texture(forDevice: device, asset: PanadapterRenderer.kTextureAsset) else {
@@ -277,46 +465,42 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     
     /// Populate the indexed drawing arrays
     ///
-    func setupIndices() {
+    private func setupIndices() {
         
         // populate the indices used for style == .line
         for i in 0..<PanadapterRenderer.kMaxVertexCount {
             // 0,1,2...n-1
-            _indicesNoFill[i] = UInt16(i)
+            _spectrumIndicesNoFill[i] = UInt16(i)
         }
         
         // populate the indices used for style == .fill || style == .fillWithTexture
         for i in 0..<PanadapterRenderer.kMaxVertexCount {
             // n,0,n+1,1,...2n-1,n-1
-            _indicesFill[2 * i] = UInt16(PanadapterRenderer.kMaxVertexCount + i)
-            _indicesFill[(2 * i) + 1] = UInt16(i)
+            _spectrumIndicesFill[2 * i] = UInt16(PanadapterRenderer.kMaxVertexCount + i)
+            _spectrumIndicesFill[(2 * i) + 1] = UInt16(i)
         }
     }
     /// Create & Populate the MTLBuffers
     ///
     /// - Parameter device:     the MTLDevice
     ///
-    func setupBuffers(device: MTLDevice) {
+    private func setupBuffers(device: MTLDevice) {
         
-        // create a Vertex Buffer for Vertices
-        let dataSize = _vertices.count * MemoryLayout.stride(ofValue: _vertices[0])
-        _vertexBuffer = device.makeBuffer(bytes: _vertices, length: dataSize)
+        // create a Buffer for Spectrum Vertices
+        let dataSize = _spectrumVertices.count * MemoryLayout.stride(ofValue: _spectrumVertices[0])
+        _spectrumVerticesBuffer = device.makeBuffer(bytes: _spectrumVertices, length: dataSize)
         
-        // create a Vertex Buffer for Uniforms
-        let uniformSize = MemoryLayout.stride(ofValue: _uniforms)
-        _uniformBuffer = device.makeBuffer(length: uniformSize)
+        // create a Buffer for Indices for non-filled drawing (lineStrip)
+        var indexSize = _spectrumIndicesNoFill.count * MemoryLayout.stride(ofValue: _spectrumIndicesNoFill[0])
+        _spectrumIndicesBufferNoFill = device.makeBuffer(bytes: _spectrumIndicesNoFill, length: indexSize)
         
-        // create an Index Buffer
-        var indexSize = _indicesNoFill.count * MemoryLayout.stride(ofValue: _indicesNoFill[0])
-        _indexBufferNoFill = device.makeBuffer(bytes: _indicesNoFill, length: indexSize)
+        // create a Buffer for Indices for filled drawing (triangleStrip)
+        indexSize = _spectrumIndicesFill.count * MemoryLayout.stride(ofValue: _spectrumIndicesFill[0])
+        _spectrumIndicesBufferFill = device.makeBuffer(bytes: _spectrumIndicesFill, length: indexSize)
         
-        // create an Index Buffer
-        indexSize = _indicesFill.count * MemoryLayout.stride(ofValue: _indicesFill[0])
-        _indexBufferFill = device.makeBuffer(bytes: _indicesFill, length: indexSize)
-        
-        // create a Vertex Buffer for Grid Vertices
-        let gridDataSize = _vertices.count * MemoryLayout.stride(ofValue: _gridVertices[0])
-        _gridVertexBuffer = device.makeBuffer(bytes: _gridVertices, length: gridDataSize)
+        // create a Buffer for Grid Vertices
+        let gridDataSize = _gridVertices.count * MemoryLayout.stride(ofValue: _gridVertices[0])
+        _gridVerticesBuffer = device.makeBuffer(bytes: _gridVertices, length: gridDataSize)
     }
     /// Create vertices for a Grid (in normalized clip space coordinates)
     ///
@@ -327,16 +511,16 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     ///   - yIncrement:     y increment between horizontal lines (pixels)
     /// - Returns:          an array of GridVertex (pixels)
     ///
-    func makeGrid(xOffset: Float, xIncrement: Float, yOffset: Float, yIncrement: Float) -> [GridVertex] {
-        var grid = [GridVertex]()
+    private func makeGrid(xOffset: Float, xIncrement: Float, yOffset: Float, yIncrement: Float) -> [StdVertex] {
+        var grid = [StdVertex]()
         
         // calculate the starting x location
         var xLocation: Float = -1.0 + xOffset
         
         // create vertical lines
         while xLocation <= 1.0 {
-            grid.append(GridVertex(coord: float2(x: xLocation, y: -1.0)))
-            grid.append(GridVertex(coord: float2(x: xLocation, y:  1.0)))
+            grid.append(StdVertex(coord: float2(x: xLocation, y: -1.0)))
+            grid.append(StdVertex(coord: float2(x: xLocation, y:  1.0)))
             xLocation += xIncrement
         }
         // calculate the starting y location
@@ -344,52 +528,13 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         
         // create horizontal lines
         while yLocation <= 1.0 {
-            grid.append(GridVertex(coord: float2(x: -1.0, y: yLocation)))
-            grid.append(GridVertex(coord: float2(x:  1.0, y: yLocation)))
+            grid.append(StdVertex(coord: float2(x: -1.0, y: yLocation)))
+            grid.append(StdVertex(coord: float2(x:  1.0, y: yLocation)))
             yLocation += yIncrement
         }
         return grid
     }
-    /// Set the Clear Color with the value from the Preferences
-    ///
-    func setClearColor() {
-        
-        // get & set the clear color
-        let color = Defaults[.spectrumBackground]
-        _view.clearColor = MTLClearColor(red: Double(color.redComponent),
-                                         green: Double(color.greenComponent),
-                                         blue: Double(color.blueComponent),
-                                         alpha: Double(color.alphaComponent))
-    }
-    /// Update all of the uniform values
-    ///
-    func updateUniforms() {
-        
-        // get the color for the Spectrum
-        var color = Defaults[.spectrum]
-        _spectrumColor = float4(Float(color.redComponent),
-                                Float(color.greenComponent),
-                                Float(color.blueComponent),
-                                Float(color.alphaComponent))
-        
-        // get the color for the Grid Lines
-        color = Defaults[.gridLines]
-        _gridColor = float4(Float(color.redComponent),
-                            Float(color.greenComponent),
-                            Float(color.blueComponent),
-                            Float(color.alphaComponent))
-        
-        // set the uniforms
-        _uniforms = Uniforms( delta: 2.0/(Float(_view.frame.width) - 1.0),
-                              height: Float(_view.frame.height),
-                              spectrumColor: _spectrumColor,
-                              gridColor: _gridColor,
-                              textureEnable: _style == .fillWithTexture )
-        
-        // update the Uniforms buffer
-        let bufferPtr = _uniformBuffer.contents()
-        memcpy(bufferPtr, &_uniforms, MemoryLayout<Uniforms>.size)
-    }
+
     // ----------------------------------------------------------------------------
     // MARK: - Class methods
     
@@ -418,6 +563,17 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         pipelineDescriptor.vertexFunction = vertexFunction
         pipelineDescriptor.fragmentFunction = fragmentFunction
         pipelineDescriptor.colorAttachments[0].pixelFormat = view.colorPixelFormat
+        
+        // setup blending
+        pipelineDescriptor.colorAttachments[0].isBlendingEnabled = true
+        pipelineDescriptor.colorAttachments[0].rgbBlendOperation = .add
+        pipelineDescriptor.colorAttachments[0].alphaBlendOperation = .add
+        
+        pipelineDescriptor.colorAttachments[0].sourceRGBBlendFactor = .one
+        pipelineDescriptor.colorAttachments[0].sourceAlphaBlendFactor = .one
+        
+        pipelineDescriptor.colorAttachments[0].destinationRGBBlendFactor = .destinationAlpha
+        pipelineDescriptor.colorAttachments[0].destinationAlphaBlendFactor = .destinationAlpha
         
         // return the Render Pipeline State
         return try device.makeRenderPipelineState(descriptor: pipelineDescriptor)
@@ -457,8 +613,9 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     /// - Returns:          a MTLSamplerState
     ///
     class func samplerState(forDevice device: MTLDevice,
-                                           addressMode: MTLSamplerAddressMode,
-                                           filter: MTLSamplerMinMagFilter) -> MTLSamplerState {
+                            addressMode: MTLSamplerAddressMode,
+                            filter: MTLSamplerMinMagFilter) -> MTLSamplerState {
+        
         // create a Sampler Descriptor
         let samplerDescriptor = MTLSamplerDescriptor()
         
@@ -489,13 +646,14 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     //
     public func panadapterStreamHandler(_ dataFrame: PanadapterFrame) {
         
-        // dataFrame.numberOfBins is the number of "real" points (horizontal) for the spectrum waveform
-        _verticesCount = dataFrame.numberOfBins
+        // dataFrame.numberOfBins is the number of horizontal pixels in the spectrum waveform
+        //      (same as the frame.width & the panadapter.xPixels)
+        _spectrumVerticesCount = dataFrame.numberOfBins
         
         // the dataFrame.bins contain the y-values (vertical) for the spectrum waveform
         // put them into the Vertex Buffer
-        _vertexBuffer.contents().copyBytes(from: dataFrame.bins, count: _verticesCount * MemoryLayout<ushort>.stride)
-        
+        //      see the NOTE at the top of this class
+        _spectrumVerticesBuffer.contents().copyBytes(from: dataFrame.bins, count: _spectrumVerticesCount * MemoryLayout<ushort>.stride)
         DispatchQueue.main.async {
             
             autoreleasepool {

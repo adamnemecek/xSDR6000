@@ -49,13 +49,15 @@ class PanadapterViewController: NSViewController {
     fileprivate var _bandwidth: Int { return _panadapter!.bandwidth }
     fileprivate var _start: Int { return _center - (_bandwidth/2) }
     fileprivate var _end: Int  { return _center + (_bandwidth/2) }
-    fileprivate var _hzPerUnit: CGFloat { return CGFloat(_end - _start) / view.frame.width }
+    fileprivate var _hzPerUnit: CGFloat { return CGFloat(_end - _start) / _panadapter!.panDimensions.width }
 
     fileprivate var _panadapter: Panadapter? { return _params.panadapter }
 
     fileprivate var _bandwidthParam: BandwidthParamTuple {         // given Bandwidth, return a Spacing & a Format
         get { return PanadapterViewController.kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? PanadapterViewController.kBandwidthParams[0] } }
     
+    fileprivate var _renderer: PanadapterRenderer!
+
     fileprivate var _panLeft: NSPanGestureRecognizer!
     fileprivate var _xStart: CGFloat = 0
     fileprivate var _newCursor: NSCursor?
@@ -65,14 +67,6 @@ class PanadapterViewController: NSViewController {
     fileprivate let _log                    = (NSApp.delegate as! AppDelegate)
     
     // ----------------------------------------------------------------------------
-    // MARK: - Internal properties
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Private properties
-    
-    private var _renderer: PanadapterRenderer!
-    
-    // ----------------------------------------------------------------------------
     // MARK: - Overridden methods
     
     /// the View has loaded
@@ -80,9 +74,8 @@ class PanadapterViewController: NSViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // give the Frequency Legend access to the params 
+        // give the Frequency Legend access to the params
         _frequencyLegendView.params = _params
-//        _frequencyLegendView.bandwidthParams = _bandwidthParams
 
         _dbLegendView.params = _params
         
@@ -105,9 +98,6 @@ class PanadapterViewController: NSViewController {
         // begin observing Defaults
         observations(UserDefaults.standard, paths: _defaultsKeyPaths)
         
-//        // begin observing Panadapter
-//        observations(_panadapter!, paths: _panadapterKeyPaths)
-
         // add notification subscriptions
         addNotifications()
 
@@ -116,11 +106,10 @@ class PanadapterViewController: NSViewController {
         _panLeft.buttonMask = kLeftButton
         view.addGestureRecognizer(_panLeft)
     }
-
     /// View did layout
     ///
     override func viewDidLayout() {
-        
+
         // tell the Panadapter to tell the Radio the current dimensions
         _panadapter?.panDimensions = CGSize(width: _spectrumView.frame.width, height: _spectrumView.frame.height)
     }
@@ -176,17 +165,83 @@ class PanadapterViewController: NSViewController {
     }
     
     // ----------------------------------------------------------------------------
+    // MARK: - Internal methods
+    
+    /// Populate vertices for Tnf draw calls
+    ///
+    /// - Returns:      vertices for Tnf's
+    ///
+    func prepareTnfVertices() -> [PanadapterRenderer.TnfVertex] {
+        var vertices: [PanadapterRenderer.TnfVertex] = []
+        
+        for (_, _tnf) in _panadapter!.radio!.tnfs {
+            
+            if _tnf.frequency >= _start && _tnf.frequency <= _end {
+                
+                // calculate the Tnf position & width
+                let _tnfPosition = Float(_tnf.frequency - _tnf.width/2 - _start) / Float(_hzPerUnit)
+                let _tnfWidth = Float(_tnf.width) / Float(_hzPerUnit)
+                
+                // color it based on depth & active / inactive
+                var color: NSColor
+                
+                switch _tnf.depth {
+                case Tnf.Depth.normal.rawValue:
+                    color = Defaults[.tnfColorNormal]
+                case Tnf.Depth.deep.rawValue:
+                    color = Defaults[.tnfColorDeep]
+                case Tnf.Depth.veryDeep.rawValue:
+                    color = Defaults[.tnfColorVeryDeep]
+                default:
+                    color = Defaults[.tnfColorNormal]
+                }
+                // convert NSColor to float4
+                let tnfColor = float4(Float(color.redComponent),
+                                  Float(color.greenComponent),
+                                  Float(color.blueComponent),
+                                  Float(color.alphaComponent))
+
+                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: _tnfPosition,  y: -1.0), color: tnfColor))
+                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: _tnfPosition,  y:  1.0), color: tnfColor))
+                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: _tnfPosition + _tnfWidth, y: -1.0), color: tnfColor))
+                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: _tnfPosition + _tnfWidth, y:  1.0), color: tnfColor))
+//                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: -0.5,  y: -1.0), color: tnfColor))
+//                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: -0.5,  y:  1.0), color: tnfColor))
+//                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: -0.5 + 0.1, y: -1.0), color: tnfColor))
+//                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: -0.5 + 0.1, y:  1.0), color: tnfColor))
+            }
+        }
+        return vertices
+    }
+    /// Force a redraw
+    ///
+    func redraw() {
+        DispatchQueue.main.async {
+            
+            // force a redraw
+            self.view.needsDisplay = true            
+        }
+    }
+
+    // ----------------------------------------------------------------------------
     // MARK: - Observation Methods
     
-    fileprivate let _defaultsKeyPaths = [             // Defaults keypaths to observe
+    fileprivate let _defaultsKeyPaths = [               // Defaults keypaths to observe
         "gridLines",
         "spectrum",
         "spectrumBackground",
     ]
 
-//    fileprivate let _panadapterKeyPaths = [           // Panadapter keypaths to observe
-//        #keyPath(Panadapter.bandwidth),
-//    ]
+    fileprivate let _tnfKeyPaths = [                    // Tnf keypaths to observe
+        #keyPath(Tnf.frequency),
+        #keyPath(Tnf.depth),
+        #keyPath(Tnf.width),
+    ]
+    
+    fileprivate let _panadapterKeyPaths = [           // Panadapter keypaths to observe
+        #keyPath(Panadapter.bandwidth),
+        #keyPath(Panadapter.center)
+    ]
     
     /// Add / Remove property observations
     ///
@@ -201,30 +256,38 @@ class PanadapterViewController: NSViewController {
         for keyPath in paths {
             
             if remove { object.removeObserver(self, forKeyPath: keyPath, context: nil) }
-            else { object.addObserver(self, forKeyPath: keyPath, options: [.new], context: nil) }
+            else { object.addObserver(self, forKeyPath: keyPath, options: [.initial, .new], context: nil) }
         }
     }
     /// Observe properties
     ///
     /// - Parameters:
-    ///   - keyPath: the registered KeyPath
-    ///   - object: object containing the KeyPath
-    ///   - change: dictionary of values
-    ///   - context: context (if any)
+    ///   - keyPath:        the registered KeyPath
+    ///   - object:         object containing the KeyPath
+    ///   - change:         dictionary of values
+    ///   - context:        context (if any)
     ///
     override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         switch keyPath! {
             
         case "gridLines", "spectrum":
-            _renderer.updateUniforms()
+            _renderer.populateUniforms()
+            _renderer.updateUniformsBuffer()
             
         case "spectrumBackground":
             _renderer.setClearColor()
             
-//        case #keyPath(Panadapter.bandwidth):
-//            _frequencyLegendView.bandwidthParams = _bandwidthParams
-//            break
+//        case #keyPath(Panadapter.bandwidth), #keyPath(Panadapter.center):
+//            if let newValue = change?[.newKey] as? Int {
+//                _renderer.uniforms.start = Int32(_center - newValue/2)
+//                _renderer.uniforms.end = Int32(_center + newValue/2)
+//                _renderer.updateUniformsBuffer()
+//            }
+            
+        case #keyPath(Tnf.frequency), #keyPath(Tnf.depth), #keyPath(Tnf.width):
+            _renderer.tnfVertices = prepareTnfVertices()
+            _renderer.updateTnfs()
             
         default:
             _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
@@ -239,6 +302,10 @@ class PanadapterViewController: NSViewController {
     ///
     fileprivate func addNotifications() {
         
+        NC.makeObserver(self, with: #selector(tnfHasBeenAdded(_:)), of: .tnfHasBeenAdded, object: nil)
+        
+        NC.makeObserver(self, with: #selector(tnfWillBeRemoved(_:)), of: .tnfWillBeRemoved, object: nil)
+
         NC.makeObserver(self, with: #selector(panadapterWillBeRemoved(_:)), of: .panadapterWillBeRemoved, object: nil)
     }
     /// Process .panadapterWillBeRemoved Notification
@@ -259,6 +326,33 @@ class PanadapterViewController: NSViewController {
 //                // YES, remove Panadapter property observers
 //                observations(panadapter, paths: _panadapterKeyPaths, remove: true)
             }
+        }
+    }
+    /// Process .tnfHasBeenAdded Notification
+    ///
+    /// - Parameter note: a Notification instance
+    ///
+    @objc fileprivate func tnfHasBeenAdded(_ note: Notification) {
+        
+        // does the Notification contain a Tnf object?
+        if let tnf = note.object as? Tnf {
+            
+            // YES, add observations of this Tnf
+            observations(tnf, paths: _tnfKeyPaths)
+        }
+    }
+    /// Process .tnfWillBeRemoved Notification
+    ///
+    /// - Parameter note: a Notification instance
+    ///
+    @objc fileprivate func tnfWillBeRemoved(_ note: Notification) {
+        
+        // does the Notification contain a Tnf object?
+        if let tnf = note.object as? Tnf {
+
+            // YES, remove observations of this Tnf
+            observations(tnf, paths: _tnfKeyPaths, remove: true)
+
         }
     }
 }

@@ -335,11 +335,11 @@
 		91D49E871F59F48D00D3D38B /* Panadapter Metal */ = {
 			isa = PBXGroup;
 			children = (
-				91D49E891F59F48D00D3D38B /* PanadapterViewController.swift */,
+				91A609901F6DFF1A007328DB /* PanadapterDbLegend.swift */,
+				91A6098E1F6DFED2007328DB /* PanadapterFrequencyLegend.swift */,
 				910F1BE21F5B28B300B5677A /* PanadapterRenderer.swift */,
 				91D49E881F59F48D00D3D38B /* PanadapterShaders.metal */,
-				91A6098E1F6DFED2007328DB /* PanadapterFrequencyLegend.swift */,
-				91A609901F6DFF1A007328DB /* PanadapterDbLegend.swift */,
+				91D49E891F59F48D00D3D38B /* PanadapterViewController.swift */,
 			);
 			name = "Panadapter Metal";
 			path = "xSDR6000/Sources/Panadapter Metal";
@@ -359,7 +359,6 @@
 			isa = PBXNativeTarget;
 			buildConfigurationList = 91B16FE61CDF7F5E00600E02 /* Build configuration list for PBXNativeTarget "xSDR6000" */;
 			buildPhases = (
-				912A81B81F4D1F54005C3125 /* ShellScript */,
 				91B16FD31CDF7F5E00600E02 /* Sources */,
 				91B16FD41CDF7F5E00600E02 /* Frameworks */,
 				91B16FD51CDF7F5E00600E02 /* Resources */,
@@ -439,19 +438,6 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXShellScriptBuildPhase section */
-		912A81B81F4D1F54005C3125 /* ShellScript */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			inputPaths = (
-			);
-			outputPaths = (
-			);
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "echo \"Project directory = ${PROJECT_DIR}\"\nif [ \"${PROJECT_DIR}\" == \"/Users/Doug/Dropbox/Code (Current)/xSDR6000-master\" ] ; then\n    echo \"Copy xLib6000.framework from ${USER_LIBRARY_DIR} -> ${PROJECT_DIR}\"\n    cp -r \"${USER_LIBRARY_DIR}/Frameworks/xLib6000.framework\" \"${PROJECT_DIR}\"\n    echo \"Copy SwiftyUserDefaults.framework from ${USER_LIBRARY_DIR} -> ${PROJECT_DIR}\"\n    cp -r \"${USER_LIBRARY_DIR}/Frameworks/SwiftyUserDefaults.framework\" \"${PROJECT_DIR}\"\n    echo \"Copy AudioLibrary.framework from ${USER_LIBRARY_DIR} -> ${PROJECT_DIR}\"\n    cp -r \"${USER_LIBRARY_DIR}/Frameworks/AudioLibrary.framework\" \"${PROJECT_DIR}\"\n    echo \"Copy XCGLogger.framework from ${USER_LIBRARY_DIR} -> ${PROJECT_DIR}\"\n    cp -r \"${USER_LIBRARY_DIR}/Frameworks/XCGLogger.framework\" \"${PROJECT_DIR}\"\n    echo \"Copy ObjcExceptionBridging.framework from ${USER_LIBRARY_DIR} -> ${PROJECT_DIR}\"\n    cp -r \"${USER_LIBRARY_DIR}/Frameworks/ObjcExceptionBridging.framework\" \"${PROJECT_DIR}\"\n    echo \"Copy OpusOSX.framework from ${USER_LIBRARY_DIR} -> ${PROJECT_DIR}\"\n    cp -r \"${USER_LIBRARY_DIR}/Frameworks/OpusOSX.framework\" \"${PROJECT_DIR}\"\n    echo \"Copy xLib6000.framework from ${USER_LIBRARY_DIR} -> ${PROJECT_DIR}\"\n    cp -r \"${USER_LIBRARY_DIR}/Frameworks/xLib6000.framework\" \"${PROJECT_DIR}\"\nfi";
-		};
 		91533CE41E230578003CEEBA /* ShellScript */ = {
 			isa = PBXShellScriptBuildPhase;
 			buildActionMask = 2147483647;

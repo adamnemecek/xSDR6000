@@ -73,6 +73,9 @@ extension DefaultsKeys {
     static let text = DefaultsKey<NSColor>("text")
     static let tnfActive = DefaultsKey<NSColor>("tnfActive")
     static let tnfInactive = DefaultsKey<NSColor>("tnfInactive")
+    static let tnfColorNormal = DefaultsKey<NSColor>("tnfColorNormal")
+    static let tnfColorDeep = DefaultsKey<NSColor>("tnfColorDeep")
+    static let tnfColorVeryDeep = DefaultsKey<NSColor>("tnfColorVeryDeep")
 
     // Settings common to all Panafalls
     static let bandMarkerOpacity = DefaultsKey<CGFloat>("bandMarkerOpacity")

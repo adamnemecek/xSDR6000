@@ -22,7 +22,7 @@ final class RadioViewController : NSSplitViewController, RadioPickerDelegate {
     
     private(set) var activeRadio: RadioParameters? {                // Radio currently in use (if any)
         didSet {
-            let title = (activeRadio == nil ? "" : " - Connected to \(activeRadio!.nickname ?? "") @ \(activeRadio!.ipAddress)")
+            let title = (activeRadio == nil ? "" : " (\(activeRadio!.nickname ?? "") @ \(activeRadio!.ipAddress))")
             DispatchQueue.main.async {
                 self.view.window?.title = "xSDR6000\(title)"
             }
