@@ -7,4 +7,5 @@ framework module xLib6000 {
 
 module xLib6000.Swift {
     header "xLib6000-Swift.h"
+    requires objc
 }
