@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
+<document type="com.apple.InterfaceBuilder3.Cocoa.Storyboard.XIB" version="3.0" toolsVersion="13196" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="13196"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
         <capability name="stacking Non-gravity area distributions on NSStackView" minToolsVersion="7.0" minSystemVersion="10.11"/>
         <capability name="system font weights other than Regular or Bold" minToolsVersion="7.0"/>
@@ -29,7 +29,7 @@
                                         <rect key="frame" x="0.0" y="90" width="75" height="200"/>
                                         <subviews>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="aac-I1-ppC">
-                                                <rect key="frame" x="18.5" y="165" width="39" height="38"/>
+                                                <rect key="frame" x="19" y="165" width="39" height="38"/>
                                                 <buttonCell key="cell" type="round" bezelStyle="circular" image="NSStopProgressFreestandingTemplate" imagePosition="only" alignment="center" borderStyle="border" imageScaling="proportionallyUpOrDown" inset="2" id="onk-FI-ikO">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="system"/>
@@ -49,7 +49,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="geb-DB-Cbj">
-                                                <rect key="frame" x="0.5" y="109" width="74" height="32"/>
+                                                <rect key="frame" x="1" y="109" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="+Tnf" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Ghh-Ib-kQb">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -59,7 +59,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="oUc-6q-4aW">
-                                                <rect key="frame" x="0.5" y="80" width="74" height="32"/>
+                                                <rect key="frame" x="1" y="80" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="Band" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="UXu-oU-zjw">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -69,7 +69,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="WtS-Dc-u17">
-                                                <rect key="frame" x="0.5" y="51" width="74" height="32"/>
+                                                <rect key="frame" x="1" y="51" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="Ant" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="n1O-IG-uy4">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -79,7 +79,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="gCE-um-uTA">
-                                                <rect key="frame" x="0.5" y="22" width="74" height="32"/>
+                                                <rect key="frame" x="1" y="22" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="Disp" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="Rp5-tf-g0l">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -89,7 +89,7 @@
                                                 </connections>
                                             </button>
                                             <button verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Rf4-7B-G4e">
-                                                <rect key="frame" x="0.5" y="-7" width="74" height="32"/>
+                                                <rect key="frame" x="1" y="-7" width="74" height="32"/>
                                                 <buttonCell key="cell" type="push" title="Dax" bezelStyle="rounded" alignment="center" borderStyle="border" imageScaling="proportionallyDown" inset="2" id="jHH-ux-SlR">
                                                     <behavior key="behavior" pushIn="YES" lightByBackground="YES" lightByGray="YES"/>
                                                     <font key="font" metaFont="systemBold"/>
@@ -192,9 +192,13 @@
                     <splitView key="splitView" identifier="Panafall" autosaveName="Panafall" dividerStyle="thin" id="eSL-4j-ZUz">
                         <rect key="frame" x="0.0" y="0.0" width="450" height="300"/>
                         <autoresizingMask key="autoresizingMask"/>
+                        <connections>
+                            <outlet property="delegate" destination="cCR-9u-87r" id="Kxp-ou-TfZ"/>
+                        </connections>
                     </splitView>
                     <connections>
                         <outlet property="_panadapterSplitViewItem" destination="wXf-R0-54b" id="DP3-uA-hAs"/>
+                        <outlet property="splitView" destination="eSL-4j-ZUz" id="gOi-si-VQa"/>
                         <segue destination="ywe-lT-40r" kind="relationship" relationship="splitItems" id="Hyh-u7-Jvc"/>
                         <segue destination="3e5-8Z-HZ9" kind="relationship" relationship="splitItems" id="4Z0-NF-j0f"/>
                     </connections>
@@ -259,7 +263,7 @@
         <scene sceneID="2cg-6a-4c4">
             <objects>
                 <viewController storyboardIdentifier="Waterfall" id="3e5-8Z-HZ9" userLabel="Waterfall" customClass="WaterfallViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" identifier="Waterfall" id="N27-36-3j2" customClass="WaterfallView" customModule="xSDR6000" customModuleProvider="target">
+                    <view key="view" identifier="Waterfall" id="N27-36-3j2">
                         <rect key="frame" x="0.0" y="0.0" width="451" height="150"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </view>
@@ -320,7 +324,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="RIj-SM-1Nr" userLabel="BottomBar">
-                                <rect key="frame" x="-1" y="-1" width="252" height="20"/>
+                                <rect key="frame" x="-1" y="-1" width="246" height="20"/>
                                 <segmentedCell key="cell" borderStyle="border" alignment="left" style="roundRect" trackingMode="selectOne" id="7P6-ZP-qlo">
                                     <font key="font" metaFont="cellTitle"/>
                                     <segments>
@@ -343,7 +347,7 @@
                                 </buttonCell>
                             </button>
                             <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="bIf-xm-ve3" userLabel="TopBar">
-                                <rect key="frame" x="-1" y="81" width="252" height="20"/>
+                                <rect key="frame" x="-1" y="81" width="246" height="20"/>
                                 <segmentedCell key="cell" refusesFirstResponder="YES" borderStyle="border" alignment="left" style="roundRect" trackingMode="selectAny" id="btW-7S-e7f">
                                     <font key="font" metaFont="cellTitle"/>
                                     <segments>
@@ -357,8 +361,8 @@
                                     </segments>
                                 </segmentedCell>
                             </segmentedControl>
-                            <textField verticalHuggingPriority="750" allowsCharacterPickerTouchBarItem="NO" translatesAutoresizingMaskIntoConstraints="NO" id="KMI-Eo-tlQ" userLabel="Frequency">
-                                <rect key="frame" x="30" y="47" width="215" height="27"/>
+                            <textField verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="KMI-Eo-tlQ" userLabel="Frequency">
+                                <rect key="frame" x="30" y="47" width="216" height="27"/>
                                 <textFieldCell key="cell" scrollable="YES" lineBreakMode="clipping" selectable="YES" editable="YES" sendsActionOnEndEditing="YES" state="on" alignment="right" placeholderString="7.235.000" id="bld-KN-yIJ">
                                     <font key="font" metaFont="system" size="21"/>
                                     <color key="textColor" name="textColor" catalog="System" colorSpace="catalog"/>
@@ -366,7 +370,7 @@
                                 </textFieldCell>
                             </textField>
                             <levelIndicator verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="Omk-ot-f9W" userLabel="Meter">
-                                <rect key="frame" x="32" y="26" width="212" height="18"/>
+                                <rect key="frame" x="32" y="28" width="213" height="16"/>
                                 <constraints>
                                     <constraint firstAttribute="height" constant="16" id="5JO-Fq-WGT"/>
                                 </constraints>
@@ -407,7 +411,7 @@
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
                             <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="L48-rE-WLj" userLabel="TopBar">
-                                <rect key="frame" x="-1" y="-1" width="103" height="20"/>
+                                <rect key="frame" x="-1" y="-1" width="100" height="20"/>
                                 <segmentedCell key="cell" borderStyle="border" alignment="left" style="roundRect" trackingMode="selectOne" id="WSY-VC-Nkk">
                                     <font key="font" metaFont="cellTitle"/>
                                     <segments>
@@ -832,6 +836,6 @@
     </scenes>
     <resources>
         <image name="NSLockUnlockedTemplate" width="10" height="14"/>
-        <image name="NSStopProgressFreestandingTemplate" width="14" height="14"/>
+        <image name="NSStopProgressFreestandingTemplate" width="11" height="11"/>
     </resources>
 </document>

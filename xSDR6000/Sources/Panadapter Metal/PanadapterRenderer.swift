@@ -101,15 +101,6 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
 
     fileprivate var _style                          :Style!
     
-    fileprivate var _gridIncrementX                 :Float = 0.0
-    fileprivate var _gridOffsetX                    :Float = 0.0
-    fileprivate var _gridIncrementY                 :Float = 0.0
-    fileprivate var _gridOffsetY                    :Float = 0.0
-        
-    fileprivate let kxLowIndex                      = 0
-    fileprivate let kxHighIndex                     = 4
-
-    
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
@@ -287,7 +278,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
                             spectrumColor: spectrumColor,
                             gridColor: gridColor,
                             tnfInactiveColor: tnfInactiveColor,
-                            textureEnable: _style != .line)
+                            textureEnable: _style == .line)
     }
     
     func updateUniformsBuffer() {
