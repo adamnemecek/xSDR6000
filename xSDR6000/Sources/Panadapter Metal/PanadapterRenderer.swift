@@ -51,6 +51,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
         var spectrumColor       :float4                 // spectrum color
         var gridColor           :float4                 // grid color
         var tnfInactiveColor    :float4                 // inactive Tnf color
+        var tnfsEnabled         :Bool                   // Tnf's enabled
         var textureEnable       :Bool                   // texture enabled
     }
     
@@ -173,7 +174,7 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
             drawGrid( encoder: renderEncoder )
             
             // *** DRAW the Tnf(s) ***
-//            drawTnfs( encoder: renderEncoder )
+            drawTnfs( encoder: renderEncoder )
             
             // *** DRAW the Slice Outline(s) ***
 //            drawSlices( encoder: renderEncoder )
@@ -228,56 +229,32 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
                                          blue: Double(color.blueComponent),
                                          alpha: Double(color.alphaComponent))
     }
-    /// Update the Tnf values
+    /// Update Tnf values
     ///
     func updateTnfs() {
         
-        if tnfVertices.count != 0 {
+        // are there any Tnf's?
+        if tnfVertices.count > 0 {
             
-            // create a Buffer for Tnf Vertices
-            let tnfDataSize = tnfVertices.count * MemoryLayout.stride(ofValue: tnfVertices[0])
-            _tnfVerticesBuffer = _device!.makeBuffer(bytes: tnfVertices, length: tnfDataSize)
-        
-        } else {
-            
-            _tnfVerticesBuffer = nil
+            // YES, create a buffer
+            let tnfSize = tnfVertices.count * MemoryLayout.stride(ofValue: tnfVertices[0])
+            _tnfVerticesBuffer = _device!.makeBuffer(bytes: &tnfVertices, length: tnfSize)
         }
     }
-    /// Populate uniform values
+    /// Populate Uniform values
     ///
     func populateUniforms() {
         
-        // get the color for the Spectrum
-        var color = Defaults[.spectrum]
-        let spectrumColor = float4(Float(color.redComponent),
-                                   Float(color.greenComponent),
-                                   Float(color.blueComponent),
-                                   Float(color.alphaComponent))
-        
-        // get the color for the Grid Lines
-        color = Defaults[.gridLines]
-        let gridColor = float4(Float(color.redComponent),
-                               Float(color.greenComponent),
-                               Float(color.blueComponent),
-                               Float(color.alphaComponent))
-        
-        // get the color for the Inactive Tnf
-        color = Defaults[.tnfInactive]
-        let tnfInactiveColor = float4(Float(color.redComponent),
-                                      Float(color.greenComponent),
-                                      Float(color.blueComponent),
-                                      Float(color.alphaComponent))
-        
-
-        // populate the uniforms
-        
+        // adjust for the scaling factor
         let adjSize = _view.convertFromBacking(_view.drawableSize)
         
+        // populate the uniforms
         uniforms = Uniforms(delta: Float(1.0 / (adjSize.width - 1.0)),
                             height: Float(adjSize.height),
-                            spectrumColor: spectrumColor,
-                            gridColor: gridColor,
-                            tnfInactiveColor: tnfInactiveColor,
+                            spectrumColor: Defaults[.spectrum].float4Color,
+                            gridColor: Defaults[.gridLines].float4Color,
+                            tnfInactiveColor: Defaults[.tnfInactive].float4Color,
+                            tnfsEnabled: false,
                             textureEnable: _style == .line)
     }
     
@@ -328,21 +305,22 @@ public final class PanadapterRenderer : NSObject, MTKViewDelegate, PanadapterStr
     ///
     private func drawTnfs(encoder: MTLRenderCommandEncoder) {
         
-//        if _tnfVerticesBuffer != nil {
-//
-//            encoder.pushDebugGroup("Tnf")
-//
-//            // use the Tnf pipeline state
-//            encoder.setRenderPipelineState(_tnfRps)
-//
-//            // bind the buffer containing the Tnf vertices (position 0)
-//            encoder.setVertexBuffer(_tnfVerticesBuffer, offset: 0, at: 0)
-//
-//            // draw
-//            encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: tnfVertices.count)
-//
-//            encoder.popDebugGroup()
-//        }
+        if tnfVertices.count > 0 {
+            
+            encoder.pushDebugGroup("Tnf")
+
+            // use the Tnf pipeline state
+            encoder.setRenderPipelineState(_tnfRps)
+
+            // bind the buffer containing the Tnf vertices (position 0)
+            encoder.setVertexBuffer(_tnfVerticesBuffer, offset: 0, at: 0)
+
+            // draw each Tnf
+            for i in 0..<tnfVertices.count/4 {
+                encoder.drawPrimitives(type: .triangleStrip, vertexStart: i * 4, vertexCount: 4)
+            }
+            encoder.popDebugGroup()
+        }
     }
     /// Draw the Slices (if any)
     ///

@@ -9,6 +9,7 @@
 import Cocoa
 import xLib6000
 import SwiftyUserDefaults
+import simd
 
 typealias NC = NotificationCenter
 
@@ -73,9 +74,9 @@ extension DefaultsKeys {
     static let text = DefaultsKey<NSColor>("text")
     static let tnfActive = DefaultsKey<NSColor>("tnfActive")
     static let tnfInactive = DefaultsKey<NSColor>("tnfInactive")
-    static let tnfColorNormal = DefaultsKey<NSColor>("tnfColorNormal")
-    static let tnfColorDeep = DefaultsKey<NSColor>("tnfColorDeep")
-    static let tnfColorVeryDeep = DefaultsKey<NSColor>("tnfColorVeryDeep")
+    static let tnfNormal = DefaultsKey<NSColor>("tnfNormal")
+    static let tnfDeep = DefaultsKey<NSColor>("tnfDeep")
+    static let tnfVeryDeep = DefaultsKey<NSColor>("tnfVeryDeep")
 
     // Settings common to all Panafalls
     static let bandMarkerOpacity = DefaultsKey<CGFloat>("bandMarkerOpacity")
@@ -337,6 +338,16 @@ extension NSGradient {
             let locations: Array<CGFloat> = [ 0.0, 0.15, 0.25, 0.45, 0.90, 0.95, 1.0 ]
             return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
         }
+    }
+}
+
+extension NSColor {
+    
+    // return a float4 version of an NSColor
+    var float4Color: float4 { return float4( Float(self.redComponent),
+                                             Float(self.greenComponent),
+                                             Float(self.blueComponent),
+                                             Float(self.alphaComponent))
     }
 }
 

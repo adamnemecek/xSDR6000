@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		9102F4431F7E91D7009576F8 /* WaterfallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9102F4421F7E91D6009576F8 /* WaterfallViewController.swift */; };
+		9102F4471F7E959B009576F8 /* WaterfallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9102F4461F7E959B009576F8 /* WaterfallViewController.swift */; };
 		910F1BE31F5B28B300B5677A /* PanadapterRenderer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 910F1BE21F5B28B300B5677A /* PanadapterRenderer.swift */; };
 		91329A8C1F4F52410095DAE2 /* Gradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91329A8B1F4F52410095DAE2 /* Gradient.swift */; };
 		916D51361F75A63900F1117B /* AudioLibrary.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 91C2067E1F67811500581284 /* AudioLibrary.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
@@ -83,7 +83,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		9102F4421F7E91D6009576F8 /* WaterfallViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = WaterfallViewController.swift; path = "xSDR6000/Sources/Waterfall Metal/WaterfallViewController.swift"; sourceTree = SOURCE_ROOT; };
+		9102F4461F7E959B009576F8 /* WaterfallViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = WaterfallViewController.swift; sourceTree = "<group>"; };
 		910F1BE21F5B28B300B5677A /* PanadapterRenderer.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PanadapterRenderer.swift; sourceTree = "<group>"; };
 		91329A8B1F4F52410095DAE2 /* Gradient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Gradient.swift; path = xSDR6000/Sources/Gradients/Gradient.swift; sourceTree = SOURCE_ROOT; };
 		91A6098E1F6DFED2007328DB /* PanadapterFrequencyLegend.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = PanadapterFrequencyLegend.swift; sourceTree = "<group>"; };
@@ -153,14 +153,14 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		9102F4411F7E91AA009576F8 /* Waterfall Metal */ = {
+		9102F4451F7E959B009576F8 /* Waterfall Metal */ = {
 			isa = PBXGroup;
 			children = (
-				9102F4421F7E91D6009576F8 /* WaterfallViewController.swift */,
+				9102F4461F7E959B009576F8 /* WaterfallViewController.swift */,
 			);
 			name = "Waterfall Metal";
-			path = "xFlex/Waterfall Metal";
-			sourceTree = "<group>";
+			path = "xSDR6000/Sources/Waterfall Metal";
+			sourceTree = SOURCE_ROOT;
 		};
 		911AF72E1D0C6C8F00DCC20B /* Panafall */ = {
 			isa = PBXGroup;
@@ -265,7 +265,7 @@
 				91473E631CF7E20E00DE2ADF /* Panadapter */,
 				91D49E871F59F48D00D3D38B /* Panadapter Metal */,
 				91473E641CF7E22400DE2ADF /* Waterfall */,
-				9102F4411F7E91AA009576F8 /* Waterfall Metal */,
+				9102F4451F7E959B009576F8 /* Waterfall Metal */,
 				9188A3CE1CFF01F9003F05A3 /* Preferences */,
 				91B171131CDF86C600600E02 /* Xibs */,
 				91B171151CDF872000600E02 /* Gradients */,
@@ -483,7 +483,7 @@
 				91FADE061F4A765A00DEC52B /* RxViewController.swift in Sources */,
 				91FADDEB1F4A74FB00DEC52B /* Extensions.swift in Sources */,
 				91FADDF81F4A75AE00DEC52B /* FlagViewController.swift in Sources */,
-				9102F4431F7E91D7009576F8 /* WaterfallViewController.swift in Sources */,
+				9102F4471F7E959B009576F8 /* WaterfallViewController.swift in Sources */,
 				91FADDFE1F4A763300DEC52B /* BandButtonViewController.swift in Sources */,
 				91FADE081F4A765A00DEC52B /* SideViewController.swift in Sources */,
 				91FADE531F4A781800DEC52B /* ParameterMonitor.swift in Sources */,

@@ -32,6 +32,7 @@ struct Uniforms {                       // common uniforms
     float4  spectrumColor;
     float4  gridColor;
     float4  tnfInactiveColor;
+    bool    tnfsEnabled;
     bool    textureEnable;
 };
 
@@ -199,17 +200,13 @@ vertex VertexOutput tnf_vertex(const device TnfVertex* vertices [[ buffer(0) ]],
 {
     
     VertexOutput v_out;
-    float percent;
-    float xCoord;
     
-    // percent = (tnf freq - start freq) / (freq range)
-//    percent = (float(uniforms.start) - vertices[vertexId].coord.x) / (uniforms.end - uniforms.start);
-    // normalize the % to an x coordinate in clip space
-//    xCoord = ( percent * 2) - 1;
-    
-    // send values to the fragment stage
-//    v_out.coord = float4( xCoord, vertices[vertexId].coord.y, 0.0, 1.0);
-    v_out.gridColor = vertices[vertexId].color;
+    v_out.coord = float4( vertices[vertexId].coord.xy, 0.0, 1.0);
+    if (uniforms.tnfsEnabled) {
+        v_out.gridColor = vertices[vertexId].color;
+    } else {
+        v_out.gridColor = uniforms.tnfInactiveColor;
+    }
     
     return v_out;
 }
@@ -230,6 +227,5 @@ fragment float4 tnf_fragment( VertexOutput in [[ stage_in ]],
 {
     // use the Grid color
     return in.gridColor;
-    //    return float4(1.0, 1.0, 1.0, 1.0);
 }
 

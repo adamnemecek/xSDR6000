@@ -26,7 +26,7 @@ final class PreferencesTabViewController : NSTabViewController {
         super.viewDidLoad()
         
         // make me the delegate of the Tab View
-        tabView.delegate = self
+//        tabView.delegate = self
 
         // give the initially selected tab a reference to the User Defaults
         tabView.selectedTabViewItem?.viewController?.representedObject = Defaults

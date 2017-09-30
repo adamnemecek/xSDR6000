@@ -44,6 +44,8 @@ class PanadapterViewController: NSViewController {
     @IBOutlet weak var _dbLegendView: PanadapterDbLegend!
     
     fileprivate var _params: Params { return representedObject as! Params }
+    fileprivate var _radio: Radio { return _params.radio }
+    fileprivate var _panadapter: Panadapter? { return _params.panadapter }
 
     fileprivate var _center: Int {return _panadapter!.center }
     fileprivate var _bandwidth: Int { return _panadapter!.bandwidth }
@@ -51,7 +53,6 @@ class PanadapterViewController: NSViewController {
     fileprivate var _end: Int  { return _center + (_bandwidth/2) }
     fileprivate var _hzPerUnit: CGFloat { return CGFloat(_end - _start) / _panadapter!.panDimensions.width }
 
-    fileprivate var _panadapter: Panadapter? { return _params.panadapter }
 
     fileprivate var _bandwidthParam: BandwidthParamTuple {         // given Bandwidth, return a Spacing & a Format
         get { return PanadapterViewController.kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? PanadapterViewController.kBandwidthParams[0] } }
@@ -95,16 +96,21 @@ class PanadapterViewController: NSViewController {
 
         _panadapter?.delegate = _renderer
         
-        // begin observing Defaults
+        // begin observing Defaults & Panadapter
         observations(UserDefaults.standard, paths: _defaultsKeyPaths)
-        
-        // add notification subscriptions
-        addNotifications()
+        observations(_panadapter!, paths: _panadapterKeyPaths)
+        observations(_radio, paths: _radioKeyPaths)
 
         // Pan (Left Button)
         _panLeft = NSPanGestureRecognizer(target: self, action: #selector(panLeft(_:)))
         _panLeft.buttonMask = kLeftButton
         view.addGestureRecognizer(_panLeft)
+        
+        // capture existing Tnf's
+        captureInitialTnfs()
+        
+        // add notification subscriptions
+        addNotifications()
     }
     /// View did layout
     ///
@@ -167,48 +173,59 @@ class PanadapterViewController: NSViewController {
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
+    /// Setup any Tnf's present at viewDidLoad time
+    ///
+    func captureInitialTnfs() {
+        
+        // populate any existing Tnf's
+        _renderer.tnfVertices = populateTnfVertices(initial: true)
+        _renderer.updateTnfs()
+        
+    }
     /// Populate vertices for Tnf draw calls
     ///
     /// - Returns:      vertices for Tnf's
     ///
-    func prepareTnfVertices() -> [PanadapterRenderer.TnfVertex] {
+    func populateTnfVertices(initial: Bool = false) -> [PanadapterRenderer.TnfVertex] {
         var vertices: [PanadapterRenderer.TnfVertex] = []
         
-        for (_, _tnf) in _panadapter!.radio!.tnfs {
+        for (_, tnf) in _panadapter!.radio!.tnfs {
             
-            if _tnf.frequency >= _start && _tnf.frequency <= _end {
+            if tnf.frequency >= _start && tnf.frequency <= _end {
                 
-                // calculate the Tnf position & width
-                let _tnfPosition = Float(_tnf.frequency - _tnf.width/2 - _start) / Float(_hzPerUnit)
-                let _tnfWidth = Float(_tnf.width) / Float(_hzPerUnit)
+                // calculate the Tnf position (in pixels)
+                let tnfXLeft = Float(tnf.frequency - tnf.width/2 - _start) / Float(_hzPerUnit)
+                let tnfXRight = tnfXLeft + (Float(tnf.width) / Float(_hzPerUnit))
                 
-                // color it based on depth & active / inactive
-                var color: NSColor
+                // convert to clip space
+                let tnfLeftPosition = (2.0 * (tnfXLeft / Float(_panadapter!.panDimensions.width) )) - 1.0
+                let tnfRightPosition = (2.0 * (tnfXRight / Float(_panadapter!.panDimensions.width) )) - 1.0
                 
-                switch _tnf.depth {
+                // color it based on depth
+                var color: float4
+                
+                // Tnf's enabled
+                switch tnf.depth {
                 case Tnf.Depth.normal.rawValue:
-                    color = Defaults[.tnfColorNormal]
+                    color = Defaults[.tnfNormal].float4Color
+                    
                 case Tnf.Depth.deep.rawValue:
-                    color = Defaults[.tnfColorDeep]
+                    color = Defaults[.tnfDeep].float4Color
+                    
                 case Tnf.Depth.veryDeep.rawValue:
-                    color = Defaults[.tnfColorVeryDeep]
+                    color = Defaults[.tnfVeryDeep].float4Color
+                    
                 default:
-                    color = Defaults[.tnfColorNormal]
+                    color = Defaults[.tnfNormal].float4Color
                 }
-                // convert NSColor to float4
-                let tnfColor = float4(Float(color.redComponent),
-                                  Float(color.greenComponent),
-                                  Float(color.blueComponent),
-                                  Float(color.alphaComponent))
-
-                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: _tnfPosition,  y: -1.0), color: tnfColor))
-                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: _tnfPosition,  y:  1.0), color: tnfColor))
-                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: _tnfPosition + _tnfWidth, y: -1.0), color: tnfColor))
-                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: _tnfPosition + _tnfWidth, y:  1.0), color: tnfColor))
-//                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: -0.5,  y: -1.0), color: tnfColor))
-//                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: -0.5,  y:  1.0), color: tnfColor))
-//                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: -0.5 + 0.1, y: -1.0), color: tnfColor))
-//                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: -0.5 + 0.1, y:  1.0), color: tnfColor))
+                // populate the tnf vertices
+                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: tnfLeftPosition,  y: -1.0), color: color))
+                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: tnfLeftPosition,  y:  1.0), color: color))
+                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: tnfRightPosition, y: -1.0), color: color))
+                vertices.append(PanadapterRenderer.TnfVertex(coord: float2(x: tnfRightPosition, y:  1.0), color: color))
+            
+                // if processing an initial Tnf, setup observations
+                if initial { observations(tnf, paths: _tnfKeyPaths) }
             }
         }
         return vertices
@@ -230,6 +247,10 @@ class PanadapterViewController: NSViewController {
         "gridLines",
         "spectrum",
         "spectrumBackground",
+        "tnfInactive",
+        "tnfNormal",
+        "tnfDeep",
+        "tnfVeryDeep"
     ]
 
     fileprivate let _tnfKeyPaths = [                    // Tnf keypaths to observe
@@ -238,7 +259,11 @@ class PanadapterViewController: NSViewController {
         #keyPath(Tnf.width),
     ]
     
-    fileprivate let _panadapterKeyPaths = [           // Panadapter keypaths to observe
+    fileprivate let _radioKeyPaths = [                  // Radio keypaths to observe
+        #keyPath(Radio.tnfEnabled)
+    ]
+
+    fileprivate let _panadapterKeyPaths = [             // Panadapter keypaths to observe
         #keyPath(Panadapter.bandwidth),
         #keyPath(Panadapter.center)
     ]
@@ -246,9 +271,9 @@ class PanadapterViewController: NSViewController {
     /// Add / Remove property observations
     ///
     /// - Parameters:
-    ///   - object: the object of the observations
-    ///   - paths: an array of KeyPaths
-    ///   - add: add / remove (defaults to add)
+    ///   - object:         the object of the observations
+    ///   - paths:          an array of KeyPaths
+    ///   - add:            add / remove (defaults to add)
     ///
     fileprivate func observations<T: NSObject>(_ object: T, paths: [String], remove: Bool = false) {
         
@@ -271,22 +296,23 @@ class PanadapterViewController: NSViewController {
         
         switch keyPath! {
             
-        case "gridLines", "spectrum":
+        case "gridLines", "spectrum", "tnfInactive":
             _renderer.populateUniforms()
             _renderer.updateUniformsBuffer()
             
         case "spectrumBackground":
             _renderer.setClearColor()
+           
+        case #keyPath(Radio.tnfEnabled):
+            _renderer.uniforms.tnfsEnabled = _radio.tnfEnabled
+            _renderer.updateUniformsBuffer()
             
-//        case #keyPath(Panadapter.bandwidth), #keyPath(Panadapter.center):
-//            if let newValue = change?[.newKey] as? Int {
-//                _renderer.uniforms.start = Int32(_center - newValue/2)
-//                _renderer.uniforms.end = Int32(_center + newValue/2)
-//                _renderer.updateUniformsBuffer()
-//            }
-            
+        case "tnfNormal", "tnfDeep", "tnfVeryDeep":
+            fallthrough
+        case #keyPath(Panadapter.bandwidth), #keyPath(Panadapter.center):
+            fallthrough
         case #keyPath(Tnf.frequency), #keyPath(Tnf.depth), #keyPath(Tnf.width):
-            _renderer.tnfVertices = prepareTnfVertices()
+            _renderer.tnfVertices = populateTnfVertices()
             _renderer.updateTnfs()
             
         default:
@@ -310,7 +336,7 @@ class PanadapterViewController: NSViewController {
     }
     /// Process .panadapterWillBeRemoved Notification
     ///
-    /// - Parameter note: a Notification instance
+    /// - Parameter note:       a Notification instance
     ///
     @objc fileprivate func panadapterWillBeRemoved(_ note: Notification) {
         
@@ -323,36 +349,46 @@ class PanadapterViewController: NSViewController {
                 // YES, remove Defaults property observers
                 observations(Defaults, paths: _defaultsKeyPaths, remove: true)
 
-//                // YES, remove Panadapter property observers
-//                observations(panadapter, paths: _panadapterKeyPaths, remove: true)
+                // remove Radio property observers
+                observations(_radio, paths: _radioKeyPaths, remove: true)
+
+                // remove Panadapter property observers
+                observations(panadapter, paths: _panadapterKeyPaths, remove: true)
             }
         }
     }
     /// Process .tnfHasBeenAdded Notification
     ///
-    /// - Parameter note: a Notification instance
+    /// - Parameter note:       a Notification instance
     ///
     @objc fileprivate func tnfHasBeenAdded(_ note: Notification) {
         
         // does the Notification contain a Tnf object?
         if let tnf = note.object as? Tnf {
             
+            _renderer.tnfVertices = populateTnfVertices()
+            _renderer.updateTnfs()
+
             // YES, add observations of this Tnf
             observations(tnf, paths: _tnfKeyPaths)
         }
     }
     /// Process .tnfWillBeRemoved Notification
     ///
-    /// - Parameter note: a Notification instance
+    /// - Parameter note:       a Notification instance
     ///
     @objc fileprivate func tnfWillBeRemoved(_ note: Notification) {
-        
+
         // does the Notification contain a Tnf object?
         if let tnf = note.object as? Tnf {
 
             // YES, remove observations of this Tnf
             observations(tnf, paths: _tnfKeyPaths, remove: true)
-
+            
+            DispatchQueue.main.async {
+                self._renderer.tnfVertices = self.populateTnfVertices()
+                self._renderer.updateTnfs()
+            }
         }
     }
 }

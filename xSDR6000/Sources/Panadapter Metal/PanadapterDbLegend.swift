@@ -79,7 +79,7 @@ final class PanadapterDbLegend: NSView {
     override func draw(_ dirtyRect: NSRect) {
         
         // setup the Legend color
-        _attributes[NSForegroundColorAttributeName] = Defaults[.frequencyLegend]
+        _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
 
         // get the spacing between legends
         let dbSpacing = CGFloat(Defaults[.dbLegendSpacing])
