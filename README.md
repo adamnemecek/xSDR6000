@@ -2,7 +2,7 @@
 Mac Client for the FlexRadio (TM) 6000 series software defined radios. 
 Provides functionality similar to the FlexRadio (TM) SmartSDR (TM) app.
 
-Builds on macOS 10.12.6 using XCode 9 using Swift 3.2 with a Deployment
+Builds on macOS 10.13 using XCode 9 using Swift 3.2 with a Deployment
 Target of macOS 10.11
 
 ==========================================================================
