@@ -9,7 +9,7 @@
 import Cocoa
 import xLib6000
 
-typealias Params = (radio: Radio, panadapter: Panadapter?, waterfall: Waterfall?)     // Radio & Panadapter references
+public typealias Params = (radio: Radio, panadapter: Panadapter?, waterfall: Waterfall?)     // Radio & Panadapter references
 
 class PanafallsViewController: NSSplitViewController {
     

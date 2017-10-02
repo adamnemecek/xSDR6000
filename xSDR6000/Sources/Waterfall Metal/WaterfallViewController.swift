@@ -19,28 +19,28 @@ class WaterfallViewController: NSViewController {
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    @IBOutlet weak var _waterfallView: MTKView!
-    @IBOutlet weak var _timeLegendView: PanadapterDbLegend!
+    @IBOutlet weak var _waterfallView   : MTKView!
+//    @IBOutlet weak var _timeLegendView: PanadapterDbLegend!
     
-    fileprivate var _params: Params { return representedObject as! Params }
-    fileprivate var _panadapter: Panadapter? { return _params.panadapter }
-    fileprivate var _waterfall: Waterfall? { return _params.radio.waterfalls[_panadapter!.waterfallId] }
+    fileprivate var _params             : Params { return representedObject as! Params }
+    fileprivate var _panadapter         : Panadapter? { return _params.panadapter }
+    fileprivate var _waterfall          : Waterfall? { return _params.radio.waterfalls[_panadapter!.waterfallId] }
 
-    fileprivate var _center: Int { return _panadapter!.center }
-    fileprivate var _bandwidth: Int { return _panadapter!.bandwidth }
-    fileprivate var _start: Int { return _center - (_bandwidth/2) }
-    fileprivate var _end: Int  { return _center + (_bandwidth/2) }
-    fileprivate var _hzPerUnit: CGFloat { return CGFloat(_end - _start) / _panadapter!.panDimensions.width }
+    fileprivate var _center             : Int { return _panadapter!.center }
+    fileprivate var _bandwidth          : Int { return _panadapter!.bandwidth }
+    fileprivate var _start              : Int { return _center - (_bandwidth/2) }
+    fileprivate var _end                : Int  { return _center + (_bandwidth/2) }
+    fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / _panadapter!.panDimensions.width }
     
-//    fileprivate var _renderer: WaterfallRenderer!
+//    fileprivate var _renderer           : WaterfallRenderer!
 
-    fileprivate var _panLeft: NSPanGestureRecognizer!
-    fileprivate var _xStart: CGFloat = 0
-    fileprivate var _newCursor: NSCursor?
-    fileprivate let kLeftButton = 0x01                              // button masks
+    fileprivate var _panLeft            : NSPanGestureRecognizer!
+    fileprivate var _xStart             : CGFloat = 0
+    fileprivate var _newCursor          : NSCursor?
+    fileprivate let kLeftButton         = 0x01                              // button masks
 
     // constants
-    fileprivate let _log                    = (NSApp.delegate as! AppDelegate)
+    fileprivate let _log                = (NSApp.delegate as! AppDelegate)
     
     // ----------------------------------------------------------------------------
     // MARK: - Overridden methods

@@ -215,46 +215,7 @@
                     <view key="view" identifier="Panadapter" wantsLayer="YES" id="Xjo-h3-79G">
                         <rect key="frame" x="0.0" y="0.0" width="450" height="120"/>
                         <autoresizingMask key="autoresizingMask"/>
-                        <subviews>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="H7C-IT-74M" userLabel="Spectrum" customClass="MTKView">
-                                <rect key="frame" x="0.0" y="20" width="450" height="100"/>
-                                <subviews>
-                                    <customView translatesAutoresizingMaskIntoConstraints="NO" id="nfG-Su-jVB" userLabel="Db Legend" customClass="PanadapterDbLegend" customModule="xSDR6000" customModuleProvider="target">
-                                        <rect key="frame" x="410" y="0.0" width="40" height="100"/>
-                                        <constraints>
-                                            <constraint firstAttribute="width" constant="40" id="iyt-te-aJO"/>
-                                        </constraints>
-                                    </customView>
-                                </subviews>
-                                <constraints>
-                                    <constraint firstAttribute="bottom" secondItem="nfG-Su-jVB" secondAttribute="bottom" id="7CM-cD-Zfm"/>
-                                    <constraint firstAttribute="height" relation="greaterThanOrEqual" constant="100" id="OEi-b4-yCY"/>
-                                </constraints>
-                            </customView>
-                            <customView translatesAutoresizingMaskIntoConstraints="NO" id="om2-ub-bLY" userLabel="Frequency Legend" customClass="PanadapterFrequencyLegend" customModule="xSDR6000" customModuleProvider="target">
-                                <rect key="frame" x="0.0" y="0.0" width="450" height="20"/>
-                                <constraints>
-                                    <constraint firstAttribute="height" constant="20" id="j4d-De-qW5"/>
-                                </constraints>
-                            </customView>
-                        </subviews>
-                        <constraints>
-                            <constraint firstItem="om2-ub-bLY" firstAttribute="leading" secondItem="Xjo-h3-79G" secondAttribute="leading" id="9cm-1Y-wWF"/>
-                            <constraint firstAttribute="trailing" secondItem="om2-ub-bLY" secondAttribute="trailing" id="ESd-LX-JOm"/>
-                            <constraint firstItem="H7C-IT-74M" firstAttribute="leading" secondItem="Xjo-h3-79G" secondAttribute="leading" id="HY8-bX-K70"/>
-                            <constraint firstItem="H7C-IT-74M" firstAttribute="top" secondItem="Xjo-h3-79G" secondAttribute="top" id="OTx-vi-Jzc"/>
-                            <constraint firstItem="om2-ub-bLY" firstAttribute="top" secondItem="H7C-IT-74M" secondAttribute="bottom" id="aSu-RJ-QjJ"/>
-                            <constraint firstAttribute="trailing" secondItem="H7C-IT-74M" secondAttribute="trailing" id="h47-76-vmF"/>
-                            <constraint firstAttribute="bottom" secondItem="om2-ub-bLY" secondAttribute="bottom" id="iMW-yd-j59"/>
-                            <constraint firstItem="nfG-Su-jVB" firstAttribute="top" secondItem="Xjo-h3-79G" secondAttribute="top" id="tVB-Af-Hh3"/>
-                            <constraint firstAttribute="trailing" secondItem="nfG-Su-jVB" secondAttribute="trailing" id="uh8-qS-sBZ"/>
-                        </constraints>
                     </view>
-                    <connections>
-                        <outlet property="_dbLegendView" destination="nfG-Su-jVB" id="IEw-ZQ-emp"/>
-                        <outlet property="_frequencyLegendView" destination="om2-ub-bLY" id="2AI-D4-Mqc"/>
-                        <outlet property="_spectrumView" destination="H7C-IT-74M" id="1Qm-uR-qze"/>
-                    </connections>
                 </viewController>
             </objects>
             <point key="canvasLocation" x="585" y="1155"/>
@@ -836,6 +797,6 @@
     </scenes>
     <resources>
         <image name="NSLockUnlockedTemplate" width="10" height="14"/>
-        <image name="NSStopProgressFreestandingTemplate" width="11" height="11"/>
+        <image name="NSStopProgressFreestandingTemplate" width="14" height="14"/>
     </resources>
 </document>
