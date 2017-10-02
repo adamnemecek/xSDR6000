@@ -53,7 +53,7 @@ final class WaterfallViewController : NSViewController, NSGestureRecognizerDeleg
         
         // give the WaterfallView a reference to the Params
         _waterfallView.params = _params
-        
+
         // get the list of possible spacings
         _timeLegendSpacings = Defaults[.timeLegendSpacings]
         
