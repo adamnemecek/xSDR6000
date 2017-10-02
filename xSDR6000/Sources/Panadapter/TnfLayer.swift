@@ -1,5 +1,5 @@
 //
-//  SLiceLayer.swift
+//  TnfLayer.swift
 //  xSDR6000
 //
 //  Created by Douglas Adams on 10/1/17.
@@ -10,13 +10,13 @@ import Cocoa
 import xLib6000
 import SwiftyUserDefaults
 
-public final class SliceLayer: CALayer, CALayerDelegate {
+public final class TnfLayer: CALayer, CALayerDelegate {
     
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
     var lineColor                       = NSColor(srgbRed: 1.0, green: 1.0, blue: 1.0, alpha: 0.2)
-    
+
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
@@ -66,58 +66,25 @@ public final class SliceLayer: CALayer, CALayerDelegate {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrent(context)
         
-        // for each Slice
-        for (_, slice) in _radio.slices {
+        // for each Tnf
+        for (_, tnf) in _radio.tnfs {
             
             // is it on this panadapter?
-            if slice.frequency >= _start && slice.frequency <= _end {
+            if tnf.frequency >= _start && tnf.frequency <= _end {
                 
                 // YES, calculate the position & width
-                let slicePosition = CGFloat(slice.frequency + slice.filterLow - _start) / _hzPerUnit
-                let sliceWidth = CGFloat( -slice.filterLow + slice.filterHigh ) / _hzPerUnit
+                let tnfPosition = CGFloat(tnf.frequency - tnf.width/2 - _start) / _hzPerUnit
+                let tnfWidth = CGFloat(tnf.width) / _hzPerUnit
                 
                 // get the color
-                let color = Defaults[.sliceFilter]
+                let color = _radio.tnfEnabled ? Defaults[.tnfActive] : Defaults[.tnfInactive]
                 
                 // draw the rectangle
-                let rect = NSRect(x: slicePosition, y: 0, width: sliceWidth, height: frame.height)
+                let rect = NSRect(x: tnfPosition, y: 0, width: tnfWidth, height: frame.height)
                 _path.fillRect( rect, withColor: color, andAlpha: Defaults[.sliceFilterOpacity])
-            }
-        }
-        _path.strokeRemove()
-        
-        // set the active slice color
-        Defaults[.sliceActive].set()
-        
-        // for each active Slice
-        for (_, slice) in _radio.slices where slice.active {
-            
-            // is it on this panadapter?
-            if slice.frequency >= _start && slice.frequency <= _end {
-
-                // YES, calculate the line position
-                let sliceFrequencyPosition = CGFloat(slice.frequency - _start) / _hzPerUnit
-
-                // draw the line
-                _path.vLine(at: sliceFrequencyPosition, fromY: 0, toY: frame.height)
-            }
-        }
-        _path.strokeRemove()
-
-        // set the inactive slice color
-        Defaults[.sliceInactive].set()
-        
-        // for each inactive Slice
-        for (_, slice) in _radio.slices where !slice.active {
-            
-            // is it on this panadapter?
-            if slice.frequency >= _start && slice.frequency <= _end{
                 
-                // YES, calculate the line position
-                let sliceFrequencyPosition = CGFloat(slice.frequency - _start) / _hzPerUnit
-                
-                // draw the line
-                _path.vLine(at: sliceFrequencyPosition, fromY: 0, toY: frame.height)
+                // crosshatch it based on depth
+                _path.crosshatch(rect, color: lineColor, depth: tnf.depth, twoWay: tnf.permanent)
             }
         }
         _path.strokeRemove()
@@ -135,5 +102,4 @@ public final class SliceLayer: CALayer, CALayerDelegate {
         }
     }
 }
-
 
