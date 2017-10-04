@@ -80,12 +80,6 @@ public final class DbLegendLayer: CALayer, CALayerDelegate {
         // calculate a typical font height
         _fontHeight = "-000".size(withAttributes: _attributes).height
                 
-        // set Line Width, Color & Dash
-        _path.lineWidth = CGFloat(Defaults[.gridLineWidth])
-        Defaults[.gridLines].set()
-        let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
-        _path.setLineDash( dash, count: 2, phase: 0 )
-
         // setup the Legend color
         _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
         
@@ -114,8 +108,13 @@ public final class DbLegendLayer: CALayer, CALayerDelegate {
         }
         _path.strokeRemove()
         
-        // draw the lines
+        // set Line Width, Color & Dash
+        _path.lineWidth = CGFloat(Defaults[.gridLineWidth])
+        let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
+        _path.setLineDash( dash, count: 2, phase: 0 )
         Defaults[.gridLines].set()
+
+        // draw the lines
         for i in 0...numberOfLegends {
             
             // calculate the y coordinate of the legend

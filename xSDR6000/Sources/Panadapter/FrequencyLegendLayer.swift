@@ -120,7 +120,7 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
         let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
         _path.setLineDash( dash, count: 2, phase: 0 )
         Defaults[.gridLines].set()
-
+        
         // draw lines
         for i in 0...numberOfMarks {
             let xPosition = firstFreqPosition + (CGFloat(i) * xIncrPerLegend)

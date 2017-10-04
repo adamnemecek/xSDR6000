@@ -39,11 +39,11 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var frequencyLegendHeight: CGFloat = 20                         // height of the Frequency Legend layer
-    var markerHeight: CGFloat = 0.6                                 // height % for band markers
-    var dbLegendWidth: CGFloat = 40
-    var dbLegendFont = NSFont(name: "Monaco", size: 12.0)
-    var frequencyLegendFont = NSFont(name: "Monaco", size: 12.0)
+    var frequencyLegendHeight               : CGFloat = 20      // height of the Frequency Legend layer
+    var markerHeight                        : CGFloat = 0.6     // height % for band markers
+    var dbLegendWidth                       : CGFloat = 40
+    var dbLegendFont                        = NSFont(name: "Monaco", size: 12.0)
+    var frequencyLegendFont                 = NSFont(name: "Monaco", size: 12.0)
 
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
@@ -80,9 +80,13 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     fileprivate var _startFreq              : CGFloat = 0.0
     fileprivate var _previousPosition       = NSPoint(x: 0.0, y: 0.0)
     fileprivate var _originalPosition       = NSPoint(x: 0.0, y: 0.0)
+    fileprivate var _originalType           : UpdateType!
     fileprivate var _dbmTop                 = false
+    fileprivate var _dragSlice              : xLib6000.Slice?
+    fileprivate var _dragTnf                : Tnf?
 
-    fileprivate var _spacings               = [String]()            // db legend spacing choices
+    fileprivate var _spacings               = Defaults[.dbLegendSpacings]
+    fileprivate var _multiplier             : CGFloat = 0.0
 
     // constants
     fileprivate let _log                    = (NSApp.delegate as! AppDelegate)
@@ -99,6 +103,14 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     fileprivate let kLeftButton             = 0x01                  // button masks
     fileprivate let kRightButton            = 0x02
 
+    enum UpdateType {
+        case bandwidth
+        case center
+        case dbm
+        case slice
+        case tnf
+    }
+
     // ----------------------------------------------------------------------------
     // MARK: - Overridden methods
     
@@ -107,58 +119,30 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     override func viewDidLoad() {
         super.viewDidLoad()
 
-        // create Spectrum, frequencyLegend & dbLegend layesr
-        setupLayers()
+        _multiplier = CGFloat(_bandwidth) * 0.001
         
-        _spectrumLayer.spectrumStyle = .line
+        // create Spectrum, frequency Legend, dbLegend, Tnf & Slice layers
+        createLayers()
         
         // get the default Metal device
         _spectrumLayer.device = MTLCreateSystemDefaultDevice()
         guard _spectrumLayer.device != nil else {
             fatalError("Metal is not supported on this device")
         }
-
-        // setup buffers
-        _spectrumLayer.setup()
         
-        // setup the spectrum background color
-        _spectrumLayer.setClearColor(Defaults[.spectrumBackground])
-
-        // setup Uniforms
-        _spectrumLayer.populateUniforms(size: view.frame.size)
-        _spectrumLayer.updateUniformsBuffer()
+        // setup Spectrum Layer
+        setupSpectrumLayer()
         
         // direct spectrum data to the spectrum layer
         _panadapter?.delegate = _spectrumLayer
 
-        // Pan (Left Button)
-        _panLeft = NSPanGestureRecognizer(target: self, action: #selector(panLeft(_:)))
-        _panLeft.buttonMask = kLeftButton
-        view.addGestureRecognizer(_panLeft)
+        // begin observations (defaults, panadapter, radio, tnf & slice)
+        setupObservations()
         
-        // get the list of possible spacings
-        _spacings = Defaults[.dbLegendSpacings]
+        // start gesture recognizers
+        setupGestureRecognizers()
         
-        // Click (Right Button)
-        _clickRight = NSClickGestureRecognizer(target: self, action: #selector(clickRight(_:)))
-        _clickRight.buttonMask = kRightButton
-        _clickRight.delegate = self
-        view.addGestureRecognizer(_clickRight)
-
-        // capture existing Tnfs
-        captureInitialTnfs()
-
-        // capture existing Slices
-        captureInitialSlices()
-        
-        // begin observations
-        observations(UserDefaults.standard, paths: _defaultsKeyPaths)
-        observations(_panadapter!, paths: _panadapterKeyPaths)
-        observations(_radio, paths: _radioKeyPaths)
-
-        // add notification subscriptions
-        addNotifications()
-
+        // draw each layer once
         _frequencyLegendLayer.redraw()
         _dbLegendLayer.redraw()
         _tnfLayer.redraw()
@@ -176,31 +160,82 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         _spectrumLayer.updateUniformsBuffer()
     }
 
+    // ----------------------------------------------------------------------------
+    // MARK: - Public methods
     
+    public func redrawFrequencyLegend() {
+        _frequencyLegendLayer.redraw()
+    }
+    public func redrawDbLegend() {
+        _dbLegendLayer.redraw()
+    }
+    public func redrawTnfs() {
+        _tnfLayer.redraw()
+    }
+    public func redrawSlices() {
+        _sliceLayer.redraw()
+    }
+
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
-    /// Setup any Tnf's present at viewDidLoad time
+    /// Create & install gesture recognizers
     ///
-    func captureInitialTnfs() {
+    func setupGestureRecognizers() {
+
+        // pan gesture - left button
+        _panLeft = NSPanGestureRecognizer(target: self, action: #selector(panLeft(_:)))
+        _panLeft.buttonMask = kLeftButton
+        view.addGestureRecognizer(_panLeft)
         
+        // click gesture - right button
+        _clickRight = NSClickGestureRecognizer(target: self, action: #selector(clickRight(_:)))
+        _clickRight.buttonMask = kRightButton
+        _clickRight.delegate = self
+        view.addGestureRecognizer(_clickRight)
+    }
+    /// Setup Spectrum layer buffers & parameters
+    ///
+    func setupSpectrumLayer() {
+        
+        // TODO: Make this a preference value
+        _spectrumLayer.spectrumStyle = .line
+        
+        // setup buffers
+        _spectrumLayer.setupBuffers()
+        
+        // setup the spectrum background color
+        _spectrumLayer.setClearColor(Defaults[.spectrumBackground])
+        
+        // setup Uniforms
+        _spectrumLayer.populateUniforms(size: view.frame.size)
+        _spectrumLayer.updateUniformsBuffer()
+    }
+    /// Setup Tnf's & Slices present at viewDidLoad time, start observations & Notification
+    ///
+    func setupObservations() {
+        
+        // capture tnfs present at viewDidLoad time
         for (_, tnf) in _radio.tnfs {
             // add observations of this Tnf
             observations(tnf, paths: _tnfKeyPaths)
         }
-    }
-    /// Setup any Slices present at viewDidLoad time
-    ///
-    func captureInitialSlices() {
-        
+        // capture slices present at viewDidLoad time
         for (_, slice) in _radio.slices {
             // add observations of this Slice
             observations(slice, paths: _sliceKeyPaths)
         }
+        // begin observations (defaults, panadapter & radio)
+        observations(UserDefaults.standard, paths: _defaultsKeyPaths)
+        observations(_panadapter!, paths: _panadapterKeyPaths)
+        observations(_radio, paths: _radioKeyPaths)
+
+        // add notification subscriptions
+        addNotifications()
     }
     /// Establish the Layers and their relationships to each other
     ///
-    fileprivate func setupLayers() {
+    fileprivate func createLayers() {
         
         // create layer constraints
         _minY = CAConstraint(attribute: .minY, relativeTo: "superlayer", attribute: .minY)
@@ -282,9 +317,6 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         _rootLayer.addSublayer(_dbLegendLayer)
         _rootLayer.addSublayer(_tnfLayer)
         _rootLayer.addSublayer(_sliceLayer)
-
-        // add notification subscriptions
-//        addNotifications()
     }
     /// Respond to Pan gesture (left mouse down)
     ///
@@ -298,13 +330,8 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // ----------------------------------------------------------------------------
         // Start of Nested methods & enums
         
-        enum UpdateType {
-            case center
-            case bandwidth
-            case dbm
-        }
-        // function to perform dragging
-        func drag(type: UpdateType, cursor: NSCursor) {
+        // function to monitor dragging
+        func drag(type: UpdateType, cursor: NSCursor, object: Any?) {
             // **** LEFT button drag RIGHT/LEFT in FREQ LEGEND ****
             switch gr.state {
                 
@@ -315,20 +342,16 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
                 // save the starting coordinate
                 _previousPosition = currentPosition
                 
-                // calculate start's percent of width & it's frequency (only used by freq legend)
-                _startPercent = currentPosition.x / view.frame.width
-                _startFreq = (_startPercent * CGFloat(_bandwidth)) + CGFloat(_start)
-                
             case .changed:
-                // update the panadapter params
-                update(type, _previousPosition, currentPosition)
+                // update the panadapter view
+                update(type, _previousPosition, currentPosition, object)
                 
                 // use the current (intermediate) location as the start
                 _previousPosition = currentPosition
 
             case .ended:
-                // update the panadapter params
-                update(type, _previousPosition, currentPosition)
+                // update the panadapter view
+                update(type, _previousPosition, currentPosition, object)
                 
                 // restore the previous cursor
                 NSCursor.pop()
@@ -338,57 +361,111 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
                 break
             }
         }
-        // function to update panadapter center, center & bandwidth or db legend
-        func update(_ type: UpdateType, _ previous: NSPoint, _ current: NSPoint) {
+        // function to update panadapter view(s)
+        func update(_ type: UpdateType, _ previous: NSPoint, _ current: NSPoint, _ object: Any?) {
             
             switch type {
-            case .center:
-                // adjust the center
-                _panadapter!.center = _panadapter!.center - Int( (current.x - previous.x) * _hzPerUnit)
-
-                // redraw the frequency legend
-                _frequencyLegendLayer.redraw()
-
             case .bandwidth:
-                // CGFloat versions of params
-                let end = CGFloat(_end)                     // end frequency (Hz)
-                let start = CGFloat(_start)                 // start frequency (Hz)
-                let bandwidth = CGFloat(_bandwidth)         // bandwidth (hz)
-                
-                // calculate the % change, + = greater bw, - = lesser bw
-                let delta = ((previous.x - current.x) / view.frame.width)
-                
-                // calculate the new bandwidth (Hz)
-                let newBandwidth = (1 + delta) * bandwidth
-                
-                // calculate adjustments to start & end
-                let adjust = (newBandwidth - bandwidth) / 2.0
-                let newStart = start - adjust
-                let newEnd = end + adjust
-                
-                // calculate adjustment to the center
-                let newStartPercent = (_startFreq - newStart) / newBandwidth
-                let freqError = (newStartPercent - _startPercent) * newBandwidth
-                let newCenter = (newStart + freqError) + (newEnd - newStart) / 2.0
-                
-                // adjust the center & bandwidth values (Hz)
-                _panadapter!.center = Int(newCenter)
-                _panadapter!.bandwidth = Int(newBandwidth)
-
-                // redraw the frequency legend
-                _frequencyLegendLayer.redraw()
-
-            case .dbm:
-                // Upper half of the db legend?
-                if _originalPosition.y > view.frame.height/2 {
-                    // YES, update the max value
-                    _panadapter!.maxDbm += (previous.y - current.y)
-                } else {
-                    // NO, update the min value
-                    _panadapter!.minDbm += (previous.y - current.y)
+                // is there a panadapter object?
+                if let pan = object as? Panadapter {
+                    
+                    // CGFloat versions of params
+                    let end = CGFloat(_end)                     // end frequency (Hz)
+                    let start = CGFloat(_start)                 // start frequency (Hz)
+                    let bandwidth = CGFloat(_bandwidth)         // bandwidth (hz)
+                    
+                    // calculate the % change, + = greater bw, - = lesser bw
+                    let delta = ((previous.x - current.x) / view.frame.width)
+                    
+                    // calculate the new bandwidth (Hz)
+                    let newBandwidth = (1 + delta) * bandwidth
+                    
+                    // calculate adjustments to start & end
+                    let adjust = (newBandwidth - bandwidth) / 2.0
+                    let newStart = start - adjust
+                    let newEnd = end + adjust
+                    
+                    // calculate adjustment to the center
+                    let newStartPercent = (_startFreq - newStart) / newBandwidth
+                    let freqError = (newStartPercent - _startPercent) * newBandwidth
+                    let newCenter = (newStart + freqError) + (newEnd - newStart) / 2.0
+                    
+                    // adjust the center & bandwidth values (Hz)
+                    pan.center = Int(newCenter)
+                    pan.bandwidth = Int(newBandwidth)
+                    
+                    // redraw the frequency legend
+                    _frequencyLegendLayer.redraw()
                 }
-                // redraw the db legend
-                _dbLegendLayer.redraw()
+
+            case .center:
+                // is there a panadapter object?
+                if let pan = object as? Panadapter {
+                    
+                    // adjust the center
+                    pan.center = pan.center - Int( (current.x - previous.x) * _hzPerUnit)
+                    
+                    // redraw the frequency legend
+                    _frequencyLegendLayer.redraw()
+                }
+                
+            case .dbm:
+                // is there a panadapter object?
+                if let pan = object as? Panadapter {
+                    
+                    // YES, Upper half of the db legend?
+                    if _originalPosition.y > view.frame.height/2 {
+                        // YES, update the max value
+                        pan.maxDbm += (previous.y - current.y)
+                    } else {
+                        // NO, update the min value
+                        pan.minDbm += (previous.y - current.y)
+                    }
+                    // redraw the db legend
+                    _dbLegendLayer.redraw()
+                }
+
+            case .slice:
+                // calculate offsets in x & y
+                let deltaX = current.x - previous.x
+                let deltaY = current.y - previous.y
+                
+                // is there a slice object?
+                if let slice = object as? xLib6000.Slice {
+                    
+                    // YES, drag or resize?
+                    if abs(deltaX) > abs(deltaY) {
+                        // drag
+                        slice.frequency += Int(deltaX * _hzPerUnit)
+                    } else {
+                        // resize
+                        slice.filterLow -= Int(deltaY * _multiplier)
+                        slice.filterHigh += Int(deltaY * _multiplier)
+                    }
+                }
+                // redraw the slices
+                _sliceLayer.redraw()
+
+            case .tnf:
+                // calculate offsets in x & y
+                let deltaX = current.x - previous.x
+                let deltaY = current.y - previous.y
+                
+                // is there a tnf object?
+                if let tnf = object as? Tnf {
+
+                    // YES, drag or resize?
+                    if abs(deltaX) > abs(deltaY) {
+                        // drag
+                        Swift.print("tnf drag")
+                        tnf.frequency = Int(current.x * _hzPerUnit) + _start
+                    } else {
+                        // resize
+                        tnf.width = tnf.width + Int(deltaY * _multiplier)
+                    }
+                }
+                // redraw the tnfs
+                _tnfLayer.redraw()
             }
         }
 
@@ -396,25 +473,63 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // End of Nested methods & enums
         
         // save the starting position
-        if gr.state == .began { _originalPosition = currentPosition }
+        if gr.state == .began {
+            _originalPosition = currentPosition
+            
+            // calculate start's percent of width & it's frequency (only used by freq legend)
+            _startPercent = currentPosition.x / view.frame.width
+            _startFreq = (_startPercent * CGFloat(_bandwidth)) + CGFloat(_start)
+
+            // what type of drag?
+            if _originalPosition.y < frequencyLegendHeight {
+                
+                // in frequency legend, bandwidth drag
+                _originalType = .bandwidth
+            
+            } else if _originalPosition.x < view.frame.width - dbLegendWidth {
+               
+                // in spectrum
+                _dragSlice = sliceHitTest(frequency: _startFreq)
+                _dragTnf = tnfHitTest(frequency: _startFreq)
+                if let _ =  _dragSlice{
+                    // Slice drag / resize
+                    _originalType = .slice
+                
+                } else if let _ = _dragTnf {
+                    // Tnf drag / resize
+                    _originalType = .tnf
+                
+                } else {
+                    // spectrum drag
+                    _originalType = .center
+                }
+            } else {
+                // in db legend, db legend drag
+                _originalType = .dbm
+            }
+        }
         
         // decide what type of drag this is
-        switch _originalPosition.y {
-        case 0..<frequencyLegendHeight:
-            drag(type: .bandwidth, cursor: NSCursor.resizeLeftRight())      // frequency legend drag
+        switch _originalType {
+        case .bandwidth:
+            drag(type: .bandwidth, cursor: NSCursor.resizeLeftRight(), object: _panadapter as Any)
             
-        case frequencyLegendHeight...:
+        case .slice:
+            drag(type: .slice, cursor: NSCursor.resizeLeftRight(), object: _dragSlice as Any)
             
-            switch _originalPosition.x {
-            case (view.frame.width - dbLegendWidth)...:
-                drag(type: .dbm, cursor: NSCursor.resizeUpDown())           // db legend drag
-                
-            default:
-                drag(type: .center, cursor: NSCursor.resizeLeftRight())     // spectrum drag
-            }
-        default:                                                            // should never occur
+        case .tnf:
+            drag(type: .tnf, cursor: NSCursor.resizeLeftRight(), object: _dragTnf as Any)
+            
+        case .dbm:
+            drag(type: .dbm, cursor: NSCursor.resizeUpDown(), object: _panadapter as Any)
+            
+        case .center:
+            drag(type: .center, cursor: NSCursor.resizeLeftRight(), object: _panadapter as Any)
+        
+        default:    // should never happen
             break
         }
+
     }
     /// Prevent the Right Click recognizer from responding when the mouse is not over the Legend
     ///
@@ -427,7 +542,7 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         
         // is it a right click?
         if gr == _clickRight {
-            // YES, if not over the legend, push it
+            // YES, if not over the legend, push it up the responder chain
             return view.convert(event.locationInWindow, from: nil).x >= view.frame.width - _dbLegendWidth
         } else {
             // not right click, process it
@@ -470,11 +585,50 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         _dbLegendLayer.redraw()
         
     }
+    /// FInd the Slice at a frequency (if any)
+    ///
+    /// - Parameter freq:       the target frequency
+    /// - Returns:              a slice or nil
+    ///
+    func sliceHitTest(frequency freq: CGFloat) -> xLib6000.Slice? {
+        var slice: xLib6000.Slice?
+        
+        for (_, s) in _radio.slices {
+            if s.frequency + s.filterLow <= Int(freq) && s.frequency + s.filterHigh >= Int(freq) {
+                slice = s
+                break
+            }
+        }
+        return slice
+    }
+    /// FInd the Tnf at or near a frequency (if any)
+    ///
+    /// - Parameter freq:       the target frequency
+    /// - Returns:              a tnf or nil
+    ///
+    func tnfHitTest(frequency freq: CGFloat) -> Tnf? {
+        var tnf: Tnf?
+        
+        // calculate a minimum width for hit testing
+        let effectiveWidth = Int( CGFloat(_bandwidth) * 0.01)
+        
+        for (_, t) in _radio.tnfs {
+            
+            let halfWidth = max(effectiveWidth, t.width/2)
+            if t.frequency - halfWidth <= Int(freq) && t.frequency + halfWidth >= Int(freq) {
+                tnf = t
+                break
+            }
+        }
+        return tnf
+    }
 
     // ----------------------------------------------------------------------------
     // MARK: - Observation Methods
     
     fileprivate let _defaultsKeyPaths = [               // Defaults keypaths to observe
+        "frequencyLegend",
+        "dbLegend",
         "gridLines",
         "spectrum",
         "spectrumBackground",
@@ -536,34 +690,38 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         
         switch keyPath! {
             
-        case "gridLines", "spectrum", "tnfInactive":
-            _spectrumLayer.populateUniforms(size: view.frame.size)
-            _spectrumLayer.updateUniformsBuffer()
+        case "frequencyLegend":
+            _frequencyLegendLayer.redraw()
+            
+        case "dbLegend":
+            _dbLegendLayer.redraw()
             
         case "gridLines":
             _frequencyLegendLayer.redraw()
             _dbLegendLayer.redraw()
             
+        case "spectrum", "tnfInactive":
+            _spectrumLayer.populateUniforms(size: view.frame.size)
+            _spectrumLayer.updateUniformsBuffer()
+            
         case "spectrumBackground":
             _spectrumLayer.setClearColor(Defaults[.spectrumBackground])
             
-        case "sliceInactive", "sliceActive", "sliceFilter":
-            _sliceLayer.redraw()
-            
         case #keyPath(Panadapter.center), #keyPath(Panadapter.bandwidth):
+            _multiplier = CGFloat(_bandwidth) * 0.001
             _sliceLayer.redraw()
             _frequencyLegendLayer.redraw()
             fallthrough
             
         case #keyPath(Radio.tnfEnabled):
             fallthrough
-            
         case "tnfInactive", "tnfNormal", "tnfDeep", "tnfVeryDeep":
             fallthrough
-            
         case #keyPath(Tnf.frequency), #keyPath(Tnf.depth), #keyPath(Tnf.width):
             _tnfLayer.redraw()
             
+        case "sliceInactive", "sliceActive", "sliceFilter":
+           fallthrough            
         case #keyPath(xLib6000.Slice.frequency), #keyPath(xLib6000.Slice.filterLow), #keyPath(xLib6000.Slice.filterHigh):
             _sliceLayer.redraw()
         

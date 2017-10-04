@@ -35,7 +35,7 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
         var delta               :Float                  // distance between x coordinates
         var height              :Float                  // height of view (yPixels)
         var spectrumColor       :float4                 // spectrum color
-        var textureEnable       :Bool                   // texture enabled
+        var textureEnable       :Bool                   // texture on / off
     }
     
     static let kMaxVertexCount  = 3_000                 // max number of panadapter bins
@@ -156,7 +156,7 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
     }
     /// Setup Buffers & State
     ///
-    func setup() {
+    func setupBuffers() {
         
         // create a Buffer for Spectrum Vertices
         let dataSize = _spectrumVertices.count * MemoryLayout.stride(ofValue: _spectrumVertices[0])
@@ -168,7 +168,7 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
             _spectrumIndices[2 * i] = UInt16(SpectrumLayer.kMaxVertexCount + i)
             _spectrumIndices[(2 * i) + 1] = UInt16(i)
         }
-        // create a Buffer for Indices for filled drawing (triangleStrip)
+        // create a Buffer for Indices for filled drawing
         let indexSize = _spectrumIndices.count * MemoryLayout.stride(ofValue: _spectrumIndices[0])
         _spectrumIndicesBuffer = device!.makeBuffer(bytes: _spectrumIndices, length: indexSize)
 
