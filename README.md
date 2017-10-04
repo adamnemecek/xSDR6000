@@ -5,6 +5,9 @@ Provides functionality similar to the FlexRadio (TM) SmartSDR (TM) app.
 Builds on macOS 10.13 using XCode 9 using Swift 3.2 with a Deployment
 Target of macOS 10.11
 
+The Metal branch is the only current branch. It's code REQUIRES a Mac that is comaptible
+with Metal.
+
 ==========================================================================
 
 NOTE: This app is a "work in progress" and is not fully functional.
