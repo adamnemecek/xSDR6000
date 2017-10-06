@@ -15,14 +15,14 @@ public final class TnfLayer: CALayer, CALayerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
+    var params                          : Params!           // Radio & Panadapter references
     var lineColor                       = NSColor(srgbRed: 1.0, green: 1.0, blue: 1.0, alpha: 0.2)
 
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _params             : Params!           // Radio & Panadapter references
-    fileprivate var _radio              : Radio { return _params.radio }
-    fileprivate var _panadapter         : Panadapter? { return _params.panadapter }
+    fileprivate var _radio              : Radio { return params.radio }
+    fileprivate var _panadapter         : Panadapter? { return params.panadapter }
     
     fileprivate var _center             : Int {return _panadapter!.center }
     fileprivate var _bandwidth          : Int { return _panadapter!.bandwidth }
@@ -31,24 +31,6 @@ public final class TnfLayer: CALayer, CALayerDelegate {
     fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / self.frame.width }
     
     fileprivate var _path               = NSBezierPath()
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Initialization
-    
-    public init( params: Params) {
-        super.init()
-        
-        // save a reference to the Params
-        _params = params
-    }
-    
-    public override init(layer: Any) {
-        super.init(layer: layer)
-    }
-    
-    required public init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
     
     // ----------------------------------------------------------------------------
     // MARK: - CALayerDelegate methods

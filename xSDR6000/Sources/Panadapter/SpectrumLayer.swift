@@ -158,7 +158,7 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
     ///
     func setupBuffers() {
         
-        // create a Buffer for Spectrum Vertices
+        // create and save a Buffer for Spectrum Vertices
         let dataSize = _spectrumVertices.count * MemoryLayout.stride(ofValue: _spectrumVertices[0])
         _spectrumVerticesBuffer = device!.makeBuffer(bytes: _spectrumVertices, length: dataSize)
         
@@ -172,25 +172,30 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
         let indexSize = _spectrumIndices.count * MemoryLayout.stride(ofValue: _spectrumIndices[0])
         _spectrumIndicesBuffer = device!.makeBuffer(bytes: _spectrumIndices, length: indexSize)
 
-        // create a texture
+        // create and save a texture
         guard let texture =  try? SpectrumLayer.texture(forDevice: device!, asset: SpectrumLayer.kTextureAsset) else {
             fatalError("Unable to load texture (\(SpectrumLayer.kTextureAsset)) from main bundle")
         }
         _texture = texture
         
-        // create a texture sampler
+        // create and save a texture sampler
         _samplerState = SpectrumLayer.samplerState(forDevice: device!, addressMode: .clampToEdge, filter: .linear)
 
+        // get the Vertex and Fragment shaders
         let library = device!.newDefaultLibrary()!
         let vertexProgram = library.makeFunction(name: kSpectrumVertex)
         let fragmentProgram = library.makeFunction(name: kSpectrumFragment)
 
+        // create a Render Pipeline Descriptor
         let renderPipelineDesc = MTLRenderPipelineDescriptor()
         renderPipelineDesc.vertexFunction = vertexProgram
         renderPipelineDesc.fragmentFunction = fragmentProgram
         renderPipelineDesc.colorAttachments[0].pixelFormat = .bgra8Unorm
         
+        // create and save the Render Pipeline State object
         _spectrumRps = try! device!.makeRenderPipelineState(descriptor: renderPipelineDesc)
+        
+        // create and save a Command Queue object
         _commandQueue = device!.makeCommandQueue()
         
     }
@@ -205,6 +210,10 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
                                     alpha: Double(color.alphaComponent))
         
     }
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Class methods
+    
     /// Create a Texture from an image in the Assets.xcassets
     ///
     /// - Parameters:

@@ -11,19 +11,21 @@ import xLib6000
 import SwiftyUserDefaults
 
 public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
+
+    typealias BandwidthParamTuple = (high: Int, low: Int, spacing: Int, format: String)
     
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
+    var params                          : Params!               // Radio & Panadapter references
     var height                          : CGFloat = 20          // layer height
     var font                            = NSFont(name: "Monaco", size: 12.0)
 
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _params             : Params!               // Radio & Panadapter references
-    fileprivate var _radio              : Radio { return _params.radio }
-    fileprivate var _panadapter         : Panadapter? { return _params.panadapter }
+    fileprivate var _radio              : Radio { return params.radio }
+    fileprivate var _panadapter         : Panadapter? { return params.panadapter }
     
     fileprivate var _center             : Int {return _panadapter!.center }
     fileprivate var _bandwidth          : Int { return _panadapter!.bandwidth }
@@ -32,29 +34,29 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
     fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / self.frame.width }
     
     fileprivate var _bandwidthParam     : BandwidthParamTuple {  // given Bandwidth, return a Spacing & a Format
-        get { return PanadapterViewController.kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? PanadapterViewController.kBandwidthParams[0] } }
+        get { return kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? kBandwidthParams[0] } }
     
     fileprivate var _attributes         = [String:AnyObject]()   // Font & Size for the Frequency Legend
     fileprivate var _path               = NSBezierPath()
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Initialization
-    
-    public init( params: Params) {
-        super.init()
-        
-        // save a reference to the Params
-        _params = params
-    }
-    
-    public override init(layer: Any) {
-        super.init(layer: layer)
-    }
-    
-    required public init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
+
+    fileprivate let kBandwidthParams: [BandwidthParamTuple] =    // spacing & format vs Bandwidth
+        [   //      Bandwidth               Legend
+            //  high         low      spacing   format
+            (15_000_000, 10_000_000, 1_000_000, "%0.0f"),           // 15.00 -> 10.00 Mhz
+            (10_000_000,  5_000_000,   400_000, "%0.1f"),           // 10.00 ->  5.00 Mhz
+            ( 5_000_000,   2_000_000,  200_000, "%0.1f"),           //  5.00 ->  2.00 Mhz
+            ( 2_000_000,   1_000_000,  100_000, "%0.1f"),           //  2.00 ->  1.00 Mhz
+            ( 1_000_000,     500_000,   50_000, "%0.2f"),           //  1.00 ->  0.50 Mhz
+            (   500_000,     400_000,   40_000, "%0.2f"),           //  0.50 ->  0.40 Mhz
+            (   400_000,     200_000,   20_000, "%0.2f"),           //  0.40 ->  0.20 Mhz
+            (   200_000,     100_000,   10_000, "%0.2f"),           //  0.20 ->  0.10 Mhz
+            (   100_000,      40_000,    4_000, "%0.3f"),           //  0.10 ->  0.04 Mhz
+            (    40_000,      20_000,    2_000, "%0.3f"),           //  0.04 ->  0.02 Mhz
+            (    20_000,      10_000,    1_000, "%0.3f"),           //  0.02 ->  0.01 Mhz
+            (    10_000,       5_000,      500, "%0.4f"),           //  0.01 ->  0.005 Mhz
+            (    5_000,            0,      400, "%0.4f")            //  0.005 -> 0 Mhz
+    ]
+
     // ----------------------------------------------------------------------------
     // MARK: - CALayerDelegate methods
     
@@ -86,11 +88,12 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
         
         // calculate the spacings
         let freqRange = _end - _start
-        let xIncrPerLegend = CGFloat(_bandwidthParam.spacing) / _hzPerUnit
+        let bandwidthParams = kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? kBandwidthParams[0]
+        let xIncrPerLegend = CGFloat(bandwidthParams.spacing) / _hzPerUnit
         
         // calculate the number & position of the legend marks
-        let numberOfMarks = freqRange / _bandwidthParam.spacing
-        let firstFreqValue = _start + _bandwidthParam.spacing - (_start - ( (_start / _bandwidthParam.spacing) * _bandwidthParam.spacing))
+        let numberOfMarks = freqRange / bandwidthParams.spacing
+        let firstFreqValue = _start + bandwidthParams.spacing - (_start - ( (_start / bandwidthParams.spacing) * bandwidthParams.spacing))
         let firstFreqPosition = CGFloat(firstFreqValue - _start) / _hzPerUnit
        
         // horizontal line above legend
@@ -102,7 +105,7 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
             let xPosition = firstFreqPosition + (CGFloat(i) * xIncrPerLegend)
             
             // calculate the Frequency legend value & width
-            let legendLabel = String(format: _bandwidthParam.format, ( CGFloat(firstFreqValue) + CGFloat( i * _bandwidthParam.spacing)) / 1_000_000.0)
+            let legendLabel = String(format: bandwidthParams.format, ( CGFloat(firstFreqValue) + CGFloat( i * bandwidthParams.spacing)) / 1_000_000.0)
             let legendWidth = legendLabel.size(withAttributes: _attributes).width
             
             // skip the legend if it would overlap the start or end or if it would be too close to the previous legend

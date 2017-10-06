@@ -212,10 +212,13 @@
             <objects>
                 <customObject id="WaM-Xb-K61" userLabel="First Responder" customClass="NSResponder" sceneMemberID="firstResponder"/>
                 <viewController storyboardIdentifier="Panadapter" id="ywe-lT-40r" userLabel="Panadapter" customClass="PanadapterViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" identifier="Panadapter" wantsLayer="YES" id="Xjo-h3-79G">
+                    <view key="view" identifier="Panadapter" wantsLayer="YES" id="Xjo-h3-79G" customClass="PanadapterView" customModule="xSDR6000" customModuleProvider="target">
                         <rect key="frame" x="0.0" y="0.0" width="450" height="120"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </view>
+                    <connections>
+                        <outlet property="_panadapterView" destination="Xjo-h3-79G" id="V8M-fY-d72"/>
+                    </connections>
                 </viewController>
             </objects>
             <point key="canvasLocation" x="585" y="1155"/>
@@ -797,6 +800,6 @@
     </scenes>
     <resources>
         <image name="NSLockUnlockedTemplate" width="10" height="14"/>
-        <image name="NSStopProgressFreestandingTemplate" width="14" height="14"/>
+        <image name="NSStopProgressFreestandingTemplate" width="11" height="11"/>
     </resources>
 </document>

@@ -15,15 +15,15 @@ public final class DbLegendLayer: CALayer, CALayerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var width: CGFloat = 40
-    var font = NSFont(name: "Monaco", size: 12.0)
+    var params                          : Params!                        // Radio & Panadapter references
+    var width: CGFloat                  = 40
+    var font                            = NSFont(name: "Monaco", size: 12.0)
     
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _params             : Params!                        // Radio & Panadapter references
-    fileprivate var _radio              : Radio { return _params.radio }
-    fileprivate var _panadapter         : Panadapter? { return _params.panadapter }
+    fileprivate var _radio              : Radio { return params.radio }
+    fileprivate var _panadapter         : Panadapter? { return params.panadapter }
     
     fileprivate var _center             : Int {return _panadapter!.center }
     fileprivate var _bandwidth          : Int { return _panadapter!.bandwidth }
@@ -37,25 +37,6 @@ public final class DbLegendLayer: CALayer, CALayerDelegate {
     fileprivate var _fontHeight         : CGFloat = 0                   // height of typical label
 
     fileprivate let kFormat             = " %4.0f"
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Initialization
-    
-    public init( params: Params) {
-        super.init()
-        
-        // save a reference to the Params
-        _params = params
-    }
-
-    public override init(layer: Any) {
-        super.init(layer: layer)
-    }
-    
-    required public init?(coder aDecoder: NSCoder) {
-        fatalError("init(coder:) has not been implemented")
-    }
-    
 
     // ----------------------------------------------------------------------------
     // MARK: - CALayerDelegate methods
