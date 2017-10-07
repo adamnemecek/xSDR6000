@@ -216,9 +216,6 @@
                         <rect key="frame" x="0.0" y="0.0" width="450" height="120"/>
                         <autoresizingMask key="autoresizingMask"/>
                     </view>
-                    <connections>
-                        <outlet property="_panadapterView" destination="Xjo-h3-79G" id="V8M-fY-d72"/>
-                    </connections>
                 </viewController>
             </objects>
             <point key="canvasLocation" x="585" y="1155"/>
@@ -800,6 +797,6 @@
     </scenes>
     <resources>
         <image name="NSLockUnlockedTemplate" width="10" height="14"/>
-        <image name="NSStopProgressFreestandingTemplate" width="11" height="11"/>
+        <image name="NSStopProgressFreestandingTemplate" width="14" height="14"/>
     </resources>
 </document>

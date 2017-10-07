@@ -57,6 +57,46 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
             (    5_000,            0,      400, "%0.4f")            //  0.005 -> 0 Mhz
     ]
 
+    func updateBandwidth(dragable dr: PanadapterViewController.Dragable) {
+        
+        // CGFloat versions of params
+        let end = CGFloat(_end)                     // end frequency (Hz)
+        let start = CGFloat(_start)                 // start frequency (Hz)
+        let bandwidth = CGFloat(_bandwidth)         // bandwidth (hz)
+        
+        // calculate the % change, + = greater bw, - = lesser bw
+        let delta = ((dr.previous.x - dr.current.x) / frame.width)
+        
+        // calculate the new bandwidth (Hz)
+        let newBandwidth = (1 + delta) * bandwidth
+        
+        // calculate adjustments to start & end
+        let adjust = (newBandwidth - bandwidth) / 2.0
+        let newStart = start - adjust
+        let newEnd = end + adjust
+        
+        // calculate adjustment to the center
+        let newStartPercent = (dr.frequency - newStart) / newBandwidth
+        let freqError = (newStartPercent - dr.percent) * newBandwidth
+        let newCenter = (newStart + freqError) + (newEnd - newStart) / 2.0
+        
+        // adjust the center & bandwidth values (Hz)
+        _panadapter!.center = Int(newCenter)
+        _panadapter!.bandwidth = Int(newBandwidth)
+        
+        // redraw the frequency legend
+        redraw()
+    }
+    
+    func updateCenter(dragable dr: PanadapterViewController.Dragable) {
+        
+        // adjust the center
+        _panadapter!.center = _panadapter!.center - Int( (dr.current.x - dr.previous.x) * _hzPerUnit)
+        
+        // redraw the frequency legend
+        redraw()
+
+    }
     // ----------------------------------------------------------------------------
     // MARK: - CALayerDelegate methods
     
@@ -79,7 +119,6 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
         // setup the Frequency Legend font & size
         _attributes[NSForegroundColorAttributeName] = Defaults[.frequencyLegend]
         _attributes[NSFontAttributeName] = font
-        
         
         let legendHeight = "123.456".size(withAttributes: _attributes).height
         

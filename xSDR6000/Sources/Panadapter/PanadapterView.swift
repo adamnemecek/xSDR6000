@@ -8,12 +8,13 @@
 
 import Cocoa
 
-final public class PanadapterView: NSView {
+final public class PanadapterView: NSView, CALayerDelegate {
 
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var delegate                            : PanadapterViewController! {
+    var delegate                            : PanadapterViewController!
+    {
         didSet { createGestures() }
     }
     var frequencyLegendHeight               : CGFloat = 20          // frequency height
@@ -56,6 +57,32 @@ final public class PanadapterView: NSView {
         createLayers()
     }
 
+    // ----------------------------------------------------------------------------
+    // MARK: - Public methods
+    
+    public func draw(_ layer: CALayer, in ctx: CGContext) {
+        
+        if let name = layer.name {
+            switch name {
+                
+            case kFrequencyLegendLayer:
+                frequencyLegendLayer.draw(layer, in: ctx)
+                
+            case kDbLegendLayer:
+                dbLegendLayer.draw(layer, in: ctx)
+                
+            case kSliceLayer:
+                sliceLayer.draw(layer, in: ctx)
+                
+            case kTnfLayer:
+                tnfLayer.draw(layer, in: ctx)
+                
+            default:
+                break
+            }
+        }
+    }
+    
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
@@ -132,7 +159,7 @@ final public class PanadapterView: NSView {
         dbLegendLayer.addConstraint(_maxX)
         dbLegendLayer.addConstraint(_aboveFrequencyLegendY)
         dbLegendLayer.addConstraint(_maxY)
-        dbLegendLayer.delegate = dbLegendLayer
+        dbLegendLayer.delegate = self
         dbLegendLayer.compositingFilter = compositingFilter
         
         // ***** Frequency Legend layer *****
@@ -142,7 +169,7 @@ final public class PanadapterView: NSView {
         frequencyLegendLayer.addConstraint(_maxX)
         frequencyLegendLayer.addConstraint(_minY)
         frequencyLegendLayer.addConstraint(_maxY)
-        frequencyLegendLayer.delegate = frequencyLegendLayer
+        frequencyLegendLayer.delegate = self
         frequencyLegendLayer.compositingFilter = compositingFilter
         frequencyLegendLayer.height = frequencyLegendHeight
         
@@ -153,7 +180,7 @@ final public class PanadapterView: NSView {
         tnfLayer.addConstraint(_maxX)
         tnfLayer.addConstraint(_aboveFrequencyLegendY)
         tnfLayer.addConstraint(_maxY)
-        tnfLayer.delegate = tnfLayer
+        tnfLayer.delegate = self
         tnfLayer.compositingFilter = compositingFilter
         
         // ***** Slice layer *****
@@ -163,7 +190,7 @@ final public class PanadapterView: NSView {
         sliceLayer.addConstraint(_maxX)
         sliceLayer.addConstraint(_aboveFrequencyLegendY)
         sliceLayer.addConstraint(_maxY)
-        sliceLayer.delegate = sliceLayer
+        sliceLayer.delegate = self
         sliceLayer.compositingFilter = compositingFilter
         
         // layer hierarchy

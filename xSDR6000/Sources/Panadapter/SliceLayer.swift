@@ -31,7 +31,35 @@ public final class SliceLayer: CALayer, CALayerDelegate {
     fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / self.frame.width }
     
     fileprivate var _path               = NSBezierPath()
+
+    fileprivate let kMultiplier         : CGFloat = 0.001
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Internal methods
     
+    func updateSlice(dragable dr: PanadapterViewController.Dragable) {
+
+        // calculate offsets in x & y
+        let deltaX = dr.current.x - dr.previous.x
+        let deltaY = dr.current.y - dr.previous.y
+        
+        // is there a slice object?
+        if let slice = dr.object as? xLib6000.Slice {
+            
+            // YES, drag or resize?
+            if abs(deltaX) > abs(deltaY) {
+                // drag
+                slice.frequency += Int(deltaX * _hzPerUnit)
+            } else {
+                // resize
+                slice.filterLow -= Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
+                slice.filterHigh += Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
+            }
+        }
+        // redraw the slices
+        redraw()
+    }
+
     // ----------------------------------------------------------------------------
     // MARK: - CALayerDelegate methods
     
@@ -61,8 +89,10 @@ public final class SliceLayer: CALayer, CALayerDelegate {
                 // get the color
                 let color = Defaults[.sliceFilter]
                 
-                // draw the rectangle
+                // calculate the rectangle
                 let rect = NSRect(x: slicePosition, y: 0, width: sliceWidth, height: frame.height)
+                
+                // draw the rectangle
                 _path.fillRect( rect, withColor: color, andAlpha: Defaults[.sliceFilterOpacity])
             }
         }

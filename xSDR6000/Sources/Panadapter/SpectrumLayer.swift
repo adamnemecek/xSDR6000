@@ -126,6 +126,7 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
+    
     /// Populate Uniform values
     ///
     func populateUniforms(size: CGSize) {

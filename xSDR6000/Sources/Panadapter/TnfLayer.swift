@@ -31,6 +31,33 @@ public final class TnfLayer: CALayer, CALayerDelegate {
     fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / self.frame.width }
     
     fileprivate var _path               = NSBezierPath()
+    fileprivate let kMultiplier         : CGFloat = 0.001
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Internal methods
+    
+    func updateTnf(dragable dr: PanadapterViewController.Dragable) {
+
+        // calculate offsets in x & y
+        let deltaX = dr.current.x - dr.previous.x
+        let deltaY = dr.current.y - dr.previous.y
+        
+        // is there a tnf object?
+        if let tnf = dr.object as? Tnf {
+            
+            // YES, drag or resize?
+            if abs(deltaX) > abs(deltaY) {
+                // drag
+                tnf.frequency = Int(dr.current.x * _hzPerUnit) + _start
+            } else {
+                
+                // resize
+                tnf.width = tnf.width + Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
+            }
+        }
+        // redraw the tnfs
+        redraw()
+    }
     
     // ----------------------------------------------------------------------------
     // MARK: - CALayerDelegate methods
@@ -63,6 +90,7 @@ public final class TnfLayer: CALayer, CALayerDelegate {
                 
                 // draw the rectangle
                 let rect = NSRect(x: tnfPosition, y: 0, width: tnfWidth, height: frame.height)
+                
                 _path.fillRect( rect, withColor: color, andAlpha: Defaults[.sliceFilterOpacity])
                 
                 // crosshatch it based on depth
@@ -74,6 +102,7 @@ public final class TnfLayer: CALayer, CALayerDelegate {
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
     }
+    
     /// Force the layer to be redrawn
     ///
     func redraw() {

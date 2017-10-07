@@ -24,19 +24,65 @@ public final class DbLegendLayer: CALayer, CALayerDelegate {
     
     fileprivate var _radio              : Radio { return params.radio }
     fileprivate var _panadapter         : Panadapter? { return params.panadapter }
-    
-    fileprivate var _center             : Int {return _panadapter!.center }
-    fileprivate var _bandwidth          : Int { return _panadapter!.bandwidth }
-    fileprivate var _start              : Int { return _center - (_bandwidth/2) }
-    fileprivate var _end                : Int  { return _center + (_bandwidth/2) }
-    fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / self.frame.width }
-    
+    fileprivate var _minDbm             : CGFloat {return _panadapter!.minDbm }
+    fileprivate var _maxDbm             : CGFloat {return _panadapter!.maxDbm }
+
+    fileprivate var _spacings           = Defaults[.dbLegendSpacings]
+
     fileprivate var _path               = NSBezierPath()
 
     fileprivate var _attributes         = [String:AnyObject]()          // Font & Size for the db Legend
     fileprivate var _fontHeight         : CGFloat = 0                   // height of typical label
 
     fileprivate let kFormat             = " %4.0f"
+
+    func updateDbmLevel(dragable dr: PanadapterViewController.Dragable) {
+
+        // Upper half of the legend?
+        if dr.original.y > frame.height/2 {
+            
+            // YES, update the max value
+            _panadapter!.maxDbm += (dr.previous.y - dr.current.y)
+        
+        } else {
+            
+            // NO, update the min value
+            _panadapter!.minDbm += (dr.previous.y - dr.current.y)
+        }
+        // redraw the db legend
+        redraw()
+    }
+    
+    func updateLegendSpacing(gestureRecognizer gr: NSClickGestureRecognizer, in view: NSView) {
+        var item: NSMenuItem!
+
+        // get the "click" coordinates and convert to the View
+        let position = gr.location(in: view)
+        
+        // create the Spacings popup menu
+        let menu = NSMenu(title: "Spacings")
+        
+        // populate the popup menu of Spacings
+        for i in 0..<_spacings.count {
+            item = menu.insertItem(withTitle: "\(_spacings[i]) dbm", action: #selector(legendSpacing(_:)), keyEquivalent: "", at: i)
+            item.tag = Int(_spacings[i]) ?? 0
+            item.target = self
+        }
+        // display the popup
+        menu.popUp(positioning: menu.item(at: 0), at: position, in: view)
+    }
+    /// respond to the Context Menu selection
+    ///
+    /// - Parameter sender:     the Context Menu
+    ///
+    @objc fileprivate func legendSpacing(_ sender: NSMenuItem) {
+        
+        // set the Db Legend spacing
+        Defaults[.dbLegendSpacing] = String(sender.tag, radix: 10)
+        
+        // redraw the db legend
+        redraw()
+    }
 
     // ----------------------------------------------------------------------------
     // MARK: - CALayerDelegate methods
@@ -60,7 +106,7 @@ public final class DbLegendLayer: CALayer, CALayerDelegate {
         
         // calculate a typical font height
         _fontHeight = "-000".size(withAttributes: _attributes).height
-                
+
         // setup the Legend color
         _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
         
@@ -68,13 +114,13 @@ public final class DbLegendLayer: CALayer, CALayerDelegate {
         let dbSpacing = CGFloat(Defaults[.dbLegendSpacing])
         
         // calculate the number of legends & the y pixels per db
-        let dbRange = _panadapter!.maxDbm - _panadapter!.minDbm
+        let dbRange = _maxDbm - _minDbm
         let numberOfLegends = Int( dbRange / dbSpacing)
         let yIncrPerDb = frame.height / dbRange
         
         // calculate the value of the first legend & its y coordinate
-        let minDbmValue = _panadapter!.minDbm - _panadapter!.minDbm.truncatingRemainder(dividingBy:  dbSpacing)
-        let yOffset = -_panadapter!.minDbm.truncatingRemainder(dividingBy: dbSpacing) * yIncrPerDb
+        let minDbmValue = _minDbm - _minDbm.truncatingRemainder(dividingBy:  dbSpacing)
+        let yOffset = -_minDbm.truncatingRemainder(dividingBy: dbSpacing) * yIncrPerDb
         
         
         // draw the legends
