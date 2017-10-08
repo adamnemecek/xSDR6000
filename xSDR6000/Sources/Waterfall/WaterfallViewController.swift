@@ -2,19 +2,16 @@
 //  WaterfallViewController.swift
 //  xSDR6000
 //
-//  Created by Douglas Adams on 10/13/15.
-//  Copyright © 2015 Douglas Adams. All rights reserved.
+//  Created by Douglas Adams on 6/15/17.
+//  Copyright © 2017 Douglas Adams. All rights reserved.
 //
 
 import Cocoa
-import xLib6000
 import SwiftyUserDefaults
+import xLib6000
+import MetalKit
 
-// --------------------------------------------------------------------------------
-// MARK: - Waterfall View Controller class implementation
-// --------------------------------------------------------------------------------
-
-final class WaterfallViewController : NSViewController, NSGestureRecognizerDelegate {
+class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
@@ -22,26 +19,22 @@ final class WaterfallViewController : NSViewController, NSGestureRecognizerDeleg
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    @IBOutlet fileprivate var _waterfallView: WaterfallView!
+    fileprivate var _waterfallView      : WaterfallView!
+    fileprivate var _params             : Params { return representedObject as! Params }
+    fileprivate var _panadapter         : Panadapter? { return _params.panadapter }
+    fileprivate var _waterfall          : Waterfall? { return _params.radio.waterfalls[_panadapter!.waterfallId] }
+
+    fileprivate var _center             : Int { return _panadapter!.center }
+    fileprivate var _bandwidth          : Int { return _panadapter!.bandwidth }
+    fileprivate var _start              : Int { return _center - (_bandwidth/2) }
+    fileprivate var _end                : Int  { return _center + (_bandwidth/2) }
+    fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / _panadapter!.panDimensions.width }
     
-    fileprivate var _params: Params { return representedObject as! Params }
+    fileprivate var _waterfallLayer     : WaterfallLayer { return _waterfallView.waterfallLayer }
+    fileprivate var _timeLegendLayer    : TimeLegendLayer { return _waterfallView.timeLegendLayer }
 
-    // gesture recognizer related
-    fileprivate var _rightClick: NSClickGestureRecognizer!
-    fileprivate var _panLeftButton: NSPanGestureRecognizer!
-    fileprivate var _panRightButton: NSPanGestureRecognizer!
-    fileprivate var _panStart: NSPoint?
-    fileprivate var _panSlice: xLib6000.Slice?
-    fileprivate var _panTnf: xLib6000.Tnf?
-    fileprivate var _dbmTop = false
-    fileprivate var _newCursor: NSCursor?
-    fileprivate var _timeLegendSpacings = [String]()        // Time legend spacing choices
-
-    //constants
-    fileprivate let kModule = "WaterfallViewController"     // Module Name reported in log messages
-    fileprivate let _timeLegendWidth: CGFloat = 40          // width of Time Legend layer
-    fileprivate let kLeftButton = 0x01                      // button masks
-    fileprivate let kRightButton = 0x02
+    // constants
+    fileprivate let _log                = (NSApp.delegate as! AppDelegate)
     
     // ----------------------------------------------------------------------------
     // MARK: - Overridden methods
@@ -51,37 +44,29 @@ final class WaterfallViewController : NSViewController, NSGestureRecognizerDeleg
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // give the WaterfallView a reference to the Params
-        _waterfallView.params = _params
-
-        // get the list of possible spacings
-        _timeLegendSpacings = Defaults[.timeLegendSpacings]
-        
-        // setup gestures, Right Click
-        _rightClick = NSClickGestureRecognizer(target: self, action: #selector(rightClick(_:)))
-        _rightClick.buttonMask = kRightButton
-        _rightClick.delegate = self
-        _waterfallView.addGestureRecognizer(_rightClick)
-    }
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Internal methods
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Action methods
+        // make the view controller the delegate for the view
+        _waterfallView = self.view as! WaterfallView
+        _waterfallView.delegate = self
+   }
     
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
-    // ----------------------------------------------------------------------------
-    // MARK: - Observation methods
     
     // ----------------------------------------------------------------------------
-    // MARK: - Notification methods
+    // MARK: - Internal methods
     
-    // ----------------------------------------------------------------------------
-    // MARK: - NSGestureRecognizer Delegate methods
+    /// Force a redraw
+    ///
+    func redraw() {
+        DispatchQueue.main.async {
+            
+            // force a redraw
+            self.view.needsDisplay = true            
+        }
+    }
 
+    
     /// Prevent the Right Click recognizer from responding when the mouse is not over the Legend
     ///
     /// - Parameters:
@@ -91,41 +76,96 @@ final class WaterfallViewController : NSViewController, NSGestureRecognizerDeleg
     ///
     func gestureRecognizer(_ gr: NSGestureRecognizer, shouldAttemptToRecognizeWith event: NSEvent) -> Bool {
         
-        return _waterfallView.convert(event.locationInWindow, from: nil).x >= _waterfallView.frame.width - _timeLegendWidth
-    }
-    /// respond to Right Click gesture when over the DbLegend
-    ///
-    /// - Parameter gr: the Click Gesture Recognizer
-    ///
-    @objc fileprivate func rightClick(_ gr: NSClickGestureRecognizer) {
-        var item: NSMenuItem!
-        
-        // get the "click" coordinates and convert to this View
-        let location = gr.location(in: _waterfallView)
-        
-        // create the popup menu
-        let menu = NSMenu(title: "TimeLegendSpacings")
-        
-        // populate the popup menu of Spacings
-        for i in 0..<_timeLegendSpacings.count {
-            item = menu.insertItem(withTitle: "\(_timeLegendSpacings[i]) sec", action: #selector(timeLegendSpacing(_:)), keyEquivalent: "", at: i)
-            item.tag = Int(_timeLegendSpacings[i]) ?? 0
-            item.target = self
+        // is it a right click?
+        if gr.action == #selector(WaterfallViewController.clickRight(_:)) {
+            // YES, if not over the legend, push it up the responder chain
+            return view.convert(event.locationInWindow, from: nil).x >= view.frame.width - _waterfallView.timeLegendWidth
+        } else {
+            // not right click, process it
+            return true
         }
-        // display the popup
-        menu.popUp(positioning: menu.item(at: 0), at: location, in: _waterfallView)
     }
-    /// respond to the Context Menu selection
+    /// respond to Right Click gesture
+    ///     NOTE: will only receive events in time legend, see previous method
     ///
-    /// - Parameter sender: the Context Menu
+    /// - Parameter gr:         the Click Gesture Recognizer
     ///
-    @objc fileprivate func timeLegendSpacing(_ sender: NSMenuItem) {
+    @objc func clickRight(_ gr: NSClickGestureRecognizer) {
         
-        // set the Db Legend spacing
-        Defaults[.timeLegendSpacing] = String(sender.tag)
-        
-        // force a redraw
-//        _waterfallView.redrawLegend()
+        // update the time Legend
+        _timeLegendLayer.updateLegendSpacing(gestureRecognizer: gr, in: view)
     }
 
+    
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Observation Methods
+    
+    fileprivate let _defaultsKeyPaths = [               // Defaults keypaths to observe
+        "gridLines",
+        "spectrum",
+        "spectrumBackground",
+    ]
+    
+    /// Add / Remove property observations
+    ///
+    /// - Parameters:
+    ///   - object: the object of the observations
+    ///   - paths: an array of KeyPaths
+    ///   - add: add / remove (defaults to add)
+    ///
+    fileprivate func observations<T: NSObject>(_ object: T, paths: [String], remove: Bool = false) {
+        
+        // for each KeyPath Add / Remove observations
+        for keyPath in paths {
+            
+            if remove { object.removeObserver(self, forKeyPath: keyPath, context: nil) }
+            else { object.addObserver(self, forKeyPath: keyPath, options: [.initial, .new], context: nil) }
+        }
+    }
+    /// Observe properties
+    ///
+    /// - Parameters:
+    ///   - keyPath:        the registered KeyPath
+    ///   - object:         object containing the KeyPath
+    ///   - change:         dictionary of values
+    ///   - context:        context (if any)
+    ///
+    override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
+        
+        switch keyPath! {
+            
+        default:
+            _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
+        }
+    }
+    
+    // ----------------------------------------------------------------------------
+    // MARK: - Notification Methods
+    
+    /// Add subsciptions to Notifications
+    ///     (as of 10.11, subscriptions are automatically removed on deinit when using the Selector-based approach)
+    ///
+    fileprivate func addNotifications() {
+        
+        NC.makeObserver(self, with: #selector(waterfallWillBeRemoved(_:)), of: .waterfallWillBeRemoved, object: nil)
+    }
+    /// Process .waterfallWillBeRemoved Notification
+    ///
+    /// - Parameter note: a Notification instance
+    ///
+    @objc fileprivate func waterfallWillBeRemoved(_ note: Notification) {
+        
+        // does the Notification contain a Panadapter object?
+        if let waterfall = note.object as? Waterfall {
+            
+            // YES, is it this panadapter
+            if waterfall == _waterfall! {
+                
+                // YES, remove Defaults property observers
+                observations(Defaults, paths: _defaultsKeyPaths, remove: true)
+            }
+        }
+    }
 }
+
