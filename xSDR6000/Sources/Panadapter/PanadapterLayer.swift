@@ -1,5 +1,5 @@
 //
-//  SpectrumLayer.swift
+//  PanadapterLayer.swift
 //  xSDR6000
 //
 //  Created by Douglas Adams on 9/30/17.
@@ -11,7 +11,7 @@ import MetalKit
 import xLib6000
 import SwiftyUserDefaults
 
-public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStreamHandler {
+public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStreamHandler {
     
     //  NOTE:
     //
@@ -49,10 +49,10 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _spectrumVertices               = [UInt16](repeating: 0, count: SpectrumLayer.kMaxVertexCount * 2)
-    fileprivate var _spectrumVerticesCount          = SpectrumLayer.kMaxVertexCount
+    fileprivate var _spectrumVertices               = [UInt16](repeating: 0, count: PanadapterLayer.kMaxVertexCount * 2)
+    fileprivate var _spectrumVerticesCount          = PanadapterLayer.kMaxVertexCount
     fileprivate var _spectrumVerticesBuffer         :MTLBuffer!
-    fileprivate var _spectrumIndices                = [UInt16](repeating: 0, count: SpectrumLayer.kMaxVertexCount * 2)
+    fileprivate var _spectrumIndices                = [UInt16](repeating: 0, count: PanadapterLayer.kMaxVertexCount * 2)
     fileprivate var _spectrumIndicesBuffer          :MTLBuffer!
     fileprivate var _spectrumRps                    :MTLRenderPipelineState!
     fileprivate var _uniforms                       :Uniforms!
@@ -164,9 +164,9 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
         _spectrumVerticesBuffer = device!.makeBuffer(bytes: _spectrumVertices, length: dataSize)
         
         // populate the indices used for style == .fill || style == .fillWithTexture
-        for i in 0..<SpectrumLayer.kMaxVertexCount {
+        for i in 0..<PanadapterLayer.kMaxVertexCount {
             // n,0,n+1,1,...2n-1,n-1
-            _spectrumIndices[2 * i] = UInt16(SpectrumLayer.kMaxVertexCount + i)
+            _spectrumIndices[2 * i] = UInt16(PanadapterLayer.kMaxVertexCount + i)
             _spectrumIndices[(2 * i) + 1] = UInt16(i)
         }
         // create a Buffer for Indices for filled drawing
@@ -174,13 +174,13 @@ public final class SpectrumLayer: CAMetalLayer, CALayerDelegate, PanadapterStrea
         _spectrumIndicesBuffer = device!.makeBuffer(bytes: _spectrumIndices, length: indexSize)
 
         // create and save a texture
-        guard let texture =  try? SpectrumLayer.texture(forDevice: device!, asset: SpectrumLayer.kTextureAsset) else {
-            fatalError("Unable to load texture (\(SpectrumLayer.kTextureAsset)) from main bundle")
+        guard let texture =  try? PanadapterLayer.texture(forDevice: device!, asset: PanadapterLayer.kTextureAsset) else {
+            fatalError("Unable to load texture (\(PanadapterLayer.kTextureAsset)) from main bundle")
         }
         _texture = texture
         
         // create and save a texture sampler
-        _samplerState = SpectrumLayer.samplerState(forDevice: device!, addressMode: .clampToEdge, filter: .linear)
+        _samplerState = PanadapterLayer.samplerState(forDevice: device!, addressMode: .clampToEdge, filter: .linear)
 
         // get the Vertex and Fragment shaders
         let library = device!.newDefaultLibrary()!

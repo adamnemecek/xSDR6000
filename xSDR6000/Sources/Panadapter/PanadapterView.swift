@@ -20,7 +20,7 @@ final public class PanadapterView: NSView, CALayerDelegate {
     var frequencyLegendHeight               : CGFloat = 20          // frequency height
 
     var rootLayer                           : CALayer!              // layers
-    var spectrumLayer                       : SpectrumLayer!
+    var panadapterLayer                     : PanadapterLayer!
     var frequencyLegendLayer                : FrequencyLegendLayer!
     var dbLegendLayer                       : DbLegendLayer!
     var tnfLayer                            : TnfLayer!
@@ -42,7 +42,7 @@ final public class PanadapterView: NSView, CALayerDelegate {
     fileprivate let kLeftButton             = 0x01                  // button masks
     fileprivate let kRightButton            = 0x02
     fileprivate let kRootLayer              = "root"                // layer names
-    fileprivate let kSpectrumLayer          = "spectrum"
+    fileprivate let kPanadapterLayer        = "panadapter"
     fileprivate let kFrequencyLegendLayer   = "frequency"
     fileprivate let kDbLegendLayer          = "legend"
     fileprivate let kTnfLayer               = "tnf"
@@ -133,22 +133,22 @@ final public class PanadapterView: NSView, CALayerDelegate {
             fatalError("Unable to create compositing filter")
         }
         // ***** Panadapter Spectrum layer *****
-        spectrumLayer = SpectrumLayer()
+        panadapterLayer = PanadapterLayer()
         
         // get the Metal device
-        spectrumLayer.device = MTLCreateSystemDefaultDevice()
-        guard spectrumLayer.device != nil else {
+        panadapterLayer.device = MTLCreateSystemDefaultDevice()
+        guard panadapterLayer.device != nil else {
             fatalError("Metal is not supported on this Mac")
         }
-        spectrumLayer.name = kSpectrumLayer
-        spectrumLayer.frame = CGRect(x: 0, y: frequencyLegendHeight, width: rootLayer.frame.width, height: rootLayer.frame.height - frequencyLegendHeight)
-        spectrumLayer.addConstraint(_minX)
-        spectrumLayer.addConstraint(_maxX)
-        spectrumLayer.addConstraint(_minY)
-        spectrumLayer.addConstraint(_maxY)
-        spectrumLayer.pixelFormat = .bgra8Unorm
-        spectrumLayer.framebufferOnly = true
-        spectrumLayer.delegate = spectrumLayer
+        panadapterLayer.name = kPanadapterLayer
+        panadapterLayer.frame = CGRect(x: 0, y: frequencyLegendHeight, width: rootLayer.frame.width, height: rootLayer.frame.height - frequencyLegendHeight)
+        panadapterLayer.addConstraint(_minX)
+        panadapterLayer.addConstraint(_maxX)
+        panadapterLayer.addConstraint(_minY)
+        panadapterLayer.addConstraint(_maxY)
+        panadapterLayer.pixelFormat = .bgra8Unorm
+        panadapterLayer.framebufferOnly = true
+        panadapterLayer.delegate = panadapterLayer
 
         // ***** Db Legend layer *****
         dbLegendLayer = DbLegendLayer()
@@ -192,7 +192,7 @@ final public class PanadapterView: NSView, CALayerDelegate {
         sliceLayer.compositingFilter = compositingFilter
         
         // layer hierarchy
-        rootLayer.addSublayer(spectrumLayer)
+        rootLayer.addSublayer(panadapterLayer)
         rootLayer.addSublayer(frequencyLegendLayer)
         rootLayer.addSublayer(dbLegendLayer)
         rootLayer.addSublayer(tnfLayer)

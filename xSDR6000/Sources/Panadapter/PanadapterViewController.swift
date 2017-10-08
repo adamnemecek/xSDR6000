@@ -66,7 +66,7 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     fileprivate let _dbLegendWidth          : CGFloat = 40          // width of Db Legend layer
     fileprivate let _frequencyLineWidth     : CGFloat = 3.0
     fileprivate let kRootLayer              = "root"                // layer names
-    fileprivate let kSpectrumLayer          = "spectrum"
+    fileprivate let kPanadapterLayer        = "panadapter"
     fileprivate let kFrequencyLegendLayer   = "frequency"
     fileprivate let kDbLegendLayer          = "legend"
     fileprivate let kTnfLayer               = "tnf"
@@ -86,14 +86,14 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         _panadapterView = self.view as! PanadapterView
         _panadapterView.delegate = self
 
-        // setup Spectrum Layer
-        setupSpectrumLayer()
+        // setup Panadapter Layer
+        setupPanadapterLayer()
         
         // give each layer access to the Params struct
         passParams()
         
         // direct spectrum data to the spectrum layer
-        _panadapter?.delegate = _panadapterView.spectrumLayer
+        _panadapter?.delegate = _panadapterView.panadapterLayer
 
         // begin observations (defaults, panadapter, radio, tnf & slice)
         setupObservations()
@@ -112,8 +112,8 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         _panadapter?.panDimensions = CGSize(width: view.frame.width, height: view.frame.height)
         
         // update the spectrum layer
-        _panadapterView.spectrumLayer.populateUniforms(size: view.frame.size)
-        _panadapterView.spectrumLayer.updateUniformsBuffer()
+        _panadapterView.panadapterLayer.populateUniforms(size: view.frame.size)
+        _panadapterView.panadapterLayer.updateUniformsBuffer()
     }
 
     // ----------------------------------------------------------------------------
@@ -146,22 +146,22 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         _panadapterView.sliceLayer.params = _params
         _panadapterView.tnfLayer.params = _params
     }
-    /// Setup Spectrum layer buffers & parameters
+    /// Setup Panadapter layer buffers & parameters
     ///
-    func setupSpectrumLayer() {
+    func setupPanadapterLayer() {
         
         // TODO: Make this a preference value
-        _panadapterView.spectrumLayer.spectrumStyle = .line
+        _panadapterView.panadapterLayer.spectrumStyle = .line
         
         // setup buffers
-        _panadapterView.spectrumLayer.setupBuffers()
+        _panadapterView.panadapterLayer.setupBuffers()
         
         // setup the spectrum background color
-        _panadapterView.spectrumLayer.setClearColor(Defaults[.spectrumBackground])
+        _panadapterView.panadapterLayer.setClearColor(Defaults[.spectrumBackground])
         
         // setup Uniforms
-        _panadapterView.spectrumLayer.populateUniforms(size: view.frame.size)
-        _panadapterView.spectrumLayer.updateUniformsBuffer()
+        _panadapterView.panadapterLayer.populateUniforms(size: view.frame.size)
+        _panadapterView.panadapterLayer.updateUniformsBuffer()
     }
     /// Setup Tnf's & Slices present at viewDidLoad time, start observations & Notification
     ///
@@ -440,11 +440,11 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
             _panadapterView.dbLegendLayer.redraw()
             
         case "spectrum", "tnfInactive":
-            _panadapterView.spectrumLayer.populateUniforms(size: view.frame.size)
-            _panadapterView.spectrumLayer.updateUniformsBuffer()
+            _panadapterView.panadapterLayer.populateUniforms(size: view.frame.size)
+            _panadapterView.panadapterLayer.updateUniformsBuffer()
             
         case "spectrumBackground":
-            _panadapterView.spectrumLayer.setClearColor(Defaults[.spectrumBackground])
+            _panadapterView.panadapterLayer.setClearColor(Defaults[.spectrumBackground])
             
         case #keyPath(Panadapter.center), #keyPath(Panadapter.bandwidth):
             _panadapterView.sliceLayer.redraw()
