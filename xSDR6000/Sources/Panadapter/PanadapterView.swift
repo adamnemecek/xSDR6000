@@ -142,10 +142,8 @@ final public class PanadapterView: NSView, CALayerDelegate {
         }
         spectrumLayer.name = kSpectrumLayer
         spectrumLayer.frame = CGRect(x: 0, y: frequencyLegendHeight, width: rootLayer.frame.width, height: rootLayer.frame.height - frequencyLegendHeight)
-        rootLayer.frame = frame
         spectrumLayer.addConstraint(_minX)
         spectrumLayer.addConstraint(_maxX)
-        spectrumLayer.addConstraint(_aboveFrequencyLegendY)
         spectrumLayer.addConstraint(_minY)
         spectrumLayer.addConstraint(_maxY)
         spectrumLayer.pixelFormat = .bgra8Unorm

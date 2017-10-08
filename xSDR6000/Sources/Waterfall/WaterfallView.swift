@@ -1,302 +1,146 @@
-
+//
 //  WaterfallView.swift
 //  xSDR6000
 //
-//  Created by Douglas Adams on 5/26/16.
-//  Copyright © 2016 Douglas Adams. All rights reserved.
+//  Created by Douglas Adams on 10/7/17.
+//  Copyright © 2017 Douglas Adams. All rights reserved.
 //
-
 
 import Cocoa
-import xLib6000
-import Quartz
-import SwiftyUserDefaults
 
-// --------------------------------------------------------------------------------
-// MARK: - Waterfall View implementation
-//
-//          setup layers for the Waterfall legend and the Waterfall display
-//          draw the Waterfall legend
-//
-// --------------------------------------------------------------------------------
+final public class WaterfallView: NSView, CALayerDelegate {
 
-final class WaterfallView: NSView, CALayerDelegate {
-    
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
-
-    var params: Params!                                         // Radio & Panadapter references
-
+    
+    var delegate                            : WaterfallViewController!
+    {
+        didSet { createGestures() }
+    }
+    var timeLegendWidth                    : CGFloat = 40           // legend width
+    
+    var rootLayer                           : CALayer!              // layers
+    var waterfallLayer                      : WaterfallLayer!
+    var timeLegendLayer                     : TimeLegendLayer!
+    
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
-
-    fileprivate var _radio: Radio { return params.radio }       // values derived from Params
-    fileprivate var _panadapter: Panadapter? { return params.panadapter }
-    fileprivate var _waterfall: Waterfall? { return _radio.waterfalls[_panadapter!.waterfallId] }
-
-    fileprivate var _lineDuration: Int { return (_waterfall?.lineDuration) ?? 100 }
     
-    fileprivate var _rootLayer: CALayer!                        // Layers
-    fileprivate var _spectrumLayer: WaterfallLayer!
-    fileprivate var _legendLayer: CALayer!
+    fileprivate var _panLeft                : NSPanGestureRecognizer!
+    fileprivate var _clickRight             : NSClickGestureRecognizer!
     
-    fileprivate var _legendAttributes = [String:AnyObject]()    // Font & Size for the Legend
-    fileprivate var _numberOfLegends = 0                        // Number of legend marks
-    fileprivate var _increment = 0                              // Seconds between marks
-
+    fileprivate var _minY                   : CAConstraint!
+    fileprivate var _minX                   : CAConstraint!
+    fileprivate var _maxY                   : CAConstraint!
+    fileprivate var _maxX                   : CAConstraint!
+    fileprivate var _timeLegendMinX         : CAConstraint!
+    
     // constants
-    fileprivate let _log = (NSApp.delegate as! AppDelegate)
-    fileprivate let kTimeLegendWidth: CGFloat = 40              // width of legend layer
-    fileprivate let kXPosition: CGFloat = 4                     // x-position of legend
-    fileprivate let kRootlayer = "rootLayer"
-    fileprivate let kLegendlayer = "legendLayer"
-    fileprivate let kWaterfalllayer = "waterfallLayer"
-
-    // ----------------------------------------------------------------------------
-    // MARK: - Overridden methods
+    fileprivate let kRightButton            = 0x02
+    fileprivate let kRootLayer              = "root"                // layer names
+    fileprivate let kWaterfallLayer         = "waterfall"
+    fileprivate let kTimeLegendLayer        = "legend"
     
-    /// Awake from nib
-    ///
-    override func awakeFromNib() {
+    // ----------------------------------------------------------------------------
+    // MARK: - Initialization
+    
+    public override func awakeFromNib() {
+        super.awakeFromNib()
         
-        // create the Waterfall layers
-        setupLayers()
-
-        // setup the Legend font & size
-        _legendAttributes[NSFontAttributeName] = NSFont(name: "Monaco", size: 12.0)
-        
-        // give the Waterfall layer a reference to the Params
-        _spectrumLayer.params = params
-        
-        // add notification subscriptions
-        addNotifications()
-
-        // setup observations of Waterfall properties
-        observations(_waterfall!, paths: _waterfallKeyPaths)
-    }
-    /// The view is about to begin resizing
-    ///
-    override func viewWillStartLiveResize() {
-        super.viewWillStartLiveResize()
-        
-        // freeze the spectrum waveform
-        _spectrumLayer.liveResize = true
-    }
-    /// The view's resizing has ended
-    ///
-    override func viewDidEndLiveResize() {
-        super.viewDidEndLiveResize()
-        
-        // resume drawing the spectrum waveform
-        _spectrumLayer.liveResize = false
-        
-        // reconfigure the Time legend
-        calcLegendParams()
-        redrawLegend()
+        createLayers()
     }
     
     // ----------------------------------------------------------------------------
-    // MARK: - Internal methods
-
-    /// Cause the Time legend to be redrawn
-    ///
-    func redrawLegend() {
+    // MARK: - Public methods
+    
+    public func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        // interact with the UI
-        DispatchQueue.main.async { [unowned self] in
-            self._legendLayer.setNeedsDisplay()
+        if let name = layer.name {
+            switch name {
+                
+            case kTimeLegendLayer:
+                timeLegendLayer.draw(layer, in: ctx)
+                
+            default:
+                break
+            }
         }
     }
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Action methods
     
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
-    /// Create the CALayers for the Waterfall display
+    /// Create the Gesture Recognizers and set their target/actions
     ///
-    fileprivate func setupLayers() {
+    fileprivate func createGestures() {
+        
+        // create a right-click gesture
+        _clickRight = NSClickGestureRecognizer(target: delegate, action: #selector(WaterfallViewController.clickRight(_:)))
+        _clickRight.buttonMask = kRightButton
+        
+        // setup a delegate to allow some right clicks to be ignored
+        _clickRight.delegate = delegate
+        
+        addGestureRecognizer(_clickRight)
+    }
+    /// Create the Layers and setup relationships to each other
+    ///
+    fileprivate func createLayers() {
         
         // create layer constraints
-        let minY = CAConstraint(attribute: .minY, relativeTo: "superlayer", attribute: .minY)
-        let maxY = CAConstraint(attribute: .maxY, relativeTo: "superlayer", attribute: .maxY)
-        let minX = CAConstraint(attribute: .minX, relativeTo: "superlayer", attribute: .minX)
-        let maxX = CAConstraint(attribute: .maxX, relativeTo: "superlayer", attribute: .maxX)
+        _minY = CAConstraint(attribute: .minY, relativeTo: "superlayer", attribute: .minY)
+        _maxY = CAConstraint(attribute: .maxY, relativeTo: "superlayer", attribute: .maxY)
+        _minX = CAConstraint(attribute: .minX, relativeTo: "superlayer", attribute: .minX)
+        _maxX = CAConstraint(attribute: .maxX, relativeTo: "superlayer", attribute: .maxX)
+        _timeLegendMinX = CAConstraint(attribute: .minX, relativeTo: "superlayer", attribute: .maxX, offset: -timeLegendWidth)
         
-        // Root layer
-        _rootLayer = CALayer()                                      // ***** Root layer *****
-        _rootLayer.name = kRootlayer
-        _rootLayer.layoutManager = CAConstraintLayoutManager()
-        _rootLayer.bounds = NSRectToCGRect(bounds)
+        // create layers
+        rootLayer = CALayer()                                      // ***** Root layer *****
+        rootLayer.name = kRootLayer
+        rootLayer.layoutManager = CAConstraintLayoutManager()
+        rootLayer.frame = frame
         layerUsesCoreImageFilters = true
         
         // make this a layer-hosting view
-        layer = _rootLayer
+        layer = rootLayer
         wantsLayer = true
-
-        // Spectrum layer
-        _spectrumLayer = WaterfallLayer()                           // ***** Waterfall layer *****
-        _spectrumLayer.name = kWaterfalllayer
-        _spectrumLayer.frame = _rootLayer.frame
-        _spectrumLayer.addConstraint(minY)                          // constraints
-        _spectrumLayer.addConstraint(maxY)
-        _spectrumLayer.addConstraint(minX)
-        _spectrumLayer.addConstraint(maxX)
-        _spectrumLayer.delegate = _spectrumLayer                    // delegate
-
-        // Legend layer
-        _legendLayer = CALayer()                                    // ***** Time Legend layer *****
-        _legendLayer.name = kLegendlayer
-        _legendLayer.frame = CGRect(x: _rootLayer.frame.width - kTimeLegendWidth, y: 0, width: kTimeLegendWidth, height: _rootLayer.frame.height)
-        _legendLayer.addConstraint(minY)                            // constraints
-        _legendLayer.addConstraint(maxY)
-        _legendLayer.addConstraint(maxX)
-        _legendLayer.delegate = self                                // delegate
-
+        
         // select a compositing filter
         // possible choices - CIExclusionBlendMode, CIDifferenceBlendMode, CIMaximumCompositing
-        if let compositingFilter = CIFilter(name: "CIDifferenceBlendMode") {
-            _legendLayer.compositingFilter = compositingFilter
+        guard let compositingFilter = CIFilter(name: "CIDifferenceBlendMode") else {
+            fatalError("Unable to create compositing filter")
         }
-        // setup the layer hierarchy
-        _rootLayer.addSublayer(_spectrumLayer)
-        _rootLayer.addSublayer(_legendLayer)
-    }
-    /// Calculate the number & spacing of the Time legends
-    ///
-    private func calcLegendParams() {
-
-        DispatchQueue.main.async { [unowned self] in
-            
-            // calc the height in seconds of the waterfall
-            let maxDuration = Int(self.frame.height * CGFloat(self._lineDuration) / 1_000.0)
-            
-            // calc the number of legends and the spacing between them
-            switch maxDuration {
-            case 0..<10 :
-                self._numberOfLegends = 3
-            case 10..<30 :
-                self._numberOfLegends = 6
-            case 30..<60 :
-                self._numberOfLegends = 9
-            default:
-                self._numberOfLegends = 12
-            }
-            // calc the "seconds" between legends
-            self._increment = maxDuration / (self._numberOfLegends + 1)
+        // ***** Waterfall layer *****
+        waterfallLayer = WaterfallLayer()
+        
+        // get the Metal device
+        waterfallLayer.device = MTLCreateSystemDefaultDevice()
+        guard waterfallLayer.device != nil else {
+            fatalError("Metal is not supported on this Mac")
         }
-    }
-
-    // ----------------------------------------------------------------------------
-    // MARK: - Observation methods
-
-    fileprivate let _waterfallKeyPaths =              // Waterfall keypaths to observe
-        [
-            #keyPath(Waterfall.lineDuration)
-        ]
-    /// Add / Remove property observations
-    ///
-    /// - Parameters:
-    ///   - object: the object of the observations
-    ///   - paths: an array of KeyPaths
-    ///   - add: add / remove (defaults to add)
-    ///
-    fileprivate func observations<T: NSObject>(_ object: T, paths: [String], remove: Bool = false) {
+        waterfallLayer.name = kWaterfallLayer
+        waterfallLayer.frame = frame
+        waterfallLayer.addConstraint(_minX)
+        waterfallLayer.addConstraint(_maxX)
+        waterfallLayer.addConstraint(_minY)
+        waterfallLayer.addConstraint(_maxY)
+        waterfallLayer.pixelFormat = .bgra8Unorm
+        waterfallLayer.framebufferOnly = true
+        waterfallLayer.delegate = waterfallLayer
         
-        // for each KeyPath Add / Remove observations
-        for keyPath in paths {
-            
-            if remove { object.removeObserver(self, forKeyPath: keyPath, context: nil) }
-            else { object.addObserver(self, forKeyPath: keyPath, options: [.initial, .new], context: nil) }
-        }
-    }
-    /// Observe properties
-    ///
-    /// - Parameters:
-    ///   - keyPath: the registered KeyPath
-    ///   - object: object containing the KeyPath
-    ///   - change: dictionary of values
-    ///   - context: context (if any)
-    ///
-    override func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
-        
-        switch keyPath! {
-        
-        case #keyPath(Waterfall.lineDuration):
-            
-            // recalc the Legend params & refresh the display
-            calcLegendParams()
-            redrawLegend()
-            
-        default:
-            _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)
-        }
-    }
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Notification methods
-    
-    /// Add subsciptions to Notifications
-    ///     (as of 10.11, subscriptions are automatically removed on deinit when using the Selector-based approach)
-    ///
-    fileprivate func addNotifications() {
-        
-        NC.makeObserver(self, with: #selector(waterfallWillBeRemoved(_:)), of: .waterfallWillBeRemoved, object: nil)
-    }
-    /// Process .waterfallWillBeRemoved Notification
-    ///
-    /// - Parameter note: a Notification instance
-    ///
-    @objc fileprivate func waterfallWillBeRemoved(_ note: Notification) {
-        
-        // does the Notification contain a Waterfall object?
-        if let waterfall = note.object as? Waterfall {
-            
-            // is it this waterfall
-            if waterfall == _waterfall! {
+        // ***** Time Legend layer *****
+        timeLegendLayer = TimeLegendLayer()
+        timeLegendLayer.name = kTimeLegendLayer
+        timeLegendLayer.addConstraint(_timeLegendMinX)
+        timeLegendLayer.addConstraint(_maxX)
+        timeLegendLayer.addConstraint(_minY)
+        timeLegendLayer.addConstraint(_maxY)
+        timeLegendLayer.delegate = self
+        timeLegendLayer.compositingFilter = compositingFilter
                 
-                // YES, remove Waterfall property observers
-                observations(waterfall, paths: _waterfallKeyPaths, remove: true)
-            }
-        }
-    }
-
-    // ----------------------------------------------------------------------------
-    // MARK: - CALayerDelegate methods
-    
-    /// Draw the Waterfall Legend layer
-    ///
-    /// - Parameters:
-    ///   - layer:      the CALayer
-    ///   - ctx:        the CGContext
-    ///
-    func draw(_ layer: CALayer, in ctx: CGContext) {
-        
-        // set the legend color
-        _legendAttributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
-        
-        // draw the Waterfall Legend
-        if layer.name == kLegendlayer {
-            
-            // setup the graphics context
-            let context = NSGraphicsContext(cgContext: ctx, flipped: false)
-            NSGraphicsContext.saveGraphicsState()
-            NSGraphicsContext.setCurrent(context)
-            
-            // FIXME: Legend values during line duration change???
-            
-            for i in 0..<_numberOfLegends {
-                
-                // calc the y position of the legend
-                let yPosition: CGFloat = frame.height - ( (frame.height / CGFloat(_numberOfLegends)) * CGFloat(i) )
-                
-                // format the legend String & draw it
-                let timeLegend = NSString.localizedStringWithFormat("- % 2ds", _increment * i)
-                timeLegend.draw(at: NSMakePoint( kXPosition, yPosition), withAttributes: _legendAttributes)
-            }
-        }
-        // restore the graphics context
-        NSGraphicsContext.restoreGraphicsState()
+        // layer hierarchy
+        rootLayer.addSublayer(waterfallLayer)
+        rootLayer.addSublayer(timeLegendLayer)
     }
 }
+
