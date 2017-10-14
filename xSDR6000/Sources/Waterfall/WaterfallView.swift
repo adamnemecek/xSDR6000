@@ -17,11 +17,11 @@ final public class WaterfallView: NSView, CALayerDelegate {
     {
         didSet { createGestures() }
     }
-    var timeLegendWidth                    : CGFloat = 40           // legend width
+    var timeLegendWidth                     : CGFloat = 40           // legend width
     
     var rootLayer                           : CALayer!              // layers
     var waterfallLayer                      : WaterfallLayer!
-    var timeLegendLayer                     : TimeLegendLayer!
+    var timeLegendLayer                     : TimeLayer!
     
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
@@ -87,15 +87,15 @@ final public class WaterfallView: NSView, CALayerDelegate {
     ///
     fileprivate func createLayers() {
         
-        // create layer constraints
+        // layer constraints
         _minY = CAConstraint(attribute: .minY, relativeTo: "superlayer", attribute: .minY)
         _maxY = CAConstraint(attribute: .maxY, relativeTo: "superlayer", attribute: .maxY)
         _minX = CAConstraint(attribute: .minX, relativeTo: "superlayer", attribute: .minX)
         _maxX = CAConstraint(attribute: .maxX, relativeTo: "superlayer", attribute: .maxX)
         _timeLegendMinX = CAConstraint(attribute: .minX, relativeTo: "superlayer", attribute: .maxX, offset: -timeLegendWidth)
         
-        // create layers
-        rootLayer = CALayer()                                      // ***** Root layer *****
+        // ***** Root layer *****
+        rootLayer = CALayer()
         rootLayer.name = kRootLayer
         rootLayer.layoutManager = CAConstraintLayoutManager()
         rootLayer.frame = frame
@@ -129,7 +129,7 @@ final public class WaterfallView: NSView, CALayerDelegate {
         waterfallLayer.delegate = waterfallLayer
         
         // ***** Time Legend layer *****
-        timeLegendLayer = TimeLegendLayer()
+        timeLegendLayer = TimeLayer()
         timeLegendLayer.name = kTimeLegendLayer
         timeLegendLayer.addConstraint(_timeLegendMinX)
         timeLegendLayer.addConstraint(_maxX)

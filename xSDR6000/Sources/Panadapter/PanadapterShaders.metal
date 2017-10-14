@@ -13,7 +13,7 @@ using namespace metal;
 // MARK: - Shader structures
 // --------------------------------------------------------------------------------
 
-struct VertexInput {                    // vertices for spectrum draw calls
+struct SpectrumValue {                  // values for spectrum draw calls
     ushort  i;
 };
 
@@ -45,7 +45,7 @@ struct VertexOutput {                   // common vertex output
 //  Returns:
 //      a VertexOutput struct
 //
-vertex VertexOutput spectrum_vertex(const device VertexInput* vertices [[ buffer(0) ]],
+vertex VertexOutput spectrum_vertex(const device SpectrumValue* intensities [[ buffer(0) ]],
                                unsigned int vertexId [[ vertex_id ]],
                                constant Uniforms &uniforms [[ buffer(1) ]])
 {
@@ -60,7 +60,7 @@ vertex VertexOutput spectrum_vertex(const device VertexInput* vertices [[ buffer
     // is this a "real" vertex?
     if (vertexId < 3000) {
 
-        intensity = float(vertices[vertexId].i);
+        intensity = float(intensities[vertexId].i);
         // YES, y values must be flipped and normalized
         yCoord = -( (2.0 * intensity/uniforms.height ) - 1 );
 

@@ -31,7 +31,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / _panadapter!.panDimensions.width }
     
     fileprivate var _waterfallLayer     : WaterfallLayer { return _waterfallView.waterfallLayer }
-    fileprivate var _timeLegendLayer    : TimeLegendLayer { return _waterfallView.timeLegendLayer }
+    fileprivate var _timeLayer    : TimeLayer { return _waterfallView.timeLegendLayer }
 
     // constants
     fileprivate let _log                = (NSApp.delegate as! AppDelegate)
@@ -47,25 +47,72 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         // make the view controller the delegate for the view
         _waterfallView = self.view as! WaterfallView
         _waterfallView.delegate = self
-   }
+
+        // give each layer access to the Params struct
+        passParams()
+        
+        // setup Waterfall Layer
+        setupWaterfallLayer()
+        
+        // direct stream data to the waterfall layer
+        _waterfall?.delegate = _waterfallLayer
+        
+        // begin observations (defaults, panadapter, radio, tnf & slice)
+        setupObservations()
+
+        // draw each layer once
+        _timeLayer.redraw()
+    }
     
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Internal methods
-    
-    /// Force a redraw
+    /// Pass the Params struct to each layer
     ///
-    func redraw() {
-        DispatchQueue.main.async {
-            
-            // force a redraw
-            self.view.needsDisplay = true            
-        }
+    private func passParams() {
+        
+        _waterfallLayer.params = _params
+        _timeLayer.params = _params
+    }
+    /// Setup Waterfall layer buffers & parameters
+    ///
+    private func setupWaterfallLayer() {
+        
+        // setup buffers
+        _waterfallLayer.setupState()
+        
+        // setup the spectrum background color
+        _waterfallLayer.setClearColor(Defaults[.spectrumBackground])
+        
+        // load the texture
+        _waterfallLayer.loadTexture()
+        
+        // setup Uniforms
+//        _waterfallLayer.populateUniforms(displayWidthHz: <#CGFloat#>, numberOfBins: <#Int#>, binWidthHz: <#CGFloat#>)
+//        _waterfallLayer.updateUniformsBuffer()
+    }
+    /// start observations & Notification
+    ///
+    private func setupObservations() {
+        
+        // begin observations (defaults, panadapter & radio)
+        observations(UserDefaults.standard, paths: _defaultsKeyPaths)
+        
+        // add notification subscriptions
+        addNotifications()
     }
 
+    // ----------------------------------------------------------------------------
+    // MARK: - Public methods
+    
+    // force a redraw of a layer
+    
+    public func redrawTimeLegend() {
+        _timeLayer.redraw()
+    }
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Internal methods
     
     /// Prevent the Right Click recognizer from responding when the mouse is not over the Legend
     ///
@@ -93,18 +140,14 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     @objc func clickRight(_ gr: NSClickGestureRecognizer) {
         
         // update the time Legend
-        _timeLegendLayer.updateLegendSpacing(gestureRecognizer: gr, in: view)
+        _timeLayer.updateLegendSpacing(gestureRecognizer: gr, in: view)
     }
 
-    
-    
     // ----------------------------------------------------------------------------
     // MARK: - Observation Methods
     
     fileprivate let _defaultsKeyPaths = [               // Defaults keypaths to observe
-        "gridLines",
-        "spectrum",
-        "spectrumBackground",
+        "spectrumBackground"
     ]
     
     /// Add / Remove property observations
@@ -134,6 +177,8 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         switch keyPath! {
+        case "spectrumBackground":
+            break   // ???? what to do
             
         default:
             _log.msg("Invalid observation - \(keyPath!)", level: .error, function: #function, file: #file, line: #line)

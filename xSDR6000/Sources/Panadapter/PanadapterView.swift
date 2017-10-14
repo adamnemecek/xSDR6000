@@ -21,8 +21,8 @@ final public class PanadapterView: NSView, CALayerDelegate {
 
     var rootLayer                           : CALayer!              // layers
     var panadapterLayer                     : PanadapterLayer!
-    var frequencyLegendLayer                : FrequencyLegendLayer!
-    var dbLegendLayer                       : DbLegendLayer!
+    var frequencyLayer                      : FrequencyLayer!
+    var dbLayer                             : DbLayer!
     var tnfLayer                            : TnfLayer!
     var sliceLayer                          : SliceLayer!
 
@@ -39,14 +39,14 @@ final public class PanadapterView: NSView, CALayerDelegate {
     fileprivate var _aboveFrequencyLegendY  : CAConstraint!
 
     // constants
-    fileprivate let kLeftButton             = 0x01                  // button masks
-    fileprivate let kRightButton            = 0x02
     fileprivate let kRootLayer              = "root"                // layer names
     fileprivate let kPanadapterLayer        = "panadapter"
-    fileprivate let kFrequencyLegendLayer   = "frequency"
-    fileprivate let kDbLegendLayer          = "legend"
+    fileprivate let kFrequencyLayer         = "frequency"
+    fileprivate let kDbLayer                = "db"
     fileprivate let kTnfLayer               = "tnf"
     fileprivate let kSliceLayer             = "slice"
+    fileprivate let kLeftButton             = 0x01                  // button masks
+    fileprivate let kRightButton            = 0x02
 
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
@@ -62,24 +62,22 @@ final public class PanadapterView: NSView, CALayerDelegate {
     
     public func draw(_ layer: CALayer, in ctx: CGContext) {
         
-        if let name = layer.name {
-            switch name {
-                
-            case kFrequencyLegendLayer:
-                frequencyLegendLayer.draw(layer, in: ctx)
-                
-            case kDbLegendLayer:
-                dbLegendLayer.draw(layer, in: ctx)
-                
-            case kSliceLayer:
-                sliceLayer.draw(layer, in: ctx)
-                
-            case kTnfLayer:
-                tnfLayer.draw(layer, in: ctx)
-                
-            default:
-                break
-            }
+        // draw in the requested layer
+        switch layer {
+        case frequencyLayer:
+            frequencyLayer.drawLayer(in: ctx)
+        
+        case dbLayer:
+            dbLayer.drawLayer(in: ctx)
+        
+        case sliceLayer:
+            sliceLayer.drawLayer(in: ctx)
+        
+        case tnfLayer:
+            tnfLayer.drawLayer(in: ctx)
+        
+        default:
+            break
         }
     }
     
@@ -151,25 +149,25 @@ final public class PanadapterView: NSView, CALayerDelegate {
         panadapterLayer.delegate = panadapterLayer
 
         // ***** Db Legend layer *****
-        dbLegendLayer = DbLegendLayer()
-        dbLegendLayer.name = kDbLegendLayer
-        dbLegendLayer.addConstraint(_minX)
-        dbLegendLayer.addConstraint(_maxX)
-        dbLegendLayer.addConstraint(_aboveFrequencyLegendY)
-        dbLegendLayer.addConstraint(_maxY)
-        dbLegendLayer.delegate = self
-        dbLegendLayer.compositingFilter = compositingFilter
+        dbLayer = DbLayer()
+        dbLayer.name = kDbLayer
+        dbLayer.addConstraint(_minX)
+        dbLayer.addConstraint(_maxX)
+        dbLayer.addConstraint(_aboveFrequencyLegendY)
+        dbLayer.addConstraint(_maxY)
+        dbLayer.delegate = self
+        dbLayer.compositingFilter = compositingFilter
         
         // ***** Frequency Legend layer *****
-        frequencyLegendLayer = FrequencyLegendLayer()
-        frequencyLegendLayer.name = kFrequencyLegendLayer
-        frequencyLegendLayer.addConstraint(_minX)
-        frequencyLegendLayer.addConstraint(_maxX)
-        frequencyLegendLayer.addConstraint(_minY)
-        frequencyLegendLayer.addConstraint(_maxY)
-        frequencyLegendLayer.delegate = self
-        frequencyLegendLayer.compositingFilter = compositingFilter
-        frequencyLegendLayer.height = frequencyLegendHeight
+        frequencyLayer = FrequencyLayer()
+        frequencyLayer.name = kFrequencyLayer
+        frequencyLayer.addConstraint(_minX)
+        frequencyLayer.addConstraint(_maxX)
+        frequencyLayer.addConstraint(_minY)
+        frequencyLayer.addConstraint(_maxY)
+        frequencyLayer.delegate = self
+        frequencyLayer.compositingFilter = compositingFilter
+        frequencyLayer.height = frequencyLegendHeight
         
         // ***** Tnf layer *****
         tnfLayer = TnfLayer()
@@ -193,8 +191,8 @@ final public class PanadapterView: NSView, CALayerDelegate {
         
         // layer hierarchy
         rootLayer.addSublayer(panadapterLayer)
-        rootLayer.addSublayer(frequencyLegendLayer)
-        rootLayer.addSublayer(dbLegendLayer)
+        rootLayer.addSublayer(frequencyLayer)
+        rootLayer.addSublayer(dbLayer)
         rootLayer.addSublayer(tnfLayer)
         rootLayer.addSublayer(sliceLayer)
     }

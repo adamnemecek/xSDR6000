@@ -19,15 +19,15 @@ class PanafallsViewController: NSSplitViewController {
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _notifications = [NSObjectProtocol]()                   // Notification observers
+    fileprivate var _notifications = [NSObjectProtocol]()               // Notification observers
     fileprivate var _radioViewController: RadioViewController! { return representedObject as! RadioViewController }
         
     // constants
     fileprivate let _log = (NSApp.delegate as! AppDelegate)
 
-    fileprivate let kPanafallStoryboard = "Panafall"                        // Storyboard names
+    fileprivate let kPanafallStoryboard = "Panafall"                    // Storyboard names
     
-    fileprivate let kPanafallButtonIdentifier = "Button"                    // Storyboard identifiers
+    fileprivate let kPanafallButtonIdentifier = "Button"                // Storyboard identifiers
     fileprivate let kPanadapterIdentifier = "Panadapter"
     fileprivate let kWaterfallIdentifier = "Waterfall"
     
@@ -77,14 +77,14 @@ class PanafallsViewController: NSSplitViewController {
     // ----------------------------------------------------------------------------
     // MARK: - Observation methods
 
-    fileprivate let _panadapterKeyPaths =                   // Panadapter keypaths to observe
+    fileprivate let _panadapterKeyPaths =                               // Panadapter keypaths to observe
         [
             #keyPath(Panadapter.center),
             #keyPath(Panadapter.bandwidth),
             #keyPath(Panadapter.minDbm),
             #keyPath(Panadapter.maxDbm)
     ]
-//    fileprivate let _waterfallKeyPaths =                    // Waterfall keypaths to observe
+//    fileprivate let _waterfallKeyPaths =                              // Waterfall keypaths to observe
 //        [
 //            #keyPath(Waterfall.autoBlackEnabled),
 //            #keyPath(Waterfall.blackLevel),

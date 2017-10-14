@@ -10,12 +10,12 @@ import Cocoa
 import xLib6000
 import SwiftyUserDefaults
 
-public final class TimeLegendLayer: CALayer, CALayerDelegate {
+public final class TimeLayer: CALayer, CALayerDelegate {
     
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var params                          : Params!                        // Radio & Panadapter references
+    var params                          : Params!       // Radio & Panadapter references
     var font                            = NSFont(name: "Monaco", size: 12.0)
     
     // ----------------------------------------------------------------------------

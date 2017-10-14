@@ -27,18 +27,18 @@ public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStr
         case fillWithTexture                            // line with textured fill
     }
 
-    struct SpectrumVertex {
-        var i                   :ushort                 // intensity
+    struct SpectrumValue {
+        var i                   : ushort                // intensity
     }
 
     struct Uniforms {
-        var delta               :Float                  // distance between x coordinates
-        var height              :Float                  // height of view (yPixels)
-        var spectrumColor       :float4                 // spectrum color
-        var textureEnable       :Bool                   // texture on / off
+        var delta               : Float                 // distance between x coordinates
+        var height              : Float                 // height of view (yPixels)
+        var spectrumColor       : float4                // spectrum color
+        var textureEnable       : Bool                  // texture on / off
     }
     
-    static let kMaxVertexCount  = 3_000                 // max number of panadapter bins
+    static let kMaxIntensities  = 3_072                 // max number of intensity values (bins)
     static let kTextureAsset    = "1x16"                // name of the texture asset
     
     // ----------------------------------------------------------------------------
@@ -49,12 +49,13 @@ public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStr
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _spectrumVertices               = [UInt16](repeating: 0, count: PanadapterLayer.kMaxVertexCount * 2)
-    fileprivate var _spectrumVerticesCount          = PanadapterLayer.kMaxVertexCount
-    fileprivate var _spectrumVerticesBuffer         :MTLBuffer!
-    fileprivate var _spectrumIndices                = [UInt16](repeating: 0, count: PanadapterLayer.kMaxVertexCount * 2)
+    fileprivate var _spectrumValues                 = [UInt16](repeating: 0, count: PanadapterLayer.kMaxIntensities * 2)
+    fileprivate var _spectrumValuesCount            = PanadapterLayer.kMaxIntensities
+    fileprivate var _spectrumValuesBuffer           :MTLBuffer!
+    fileprivate var _spectrumIndices                = [UInt16](repeating: 0, count: PanadapterLayer.kMaxIntensities * 2)
     fileprivate var _spectrumIndicesBuffer          :MTLBuffer!
-    fileprivate var _spectrumRps                    :MTLRenderPipelineState!
+    fileprivate var _spectrumPipelineState          :MTLRenderPipelineState!
+
     fileprivate var _uniforms                       :Uniforms!
     fileprivate var _uniformsBuffer                 :MTLBuffer?
     fileprivate var _texture                        :MTLTexture!
@@ -77,44 +78,11 @@ public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStr
         // obtain a drawable
         guard let drawable = nextDrawable() else { return }
         
-        // setup a render pass descriptor
-        let renderPassDesc = MTLRenderPassDescriptor()
-        renderPassDesc.colorAttachments[0].texture = drawable.texture
-        renderPassDesc.colorAttachments[0].loadAction = .clear
-        renderPassDesc.colorAttachments[0].clearColor = _clearColor!
-
         // create a command buffer
         let cmdBuffer = _commandQueue.makeCommandBuffer()
-
-        // Create a render encoder
-        let encoder = cmdBuffer.makeRenderCommandEncoder(descriptor: renderPassDesc)
         
-        // use the Spectrum pipeline state
-        encoder.setRenderPipelineState(_spectrumRps)
-        
-        // bind the buffer containing the Spectrum vertices (position 0)
-        encoder.setVertexBuffer(_spectrumVerticesBuffer, offset: 0, at: 0)
-        
-        // bind the Spectrum texture for the Fragment shader
-        encoder.setFragmentTexture(_texture, at: 0)
-        
-        // bind the sampler state for the Fragment shader
-        encoder.setFragmentSamplerState(_samplerState, at: 0)
-
-        // bind the buffer containing the Uniforms (position 1)
-        encoder.setVertexBuffer(_uniformsBuffer, offset: 0, at: 1)
-
-        if spectrumStyle == .line {
-            // Draw as a Line
-            encoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: _spectrumVerticesCount)
-            
-        } else {
-            // Draw filled (with or without Texture)
-            encoder.drawIndexedPrimitives(type: .triangleStrip, indexCount: _spectrumVerticesCount * 2, indexType: .uint16, indexBuffer: _spectrumIndicesBuffer, indexBufferOffset: 0)
-        }
-
-        // finish using this encoder
-        encoder.endEncoding()
+        // Draw the Spectrum
+        drawSpectrum(with: drawable, cmdBuffer: cmdBuffer)
         
         // add a final command to present the drawable to the screen
         cmdBuffer.present(drawable)
@@ -125,7 +93,6 @@ public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStr
    
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
-    
     
     /// Populate Uniform values
     ///
@@ -159,14 +126,14 @@ public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStr
     ///
     func setupBuffers() {
         
-        // create and save a Buffer for Spectrum Vertices
-        let dataSize = _spectrumVertices.count * MemoryLayout.stride(ofValue: _spectrumVertices[0])
-        _spectrumVerticesBuffer = device!.makeBuffer(bytes: _spectrumVertices, length: dataSize)
+        // create and save a Buffer for Spectrum Values
+        let dataSize = _spectrumValues.count * MemoryLayout.stride(ofValue: _spectrumValues[0])
+        _spectrumValuesBuffer = device!.makeBuffer(bytes: _spectrumValues, length: dataSize)
         
         // populate the indices used for style == .fill || style == .fillWithTexture
-        for i in 0..<PanadapterLayer.kMaxVertexCount {
+        for i in 0..<PanadapterLayer.kMaxIntensities {
             // n,0,n+1,1,...2n-1,n-1
-            _spectrumIndices[2 * i] = UInt16(PanadapterLayer.kMaxVertexCount + i)
+            _spectrumIndices[2 * i] = UInt16(PanadapterLayer.kMaxIntensities + i)
             _spectrumIndices[(2 * i) + 1] = UInt16(i)
         }
         // create a Buffer for Indices for filled drawing
@@ -182,23 +149,20 @@ public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStr
         // create and save a texture sampler
         _samplerState = PanadapterLayer.samplerState(forDevice: device!, addressMode: .clampToEdge, filter: .linear)
 
-        // get the Vertex and Fragment shaders
+        // get the Library (contains all compiled .metal files in this project)
         let library = device!.newDefaultLibrary()!
-        let vertexProgram = library.makeFunction(name: kSpectrumVertex)
-        let fragmentProgram = library.makeFunction(name: kSpectrumFragment)
 
-        // create a Render Pipeline Descriptor
-        let renderPipelineDesc = MTLRenderPipelineDescriptor()
-        renderPipelineDesc.vertexFunction = vertexProgram
-        renderPipelineDesc.fragmentFunction = fragmentProgram
-        renderPipelineDesc.colorAttachments[0].pixelFormat = .bgra8Unorm
+        // create a Render Pipeline Descriptor for the Spectrum
+        let spectrumPipelineDesc = MTLRenderPipelineDescriptor()
+        spectrumPipelineDesc.vertexFunction = library.makeFunction(name: kSpectrumVertex)
+        spectrumPipelineDesc.fragmentFunction = library.makeFunction(name: kSpectrumFragment)
+        spectrumPipelineDesc.colorAttachments[0].pixelFormat = .bgra8Unorm
         
         // create and save the Render Pipeline State object
-        _spectrumRps = try! device!.makeRenderPipelineState(descriptor: renderPipelineDesc)
+        _spectrumPipelineState = try! device!.makeRenderPipelineState(descriptor: spectrumPipelineDesc)
         
         // create and save a Command Queue object
         _commandQueue = device!.makeCommandQueue()
-        
     }
     /// Set the Metal clear color
     ///
@@ -209,9 +173,57 @@ public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStr
                                     green: Double(color.greenComponent),
                                     blue: Double(color.blueComponent),
                                     alpha: Double(color.alphaComponent))
-        
     }
     
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
+    /// Draw the Spectrum
+    ///
+    /// - Parameter encoder:        a Render Encoder
+    ///
+    private func drawSpectrum(with drawable: CAMetalDrawable, cmdBuffer: MTLCommandBuffer) {
+        
+        // setup a render pass descriptor
+        let renderPassDesc = MTLRenderPassDescriptor()
+        renderPassDesc.colorAttachments[0].texture = drawable.texture
+        renderPassDesc.colorAttachments[0].loadAction = .clear
+        renderPassDesc.colorAttachments[0].clearColor = _clearColor!
+        
+        // Create a render encoder
+        let encoder = cmdBuffer.makeRenderCommandEncoder(descriptor: renderPassDesc)
+        
+        encoder.pushDebugGroup("Spectrum")
+        
+        // use the Spectrum pipeline state
+        encoder.setRenderPipelineState(_spectrumPipelineState)
+        
+        // bind the buffer containing the Spectrum vertices (position 0)
+        encoder.setVertexBuffer(_spectrumValuesBuffer, offset: 0, at: 0)
+        
+        // bind the Spectrum texture for the Fragment shader
+        encoder.setFragmentTexture(_texture, at: 0)
+        
+        // bind the sampler state for the Fragment shader
+        encoder.setFragmentSamplerState(_samplerState, at: 0)
+        
+        // bind the buffer containing the Uniforms (position 1)
+        encoder.setVertexBuffer(_uniformsBuffer, offset: 0, at: 1)
+        
+        if spectrumStyle == .line {
+            // Draw as a Line
+            encoder.drawPrimitives(type: .lineStrip, vertexStart: 0, vertexCount: _spectrumValuesCount)
+            
+        } else {
+            // Draw filled (with or without Texture)
+            encoder.drawIndexedPrimitives(type: .triangleStrip, indexCount: _spectrumValuesCount * 2, indexType: .uint16, indexBuffer: _spectrumIndicesBuffer, indexBufferOffset: 0)
+        }
+        encoder.popDebugGroup()
+        
+        // finish using this encoder
+        encoder.endEncoding()
+    }
+
     // ----------------------------------------------------------------------------
     // MARK: - Class methods
     
@@ -285,12 +297,12 @@ public final class PanadapterLayer: CAMetalLayer, CALayerDelegate, PanadapterStr
         
         // dataFrame.numberOfBins is the number of horizontal pixels in the spectrum waveform
         //      (same as the frame.width & the panadapter.xPixels)
-        _spectrumVerticesCount = dataFrame.numberOfBins
+        _spectrumValuesCount = dataFrame.numberOfBins
         
         // the dataFrame.bins contain the y-values (vertical) for the spectrum waveform
         // put them into the Vertex Buffer
         //      see the NOTE at the top of this class
-        _spectrumVerticesBuffer.contents().copyBytes(from: dataFrame.bins, count: _spectrumVerticesCount * MemoryLayout<ushort>.stride)
+        _spectrumValuesBuffer.contents().copyBytes(from: dataFrame.bins, count: _spectrumValuesCount * MemoryLayout<ushort>.stride)
         DispatchQueue.main.async {
             
             autoreleasepool {

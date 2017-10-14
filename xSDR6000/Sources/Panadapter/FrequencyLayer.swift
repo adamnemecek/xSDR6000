@@ -10,7 +10,7 @@ import Cocoa
 import xLib6000
 import SwiftyUserDefaults
 
-public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
+public final class FrequencyLayer: CALayer {
 
     typealias BandwidthParamTuple = (high: Int, low: Int, spacing: Int, format: String)
     
@@ -66,7 +66,7 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
         
         // calculate the % change, + = greater bw, - = lesser bw
         let delta = ((dr.previous.x - dr.current.x) / frame.width)
-        
+
         // calculate the new bandwidth (Hz)
         let newBandwidth = (1 + delta) * bandwidth
         
@@ -106,15 +106,15 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
     ///   - layer:      a CALayer
     ///   - ctx:        context
     ///
-    public func draw(_ layer: CALayer, in ctx: CGContext) {
-        
+    public func drawLayer(in ctx: CGContext) {
+
         // setup the graphics context
         let context = NSGraphicsContext(cgContext: ctx, flipped: false)
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrent(context)
         
         // set the background color
-        layer.backgroundColor = Defaults[.frequencyLegendBackground].cgColor
+        backgroundColor = Defaults[.frequencyLegendBackground].cgColor
         
         // setup the Frequency Legend font & size
         _attributes[NSForegroundColorAttributeName] = Defaults[.frequencyLegend]
@@ -168,11 +168,11 @@ public final class FrequencyLegendLayer: CALayer, CALayerDelegate {
             let xPosition = firstFreqPosition + (CGFloat(i) * xIncrPerLegend)
             
             // draw a vertical line at the frequency legend
-            if xPosition < layer.bounds.width {
-                _path.vLine(at: xPosition, fromY: layer.bounds.height, toY: legendHeight)
+            if xPosition < bounds.width {
+                _path.vLine(at: xPosition, fromY: bounds.height, toY: legendHeight)
             }
             // draw an "in-between" vertical line
-            _path.vLine(at: xPosition + (xIncrPerLegend/2), fromY: layer.bounds.height, toY: legendHeight)
+            _path.vLine(at: xPosition + (xIncrPerLegend/2), fromY: bounds.height, toY: legendHeight)
         }
         _path.strokeRemove()
 

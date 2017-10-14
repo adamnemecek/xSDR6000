@@ -10,7 +10,7 @@ import Cocoa
 import xLib6000
 import SwiftyUserDefaults
 
-public final class TnfLayer: CALayer, CALayerDelegate {
+public final class TnfLayer: CALayer {
     
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
@@ -68,8 +68,8 @@ public final class TnfLayer: CALayer, CALayerDelegate {
     ///   - layer:      a CALayer
     ///   - ctx:        context
     ///
-    public func draw(_ layer: CALayer, in ctx: CGContext) {
-        
+    public func drawLayer(in ctx: CGContext) {
+
         // setup the graphics context
         let context = NSGraphicsContext(cgContext: ctx, flipped: false)
         NSGraphicsContext.saveGraphicsState()
