@@ -13,33 +13,33 @@ final public class WaterfallView: NSView, CALayerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var delegate                            : WaterfallViewController!
+    var delegate                                : WaterfallViewController!
     {
         didSet { createGestures() }
     }
-    var timeLegendWidth                     : CGFloat = 40           // legend width
+    var timeLegendWidth                         : CGFloat = 40          // legend width
     
-    var rootLayer                           : CALayer!              // layers
-    var waterfallLayer                      : WaterfallLayer!
-    var timeLegendLayer                     : TimeLayer!
+    var rootLayer                               : CALayer!              // layers
+    var waterfallLayer                          : WaterfallLayer!
+    var timeLegendLayer                         : TimeLayer!
     
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _panLeft                : NSPanGestureRecognizer!
-    fileprivate var _clickRight             : NSClickGestureRecognizer!
+    fileprivate var _panLeft                    : NSPanGestureRecognizer!
+    fileprivate var _clickRight                 : NSClickGestureRecognizer!
     
-    fileprivate var _minY                   : CAConstraint!
-    fileprivate var _minX                   : CAConstraint!
-    fileprivate var _maxY                   : CAConstraint!
-    fileprivate var _maxX                   : CAConstraint!
-    fileprivate var _timeLegendMinX         : CAConstraint!
+    fileprivate var _minY                       : CAConstraint!
+    fileprivate var _minX                       : CAConstraint!
+    fileprivate var _maxY                       : CAConstraint!
+    fileprivate var _maxX                       : CAConstraint!
+    fileprivate var _timeLegendMinX             : CAConstraint!
     
     // constants
-    fileprivate let kRightButton            = 0x02
-    fileprivate let kRootLayer              = "root"                // layer names
-    fileprivate let kWaterfallLayer         = "waterfall"
-    fileprivate let kTimeLegendLayer        = "legend"
+    fileprivate let kRightButton                = 0x02
+    fileprivate let kRootLayer                  = "root"                // layer names
+    fileprivate let kWaterfallLayer             = "waterfall"
+    fileprivate let kTimeLegendLayer            = "legend"
     
     // ----------------------------------------------------------------------------
     // MARK: - Initialization

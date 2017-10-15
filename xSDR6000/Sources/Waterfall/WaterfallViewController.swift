@@ -19,22 +19,22 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _waterfallView      : WaterfallView!
-    fileprivate var _params             : Params { return representedObject as! Params }
-    fileprivate var _panadapter         : Panadapter? { return _params.panadapter }
-    fileprivate var _waterfall          : Waterfall? { return _params.radio.waterfalls[_panadapter!.waterfallId] }
+    fileprivate var _waterfallView              : WaterfallView!
+    fileprivate var _params                     : Params { return representedObject as! Params }
+    fileprivate var _panadapter                 : Panadapter? { return _params.panadapter }
+    fileprivate var _waterfall                  : Waterfall? { return _params.radio.waterfalls[_panadapter!.waterfallId] }
 
-    fileprivate var _center             : Int { return _panadapter!.center }
-    fileprivate var _bandwidth          : Int { return _panadapter!.bandwidth }
-    fileprivate var _start              : Int { return _center - (_bandwidth/2) }
-    fileprivate var _end                : Int  { return _center + (_bandwidth/2) }
-    fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / _panadapter!.panDimensions.width }
+    fileprivate var _center                     : Int { return _panadapter!.center }
+    fileprivate var _bandwidth                  : Int { return _panadapter!.bandwidth }
+    fileprivate var _start                      : Int { return _center - (_bandwidth/2) }
+    fileprivate var _end                        : Int  { return _center + (_bandwidth/2) }
+    fileprivate var _hzPerUnit                  : CGFloat { return CGFloat(_end - _start) / _panadapter!.panDimensions.width }
     
-    fileprivate var _waterfallLayer     : WaterfallLayer { return _waterfallView.waterfallLayer }
-    fileprivate var _timeLayer    : TimeLayer { return _waterfallView.timeLegendLayer }
+    fileprivate var _waterfallLayer             : WaterfallLayer { return _waterfallView.waterfallLayer }
+    fileprivate var _timeLayer                  : TimeLayer { return _waterfallView.timeLegendLayer }
 
     // constants
-    fileprivate let _log                = (NSApp.delegate as! AppDelegate)
+    fileprivate let _log                        = (NSApp.delegate as! AppDelegate)
     
     // ----------------------------------------------------------------------------
     // MARK: - Overridden methods
@@ -57,7 +57,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         // direct stream data to the waterfall layer
         _waterfall?.delegate = _waterfallLayer
         
-        // begin observations (defaults, panadapter, radio, tnf & slice)
+        // begin observations (defaults & Waterfall)
         setupObservations()
 
         // draw each layer once
@@ -95,9 +95,10 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     ///
     private func setupObservations() {
         
-        // begin observations (defaults, panadapter & radio)
+        // begin observations (defaults & waterfall)
         observations(UserDefaults.standard, paths: _defaultsKeyPaths)
-        
+        observations(_waterfall!, paths: _waterfallKeyPaths)
+
         // add notification subscriptions
         addNotifications()
     }
@@ -117,9 +118,9 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     /// Prevent the Right Click recognizer from responding when the mouse is not over the Legend
     ///
     /// - Parameters:
-    ///   - gr: the Gesture Recognizer
-    ///   - event: the Event
-    /// - Returns: True = allow, false = ignore
+    ///   - gr:             the Gesture Recognizer
+    ///   - event:          the Event
+    /// - Returns:          True = allow, false = ignore
     ///
     func gestureRecognizer(_ gr: NSGestureRecognizer, shouldAttemptToRecognizeWith event: NSEvent) -> Bool {
         
@@ -135,7 +136,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     /// respond to Right Click gesture
     ///     NOTE: will only receive events in time legend, see previous method
     ///
-    /// - Parameter gr:         the Click Gesture Recognizer
+    /// - Parameter gr:     the Click Gesture Recognizer
     ///
     @objc func clickRight(_ gr: NSClickGestureRecognizer) {
         
@@ -146,16 +147,23 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Observation Methods
     
-    fileprivate let _defaultsKeyPaths = [               // Defaults keypaths to observe
+    fileprivate let _defaultsKeyPaths = [       // Defaults keypaths to observe
         "spectrumBackground"
     ]
-    
+
+    fileprivate let _waterfallKeyPaths = [      // Waterfall keypaths to observe
+        #keyPath(Waterfall.autoBlackEnabled),
+        #keyPath(Waterfall.blackLevel),
+        #keyPath(Waterfall.colorGain),
+        #keyPath(Waterfall.gradientIndex)
+    ]
+
     /// Add / Remove property observations
     ///
     /// - Parameters:
-    ///   - object: the object of the observations
-    ///   - paths: an array of KeyPaths
-    ///   - add: add / remove (defaults to add)
+    ///   - object:         the object of the observations
+    ///   - paths:          an array of KeyPaths
+    ///   - add:            add / remove (defaults to add)
     ///
     fileprivate func observations<T: NSObject>(_ object: T, paths: [String], remove: Bool = false) {
         
@@ -177,6 +185,15 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         switch keyPath! {
+        
+        case #keyPath(Waterfall.autoBlackEnabled), #keyPath(Waterfall.blackLevel), #keyPath(Waterfall.colorGain):
+            // recalc the levels
+            _waterfallLayer.gradient.calcLevels(autoBlackEnabled: _waterfall!.autoBlackEnabled, autoBlackLevel: _waterfallLayer.autoBlackLevel, blackLevel: _waterfall!.blackLevel, colorGain: _waterfall!.colorGain)
+        
+        case #keyPath(Waterfall.gradientIndex):
+            // reload the Gradient
+            _waterfallLayer.gradient.loadMap(_waterfall!.gradientIndex)
+            
         case "spectrumBackground":
             break   // ???? what to do
             
@@ -209,6 +226,9 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
                 
                 // YES, remove Defaults property observers
                 observations(Defaults, paths: _defaultsKeyPaths, remove: true)
+                
+                // remove Waterfall property observers
+                observations(waterfall, paths: _waterfallKeyPaths, remove: true)
             }
         }
     }

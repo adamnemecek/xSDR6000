@@ -639,14 +639,14 @@
                                     <color key="backgroundColor" name="controlColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
                                 <connections>
-                                    <binding destination="ZbW-v4-iMg" name="value" keyPath="representedObject.colorGain" id="Xsq-8R-JSE"/>
+                                    <binding destination="ZbW-v4-iMg" name="value" keyPath="representedObject.colorGain" id="DKz-nw-7aT"/>
                                 </connections>
                             </textField>
                             <slider verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="hft-OR-PjQ">
                                 <rect key="frame" x="143" y="68" width="96" height="19"/>
                                 <sliderCell key="cell" continuous="YES" state="on" alignment="left" minValue="1" maxValue="100" doubleValue="50" tickMarkPosition="above" sliderType="linear" id="Tgl-hZ-izO"/>
                                 <connections>
-                                    <binding destination="ZbW-v4-iMg" name="value" keyPath="representedObject.colorGain" id="v5N-AA-xhr"/>
+                                    <binding destination="ZbW-v4-iMg" name="value" keyPath="representedObject.colorGain" id="pMz-M4-GsG"/>
                                 </connections>
                             </slider>
                             <button translatesAutoresizingMaskIntoConstraints="NO" id="M7N-Ic-8Fd">

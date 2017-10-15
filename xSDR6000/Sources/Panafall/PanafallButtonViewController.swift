@@ -21,61 +21,61 @@ final class PanafallButtonViewController: NSViewController {
     
     // used by bindings in Popovers
     //Panafall
-    var antList: [Radio.AntennaPort] { return _radio.antennaList }
-    var average: Int {
+    @objc dynamic var antList: [Radio.AntennaPort] { return _radio.antennaList }
+    @objc dynamic var average: Int {
         get { return _panadapter!.average }
         set { _panadapter!.average = newValue } }
 
-    var daxIqChannel: Int {
+    @objc dynamic var daxIqChannel: Int {
         get { return _panadapter!.daxIqChannel }
         set { _panadapter!.daxIqChannel = newValue } }
 
-    var fps: Int {
+    @objc dynamic var fps: Int {
         get { return _panadapter!.fps }
         set { _panadapter!.fps = newValue } }
 
-    var loopA: Bool {
+    @objc dynamic var loopA: Bool {
         get { return _panadapter!.loopAEnabled }
         set { _panadapter!.loopAEnabled = newValue } }
 
-    var rfGain: Int {
+    @objc dynamic var rfGain: Int {
         get { return _panadapter!.rfGain }
         set { _panadapter!.rfGain = newValue } }
 
-    var rxAnt: String {
+    @objc dynamic var rxAnt: String {
         get { return _panadapter!.rxAnt }
         set { _panadapter!.rxAnt = newValue } }
 
-    var weightedAverage: Bool {
+    @objc dynamic var weightedAverage: Bool {
         get { return _panadapter!.weightedAverageEnabled }
         set { _panadapter!.weightedAverageEnabled = newValue } }
 
     // Waterfall
-    var autoBlackEnabled: Bool {
+    @objc dynamic var autoBlackEnabled: Bool {
         get { return _waterfall!.autoBlackEnabled }
         set { _waterfall!.autoBlackEnabled = newValue } }
 
-    var blackLevel: Int {
+    @objc dynamic var blackLevel: Int {
         get { return _waterfall!.blackLevel }
         set { _waterfall!.blackLevel = newValue } }
 
-    var colorGain: Int {
+    @objc dynamic var colorGain: Int {
         get { return _waterfall!.colorGain }
         set { _waterfall!.colorGain = newValue } }
 
-    var gradientIndex: Int {
+    @objc dynamic var gradientIndex: Int {
         get { return _waterfall!.gradientIndex }
         set { _waterfall!.gradientIndex = newValue } }
 
-    var gradientName: String { return gradientNames[_waterfall!.gradientIndex] }
+    @objc dynamic var gradientName: String { return gradientNames[_waterfall!.gradientIndex] }
 
-    var gradientNames: [String] { return Gradient.names }
+    @objc dynamic var gradientNames: [String] { return Gradient.names }
 
-    var lineDuration: Int {
+    @objc dynamic var lineDuration: Int {
         get { return _waterfall!.lineDuration }
         set { _waterfall!.lineDuration = newValue } }
     
-    let daxChoices = ["None", "1", "2", "3", "4"]
+    @objc dynamic let daxChoices = ["None", "1", "2", "3", "4"]
 
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
@@ -86,7 +86,10 @@ final class PanafallButtonViewController: NSViewController {
     
     fileprivate var _radio: Radio { return _params.radio }
     fileprivate var _panadapter: Panadapter? { return _params.panadapter }
-    fileprivate var _waterfall: Waterfall? { return _radio.waterfalls[_panadapter!.waterfallId] }
+    fileprivate var _waterfall: Waterfall? {
+        return _radio.waterfalls[_panadapter!.waterfallId]
+        
+    }
 
     fileprivate var _center: Int {return _panadapter!.center }
     fileprivate var _bandwidth: Int { return _panadapter!.bandwidth }

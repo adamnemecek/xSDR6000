@@ -15,17 +15,17 @@ public final class TimeLayer: CALayer, CALayerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var params                          : Params!       // Radio & Panadapter references
-    var font                            = NSFont(name: "Monaco", size: 12.0)
+    var params                                  : Params!               // Radio & Panadapter references
+    var font                                    = NSFont(name: "Monaco", size: 12.0)
     
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _radio              : Radio { return params.radio }
-    fileprivate var _panadapter         : Panadapter? { return params.panadapter }
-    fileprivate var _waterfall          : Waterfall? { return _radio.waterfalls[_panadapter!.waterfallId] }
+    fileprivate var _radio                      : Radio { return params.radio }
+    fileprivate var _panadapter                 : Panadapter? { return params.panadapter }
+    fileprivate var _waterfall                  : Waterfall? { return _radio.waterfalls[_panadapter!.waterfallId] }
 
-    fileprivate var _spacings           = Defaults[.timeLegendSpacings]
+    fileprivate var _spacings                   = Defaults[.timeLegendSpacings]
 
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods

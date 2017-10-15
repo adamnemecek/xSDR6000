@@ -15,41 +15,46 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     
     //  NOTE:
     //
-    //  As input, the renderer expects an array of UInt16 intensity values. The intensity values are
-    //  scaled by the radio to be between zero and UInt16.max.
+    //  As input, the stream handler expects an array of UInt16 intensity values. The intensity
+    //  values are scaled by the radio to be between zero and UInt16.max. The intensity values
+    //  are converted to color values using a gradient. The converted values are written into
+    //  the current line of the texture (i.e. the "top" of the waterfall display). As each new line
+    //  arrives from the Radio the previous screen content (the texture) is scrolled down one line.
+    //
     //  The Waterfall sends an array of size ??? (larger than frame.width). Only the usable portion
     //  is displayed because of the clip space conversion (values outside of -1 to +1 are ignored).
     //
     
     struct Vertex {
-        var coord                                   : float2    // waterfall coordinates
-        var texCoord                                : float2    // texture coordinates
+        var coord                               : float2                // waterfall coordinates
+        var texCoord                            : float2                // texture coordinates
     }
     
     struct Uniforms {
-        var numberOfBins                            : Float     // # of bins in stream width
-        var numberOfDisplayBins                     : Float     // # of bins in display width
-        var halfBinWidth                            : Float     // clip space x offset (half of a bin)
+        var numberOfBins                        : Float                 // # of bins in stream width
+        var numberOfDisplayBins                 : Float                 // # of bins in display width
+        var halfBinWidth                        : Float                 // clip space x offset (half of a bin)
     }
-    
-    static let kMaxIntensities                      = 8         // max number of intensity values (bins)
     
     // ----------------------------------------------------------------------------
     // MARK: - Public properties
     
-    var params                                      : Params!   // Radio & Panadapter references
+    var params                                  : Params!               // Radio & Panadapter references
+    var gradient                                = Gradient(0)           // color gradient
+    var autoBlackLevel                          : UInt32 = 0            // black level calculated by the Radio
 
     // ----------------------------------------------------------------------------
     // MARK: - Private properties    
 
-    fileprivate var _radio                          : Radio { return params.radio }
-    fileprivate var _panadapter                     : Panadapter? { return params.panadapter }
-    
-    fileprivate var _center                         : Int {return _panadapter!.center }
-    fileprivate var _bandwidth                      : Int { return _panadapter!.bandwidth }
-    fileprivate var _start                          : Int { return _center - (_bandwidth/2) }
-    fileprivate var _end                            : Int  { return _center + (_bandwidth/2) }
-    fileprivate var _hzPerUnit                      : CGFloat { return CGFloat(_end - _start) / self.frame.width }
+    fileprivate var _radio                      : Radio { return params.radio }
+    fileprivate var _panadapter                 : Panadapter? { return params.panadapter }
+    fileprivate var _waterfall                  : Waterfall? { return params.radio.waterfalls[_panadapter!.waterfallId] }
+
+    fileprivate var _center                     : Int {return _panadapter!.center }
+    fileprivate var _bandwidth                  : Int { return _panadapter!.bandwidth }
+    fileprivate var _start                      : Int { return _center - (_bandwidth/2) }
+    fileprivate var _end                        : Int  { return _center + (_bandwidth/2) }
+    fileprivate var _hzPerUnit                  : CGFloat { return CGFloat(_end - _start) / self.frame.width }
 
     //  Vertices    v1  (-1, 1)     |     ( 1, 1)  v3       Texture     v1  ( 0, 1) |           ( 1, 1)  v3
     //  (-1 to +1)                  |                       (0 to 1)                |
@@ -57,51 +62,48 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     //                              |                                               |
     //              v0  (-1,-1)     |     ( 1,-1)  v2                   v0  ( 0, 0) |---------  ( 1, 0)  v2
     //
-    fileprivate var _waterfallVertices              : [Vertex] = [
-        Vertex(coord: float2(-1.0, -1.0), texCoord: float2( 0.0, 0.0)),         // v0 - bottom left
-        Vertex(coord: float2(-1.0,  1.0), texCoord: float2( 0.0, 1.0)),         // v1 - top    left
-        Vertex(coord: float2( 1.0, -1.0), texCoord: float2( 1.0, 0.0)),         // v2 - bottom right
-        Vertex(coord: float2( 1.0,  1.0), texCoord: float2( 1.0, 1.0))          // v3 - top    right
+    fileprivate var _waterfallVertices          : [Vertex] = [
+        Vertex(coord: float2(-1.0, -1.0), texCoord: float2( 0.0, 0.0)), // v0 - bottom left
+        Vertex(coord: float2(-1.0,  1.0), texCoord: float2( 0.0, 1.0)), // v1 - top    left
+        Vertex(coord: float2( 1.0, -1.0), texCoord: float2( 1.0, 0.0)), // v2 - bottom right
+        Vertex(coord: float2( 1.0,  1.0), texCoord: float2( 1.0, 1.0))  // v3 - top    right
     ]
-    fileprivate var _waterfallPipelineState         :MTLRenderPipelineState!
+    fileprivate var _waterfallPipelineState     :MTLRenderPipelineState!
     
-    fileprivate var _uniforms                       :Uniforms!
-    fileprivate var _uniformsBuffer                 :MTLBuffer?
-    fileprivate var _texture                        :MTLTexture!
-    fileprivate var _samplerState                   :MTLSamplerState!
-    fileprivate var _commandQueue                   :MTLCommandQueue!
-    fileprivate var _clearColor                     :MTLClearColor?
+    fileprivate var _uniforms                   :Uniforms!
+    fileprivate var _uniformsBuffer             :MTLBuffer?
+    fileprivate var _texture                    :MTLTexture!
+    fileprivate var _samplerState               :MTLSamplerState!
+    fileprivate var _commandQueue               :MTLCommandQueue!
+    fileprivate var _clearColor                 :MTLClearColor?
     
-    fileprivate var _numberOfBins                   : Int = 0
-    fileprivate var _binWidthHz                     : CGFloat = 0.0
-    fileprivate var _firstPass                      = true
+    fileprivate var _numberOfBins               : Int = 0
+    fileprivate var _binWidthHz                 : CGFloat = 0.0
+    fileprivate var _firstPass                  = true
     
-    fileprivate var _texDuration                    = 0                         // seconds
-    fileprivate var _waterfallDuration              = 0                         // seconds
-    fileprivate var _lineDuration                   = 0                         // milliseconds
-    fileprivate var _textureIndex                   = 0                         // current "top" line
+    fileprivate var _texDuration                = 0                     // seconds
+    fileprivate var _waterfallDuration          = 0                     // seconds
+    fileprivate var _lineDuration               = 0                     // milliseconds
+    fileprivate var _textureIndex               = 0                     // current "top" line
     
-    fileprivate var _yIncrement                     : Float = 0.0               // tex vertical increment
-    fileprivate var _startingBinNumber              = 0                         // first bin to display (left)
-    fileprivate var _endingBinNumber                = 0                         // last bin to display (right)
+    fileprivate var _yIncrement                 : Float = 0.0           // tex vertical increment
+    fileprivate var _startingBinNumber          = 0                     // first bin to display (left)
+    fileprivate var _endingBinNumber            = 0                     // last bin to display (right)
     
-    fileprivate var _line = [[UInt32](repeating: WaterfallLayer.kRedRGBA, count: WaterfallLayer.kTextureWidth)]
+    fileprivate var _currentLine = [UInt32](repeating: WaterfallLayer.kBlackRGBA, count: WaterfallLayer.kTextureWidth)
     
     // constants
-    fileprivate let _log                            = (NSApp.delegate as! AppDelegate)
-    fileprivate let kWaterfallVertex                = "waterfall_vertex"
-    fileprivate let kWaterfallFragment              = "waterfall_fragment"
+    fileprivate let _log                        = (NSApp.delegate as! AppDelegate)
+    fileprivate let kWaterfallVertex            = "waterfall_vertex"
+    fileprivate let kWaterfallFragment          = "waterfall_fragment"
     
-    static let kTextureWidth                        = 4096                      // must be >= max number of Bins
-    static let kTextureHeight                       = 2048                      // must be >= max number of lines
-    static let kBlackRGBA                           : UInt32 = 0xFF000000       // Black color in RGBA format
-    static let kRedRGBA                             : UInt32 = 0xFF0000FF       // Red color in RGBA format
-    static let kGreenRGBA                           : UInt32 = 0xFF00FF00       // Green color in RGBA format
-    static let kBlueRGBA                            : UInt32 = 0xFFFF0000       // Blue color in RGBA format
+    static let kTextureWidth                    = 4096                  // must be >= max number of Bins
+    static let kTextureHeight                   = 2048                  // must be >= max number of lines
+    static let kBlackRGBA                       : UInt32 = 0xFF000000   // Black color in RGBA format
+    static let kRedRGBA                         : UInt32 = 0xFF0000FF   // Red color in RGBA format
+    static let kGreenRGBA                       : UInt32 = 0xFF00FF00   // Green color in RGBA format
+    static let kBlueRGBA                        : UInt32 = 0xFFFF0000   // Blue color in RGBA format
     
-    fileprivate var _linesIndex = 0
-    fileprivate var _pass = 0
-
     // ----------------------------------------------------------------------------
     // MARK: - Public methods
     
@@ -159,46 +161,46 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
-    func updateTexCoords(binCount: Int) {
-        
-        // is it the first pass?
-        if _firstPass {
-            
-            // YES, reset the flag
-            _firstPass = false
-            
-            // calculate texture duration (seconds)
-            _texDuration = (_lineDuration * WaterfallLayer.kTextureHeight) / 1_000
-
-            // calculate waterfall duration (seconds)
-            _waterfallDuration = Int( (CGFloat(_lineDuration) * frame.height ) / 1_000 )
-            
-            // set lower y coordinates of the texture to initial values
-            //      (upper values are set in property declarations)
-            let bottomSide = 1.0 - Float(frame.height - 1) / Float(WaterfallLayer.kTextureHeight - 1)
-            _waterfallVertices[2].texCoord.y = bottomSide
-            _waterfallVertices[0].texCoord.y = bottomSide
-
-            // calculate how much to move the texture vertically for each line drawn
-            _yIncrement = Float( 1.0 / (Float(WaterfallLayer.kTextureHeight) - 1.0))
-
-            // set the right & left texture x coordinates
-            let leftSide = Float(_startingBinNumber) / Float(WaterfallLayer.kTextureWidth - 1)
-            let rightSide = Float(_endingBinNumber) / Float(WaterfallLayer.kTextureWidth - 1)
-            _waterfallVertices[3].texCoord.x = rightSide
-            _waterfallVertices[2].texCoord.x = rightSide
-            _waterfallVertices[1].texCoord.x = leftSide
-            _waterfallVertices[0].texCoord.x = leftSide
-            
-        } else {
-            
-            // NO, update the upper & lower y coordinates of the texture
-            _waterfallVertices[3].texCoord.y += _yIncrement
-            _waterfallVertices[2].texCoord.y += _yIncrement
-            _waterfallVertices[1].texCoord.y += _yIncrement
-            _waterfallVertices[0].texCoord.y += _yIncrement
-        }
-    }
+//    func updateTexCoords(binCount: Int) {
+//
+//        // is it the first pass?
+//        if _firstPass {
+//
+//            // YES, reset the flag
+//            _firstPass = false
+//
+//            // calculate texture duration (seconds)
+//            _texDuration = (_lineDuration * WaterfallLayer.kTextureHeight) / 1_000
+//
+//            // calculate waterfall duration (seconds)
+//            _waterfallDuration = Int( (CGFloat(_lineDuration) * frame.height ) / 1_000 )
+//
+//            // set lower y coordinates of the texture to initial values
+//            //      (upper values are set in property declarations)
+//            let bottomSide = 1.0 - Float(frame.height - 1) / Float(WaterfallLayer.kTextureHeight - 1)
+//            _waterfallVertices[2].texCoord.y = bottomSide
+//            _waterfallVertices[0].texCoord.y = bottomSide
+//
+//            // calculate how much to move the texture vertically for each line drawn
+//            _yIncrement = Float( 1.0 / (Float(WaterfallLayer.kTextureHeight) - 1.0))
+//
+//            // set the right & left texture x coordinates
+//            let leftSide = Float(_startingBinNumber) / Float(WaterfallLayer.kTextureWidth - 1)
+//            let rightSide = Float(_endingBinNumber) / Float(WaterfallLayer.kTextureWidth - 1)
+//            _waterfallVertices[3].texCoord.x = rightSide
+//            _waterfallVertices[2].texCoord.x = rightSide
+//            _waterfallVertices[1].texCoord.x = leftSide
+//            _waterfallVertices[0].texCoord.x = leftSide
+//
+//        } else {
+//
+//            // NO, update the upper & lower y coordinates of the texture
+//            _waterfallVertices[3].texCoord.y += _yIncrement
+//            _waterfallVertices[2].texCoord.y += _yIncrement
+//            _waterfallVertices[1].texCoord.y += _yIncrement
+//            _waterfallVertices[0].texCoord.y += _yIncrement
+//        }
+//    }
     /// Load a Texture from an asset
     ///
     func loadTexture() {
@@ -300,71 +302,60 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     ///
     public func waterfallStreamHandler(_ dataFrame: WaterfallFrame ) {
         
+        autoBlackLevel = dataFrame.autoBlackLevel
         
-        // is it the first pass?
-        if _firstPass {
-            
-            // YES, reset the flag
-            _firstPass = false
-            
-            // save the line duration
-            _lineDuration = dataFrame.lineDuration
-            
-            // calculate texture duration (seconds)
-            _texDuration = (_lineDuration * WaterfallLayer.kTextureHeight) / 1_000
-            
-            // calculate waterfall duration (seconds)
-            _waterfallDuration = Int( (CGFloat(_lineDuration) * frame.height ) / 1_000 )
-            
-            // calculate the starting & ending bin numbers
-            let numberOfDisplayBins = Int( CGFloat(_bandwidth) / dataFrame.binBandwidth )
-            _startingBinNumber = Int( CGFloat(_bandwidth) / (2.0 * dataFrame.binBandwidth) )
-            _endingBinNumber = _startingBinNumber + numberOfDisplayBins
+        // YES, reset the flag
+        _firstPass = false
+        
+        // calc the levels
+        gradient.calcLevels(autoBlackEnabled: _waterfall!.autoBlackEnabled, autoBlackLevel: autoBlackLevel, blackLevel: _waterfall!.blackLevel, colorGain: _waterfall!.colorGain)
+        
+        // save the line duration
+        _lineDuration = dataFrame.lineDuration
+        
+        // calculate texture duration (seconds)
+        _texDuration = (_lineDuration * WaterfallLayer.kTextureHeight) / 1_000
+        
+        // calculate waterfall duration (seconds)
+        _waterfallDuration = Int( (CGFloat(_lineDuration) * frame.height ) / 1_000 )
+        
+        // calculate the starting & ending bin numbers
+        _startingBinNumber = Int( (CGFloat(_start) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
+        _endingBinNumber = Int( (CGFloat(_end) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
+        
+        // set the right & left texture x coordinates
+        let leftSide = Float(_startingBinNumber) / Float(WaterfallLayer.kTextureWidth)
+        let rightSide = Float(_endingBinNumber) / Float(WaterfallLayer.kTextureWidth)
+        _waterfallVertices[3].texCoord.x = rightSide
+        _waterfallVertices[2].texCoord.x = rightSide
+        _waterfallVertices[1].texCoord.x = leftSide
+        _waterfallVertices[0].texCoord.x = leftSide
+        
+        let yOffset = Float(_textureIndex) / Float(WaterfallLayer.kTextureHeight - 1)
+        let stepValue = 1.0 / Float(WaterfallLayer.kTextureHeight - 1)
+        let heightPercent = Float(_waterfallDuration) / Float(_texDuration)
 
-            // set lower y coordinates of the texture to initial values
-            //      (upper values are set in property declarations)
-            let bottomSide = 1.0 - Float(frame.height - 1) / Float(WaterfallLayer.kTextureHeight - 1)
-            _waterfallVertices[2].texCoord.y = bottomSide
-            _waterfallVertices[0].texCoord.y = bottomSide
-            
-            // calculate how much to move the texture vertically for each line drawn
-            _yIncrement = Float( 1.0 / (Float(WaterfallLayer.kTextureHeight) - 1.0))
-            
-            // set the right & left texture x coordinates
-            let leftSide = Float(_startingBinNumber) / Float(WaterfallLayer.kTextureWidth - 1)
-            let rightSide = Float(_endingBinNumber) / Float(WaterfallLayer.kTextureWidth - 1)
-            _waterfallVertices[3].texCoord.x = rightSide
-            _waterfallVertices[2].texCoord.x = rightSide
-            _waterfallVertices[1].texCoord.x = leftSide
-            _waterfallVertices[0].texCoord.x = leftSide
-            
-        } else {
-            
-            // NO, update the upper & lower y coordinates of the texture
-            _waterfallVertices[3].texCoord.y += _yIncrement
-            _waterfallVertices[2].texCoord.y += _yIncrement
-            _waterfallVertices[1].texCoord.y += _yIncrement
-            _waterfallVertices[0].texCoord.y += _yIncrement
+        // set lower y coordinates of the texture to initial values
+        _waterfallVertices[3].texCoord.y = yOffset + 1 - stepValue
+        _waterfallVertices[2].texCoord.y = yOffset + 1 - heightPercent
+        _waterfallVertices[1].texCoord.y = yOffset + 1 - stepValue
+        _waterfallVertices[0].texCoord.y = yOffset + 1 - heightPercent
+
+        // lookup the intensities in the Gradient
+        let binsPtr = UnsafePointer<UInt16>(dataFrame.bins)
+        for i in 0..<dataFrame.numberOfBins {
+            _currentLine[i] = gradient.value(binsPtr.advanced(by: i).pointee)
         }
-
         // copy the current line into the texture
-//        let region = MTLRegionMake2D(0, _textureIndex, WaterfallLayer.kTextureWidth, 1)
-//        _texture.replace(region: region, mipmapLevel: 0, withBytes: &_line[0], bytesPerRow: WaterfallLayer.kTextureWidth * 4)
         let region = MTLRegionMake2D(0, _textureIndex, dataFrame.numberOfBins, 1)
-        let uint8Ptr = UnsafeRawPointer(dataFrame.bins).bindMemory(to: UInt8.self, capacity: dataFrame.numberOfBins * 2)
+        let uint8Ptr = UnsafeRawPointer(_currentLine).bindMemory(to: UInt8.self, capacity: dataFrame.numberOfBins * 4)
         _texture.replace(region: region, mipmapLevel: 0, withBytes: uint8Ptr, bytesPerRow: dataFrame.numberOfBins * 4)
 
         // increment the texture position
         _textureIndex = (_textureIndex + 1) % WaterfallLayer.kTextureHeight
 
-        // the dataFrame.bins contain the y-values (vertical) for the spectrum waveform
-        // put them into the Vertex Buffer
-        //      see the NOTE at the top of this class
-//        _spectrumValuesBuffer.contents().copyBytes(from: dataFrame.bins, count: _numberOfBins * MemoryLayout<ushort>.stride)
-
         // interact with the UI
-        DispatchQueue.main.async { [unowned self] in
-            
+        DispatchQueue.main.async { [unowned self] in            
             autoreleasepool {
                 
                 // draw
