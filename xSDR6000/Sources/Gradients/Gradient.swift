@@ -14,7 +14,6 @@ import Cocoa
 
 final class Gradient {
     
-    
     // Note:    The Gradients created by the extensions on NSGradient (basic, dark, etc.)
     //          are formatted internally in bgra format since this is the native format
     //          of the Metal framebuffer where they are used (in WaterfallLayer).
@@ -31,8 +30,8 @@ final class Gradient {
     // ----------------------------------------------------------------------------
     // MARK: - Internal properties
     
-    var colorMap: NSGradient!
-    var glRgbaArray = [GLuint](repeating: 0, count: kSize)
+    var colorMap                                : NSGradient!
+    var colorArray                              = [UInt32](repeating: 0, count: kSize)
     
     static let names = [
         GradientType.basic.rawValue,
@@ -46,42 +45,42 @@ final class Gradient {
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    private var _lowThreshold: UInt16 = 0              // low Threshold
-    private var _highThreshold: UInt16 = 0             // high Threshold
-    private var _intensityRange: Float = 0.0
+    private var _lowThreshold                   : UInt16 = 0            // low Threshold
+    private var _highThreshold                  : UInt16 = 0            // high Threshold
+    private var _intensityRange                 : Float = 0.0           // high - low threshold
     
-    private let kDefault = GradientType.basic
+    private let kDefault                        = GradientType.basic    // default Gradient
     
-    static let kSize = 1024
+    static let kSize                            = 256                   // # colors in Gradient
 
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
     init(_ index: Int) {
-        loadMap(index)
+        loadGradient(index)
     }
     /// Load the Gradient at the specified Index
     ///
     /// - Parameter index:   Gradient index
     ///
-    func loadMap(_ index: Int) {
+    func loadGradient(_ index: Int) {
         // is the Gradient index valid?
         if index > 0 && index < Gradient.names.count {
             
             // YES, load it (by index)
-            loadMap( GradientType(rawValue: Gradient.names[index])! )
+            loadGradient( GradientType(rawValue: Gradient.names[index])! )
             
         } else {
             
             // NO, load it (by name)
-            loadMap(kDefault)
+            loadGradient(kDefault)
         }
     }
-    /// Load the specified Gradient Type
+    /// Load the specified Gradient
     ///
     /// - Parameter type:   Gradient type
     ///
-    func loadMap(_ type: GradientType) {
+    func loadGradient(_ type: GradientType) {
         
         switch type {
         case .basic:
@@ -102,16 +101,16 @@ final class Gradient {
         case .tritanopia:
             colorMap = NSGradient.tritanopia
         }
-        // create the array of GL_RGBA values
+        // create the array of bgra values
         makeArray()
     }
-    /// Convert an intensity into a Gradient value
+    /// Convert an intensity into a color value
     ///
     /// - Parameters:
     ///   - intensity:      the Intensity
-    /// - Returns:          a GL_RGBA color from the Gradient
+    /// - Returns:          a bgra8Norm color from the Gradient
     ///
-    func value(_ intensity: UInt16) -> GLuint {
+    func value(_ intensity: UInt16) -> UInt32 {
         var index: CGFloat = 0.0
         
         if (intensity <= _lowThreshold) {
@@ -131,34 +130,36 @@ final class Gradient {
         // get the interpolated color
         let color = colorMap.interpolatedColor(atLocation: index)
         
-        // capture the GL_RGBA values
-        let alpha = GLuint( UInt8( color.alphaComponent * CGFloat(UInt8.max) ) ) << 24
-        let blue = GLuint( UInt8( color.blueComponent * CGFloat(UInt8.max) ) ) << 16
-        let green = GLuint( UInt8( color.greenComponent * CGFloat(UInt8.max) ) ) << 8
-        let red = GLuint( UInt8( color.redComponent * CGFloat(UInt8.max) ) )
+        // capture the component values (assumes that the Blue & Red are swapped)
+        //      see the Note at the top of this class
+        let alpha = UInt32( UInt8( color.alphaComponent * CGFloat(UInt8.max) ) ) << 24
+        let red = UInt32( UInt8( color.blueComponent * CGFloat(UInt8.max) ) ) << 16
+        let green = UInt32( UInt8( color.greenComponent * CGFloat(UInt8.max) ) ) << 8
+        let blue = UInt32( UInt8( color.redComponent * CGFloat(UInt8.max) ) )
         
-        // return the GLuint (in GL_RGBA format)
-        return alpha + blue + green + red
+        // return the UInt32 (in bgra format)
+        return alpha + red + green + blue
     }
-    /// Create a GL_RGBA Array from the ColorMap
+    /// Create a bgra Array from the Gradient
     ///
     func makeArray() {
         
-        glRgbaArray.removeAll(keepingCapacity: true)
+        colorArray.removeAll(keepingCapacity: true)
         
         for i in 0..<Gradient.kSize  {
             
             // get the interpolated color
             let color = colorMap.interpolatedColor( atLocation: CGFloat(i)/CGFloat(Gradient.kSize) )
             
-            // capture the GL_RGBA values
-            let alpha = GLuint( UInt8( color.alphaComponent * CGFloat(UInt8.max) ) ) << 24
-            let blue = GLuint( UInt8( color.blueComponent * CGFloat(UInt8.max) ) ) << 16
-            let green = GLuint( UInt8( color.greenComponent * CGFloat(UInt8.max) ) ) << 8
-            let red = GLuint( UInt8( color.redComponent * CGFloat(UInt8.max) ) )
+            // capture the component values (assumes that the Blue & Red are swapped)
+            //      see the Note at the top of this class
+            let alpha = UInt32( UInt8( color.alphaComponent * CGFloat(UInt8.max) ) ) << 24
+            let red = UInt32( UInt8( color.blueComponent * CGFloat(UInt8.max) ) ) << 16
+            let green = UInt32( UInt8( color.greenComponent * CGFloat(UInt8.max) ) ) << 8
+            let blue = UInt32( UInt8( color.redComponent * CGFloat(UInt8.max) ) )
             
-            // append the GL_RGBA value
-            glRgbaArray.append(alpha + blue + green + red)
+            // append the brga value
+            colorArray.append(alpha + red + green + blue)
         }
     }
     /// Calculate the High & Low threshold values
@@ -183,6 +184,8 @@ final class Gradient {
 
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
+    
+    // Note:    These calculations are patterned after the calculations provided by Flex Radio
     
     /// Calculate the Low end of the Gradient Color dynamic range
     ///

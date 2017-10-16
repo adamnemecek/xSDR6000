@@ -64,6 +64,13 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         _timeLayer.redraw()
     }
     
+    override func viewDidLayout() {
+        super.viewDidLayout()
+        
+        // initialize the texture height percentage
+        _waterfallLayer.heightPercent = Float(view.frame.height) / Float(WaterfallLayer.kTextureHeight)
+    }
+    
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
@@ -84,12 +91,17 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         // setup the spectrum background color
         _waterfallLayer.setClearColor(Defaults[.spectrumBackground])
         
+        // initialize the texture height percentage
+        _waterfallLayer.heightPercent = Float(view.frame.height) / Float(WaterfallLayer.kTextureHeight)
+
         // load the texture
         _waterfallLayer.loadTexture()
         
-//         // setup Uniforms
-//        _waterfallLayer.populateUniforms(displayWidthHz: <#CGFloat#>, numberOfBins: <#Int#>, binWidthHz: <#CGFloat#>)
-//        _waterfallLayer.updateUniformsBuffer()
+        // initialize the gradient levels
+        _waterfallLayer.gradient.calcLevels(autoBlackEnabled: _waterfall!.autoBlackEnabled,
+                                            autoBlackLevel: _waterfallLayer.autoBlackLevel,
+                                            blackLevel: _waterfall!.blackLevel,
+                                            colorGain: _waterfall!.colorGain)
     }
     /// start observations & Notification
     ///
@@ -98,6 +110,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         // begin observations (defaults & waterfall)
         observations(UserDefaults.standard, paths: _defaultsKeyPaths)
         observations(_waterfall!, paths: _waterfallKeyPaths)
+        observations(_panadapter!, paths: _panadapterKeyPaths)
 
         // add notification subscriptions
         addNotifications()
@@ -158,6 +171,11 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         #keyPath(Waterfall.gradientIndex)
     ]
 
+    fileprivate let _panadapterKeyPaths = [      // Panadapter keypaths to observe
+        #keyPath(Panadapter.center),
+        #keyPath(Panadapter.bandwidth)
+    ]
+
     /// Add / Remove property observations
     ///
     /// - Parameters:
@@ -192,7 +210,10 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         
         case #keyPath(Waterfall.gradientIndex):
             // reload the Gradient
-            _waterfallLayer.gradient.loadMap(_waterfall!.gradientIndex)
+            _waterfallLayer.gradient.loadGradient(_waterfall!.gradientIndex)
+            
+        case #keyPath(Panadapter.center), #keyPath(Panadapter.bandwidth):
+            _waterfallLayer.updateNeeded = true
             
         case "spectrumBackground":
             break   // ???? what to do
@@ -229,6 +250,9 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
                 
                 // remove Waterfall property observers
                 observations(waterfall, paths: _waterfallKeyPaths, remove: true)
+                
+                // remove Panadapter property observers
+                observations(_panadapter!, paths: _panadapterKeyPaths, remove: true)
             }
         }
     }

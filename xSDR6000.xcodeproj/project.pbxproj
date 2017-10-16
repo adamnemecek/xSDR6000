@@ -48,12 +48,6 @@
 		91FADE1B1F4A76FB00DEC52B /* ColorsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE191F4A76FB00DEC52B /* ColorsViewController.swift */; };
 		91FADE1C1F4A76FB00DEC52B /* PreferencesTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE1A1F4A76FB00DEC52B /* PreferencesTabViewController.swift */; };
 		91FADE1E1F4A771800DEC52B /* FlagViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE1D1F4A771800DEC52B /* FlagViewController.xib */; };
-		91FADE261F4A775400DEC52B /* Basic.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE1F1F4A775400DEC52B /* Basic.tex */; };
-		91FADE271F4A775400DEC52B /* Dark.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE201F4A775400DEC52B /* Dark.tex */; };
-		91FADE281F4A775400DEC52B /* Deuteranopia.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE211F4A775400DEC52B /* Deuteranopia.tex */; };
-		91FADE291F4A775400DEC52B /* Grayscale.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE221F4A775400DEC52B /* Grayscale.tex */; };
-		91FADE2A1F4A775400DEC52B /* Purple.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE231F4A775400DEC52B /* Purple.tex */; };
-		91FADE2B1F4A775400DEC52B /* Tritanopia.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE241F4A775400DEC52B /* Tritanopia.tex */; };
 		91FADE381F4A77A200DEC52B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE371F4A77A200DEC52B /* Assets.xcassets */; };
 		91FADE521F4A781800DEC52B /* OpusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE501F4A781800DEC52B /* OpusManager.swift */; };
 		91FADE531F4A781800DEC52B /* ParameterMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE511F4A781800DEC52B /* ParameterMonitor.swift */; };
@@ -129,12 +123,6 @@
 		91FADE191F4A76FB00DEC52B /* ColorsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = ColorsViewController.swift; path = xSDR6000/Sources/Preferences/ColorsViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE1A1F4A76FB00DEC52B /* PreferencesTabViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = PreferencesTabViewController.swift; path = xSDR6000/Sources/Preferences/PreferencesTabViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE1D1F4A771800DEC52B /* FlagViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = FlagViewController.xib; path = xSDR6000/Sources/Xibs/FlagViewController.xib; sourceTree = SOURCE_ROOT; };
-		91FADE1F1F4A775400DEC52B /* Basic.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Basic.tex; path = xSDR6000/Sources/Gradients/Basic.tex; sourceTree = SOURCE_ROOT; };
-		91FADE201F4A775400DEC52B /* Dark.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Dark.tex; path = xSDR6000/Sources/Gradients/Dark.tex; sourceTree = SOURCE_ROOT; };
-		91FADE211F4A775400DEC52B /* Deuteranopia.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Deuteranopia.tex; path = xSDR6000/Sources/Gradients/Deuteranopia.tex; sourceTree = SOURCE_ROOT; };
-		91FADE221F4A775400DEC52B /* Grayscale.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Grayscale.tex; path = xSDR6000/Sources/Gradients/Grayscale.tex; sourceTree = SOURCE_ROOT; };
-		91FADE231F4A775400DEC52B /* Purple.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Purple.tex; path = xSDR6000/Sources/Gradients/Purple.tex; sourceTree = SOURCE_ROOT; };
-		91FADE241F4A775400DEC52B /* Tritanopia.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Tritanopia.tex; path = xSDR6000/Sources/Gradients/Tritanopia.tex; sourceTree = SOURCE_ROOT; };
 		91FADE371F4A77A200DEC52B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = xSDR6000/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		91FADE501F4A781800DEC52B /* OpusManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = OpusManager.swift; path = xSDR6000/Sources/Misc/OpusManager.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE511F4A781800DEC52B /* ParameterMonitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = ParameterMonitor.swift; path = xSDR6000/Sources/Misc/ParameterMonitor.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -307,12 +295,6 @@
 		91B171151CDF872000600E02 /* Gradients */ = {
 			isa = PBXGroup;
 			children = (
-				91FADE1F1F4A775400DEC52B /* Basic.tex */,
-				91FADE201F4A775400DEC52B /* Dark.tex */,
-				91FADE211F4A775400DEC52B /* Deuteranopia.tex */,
-				91FADE221F4A775400DEC52B /* Grayscale.tex */,
-				91FADE231F4A775400DEC52B /* Purple.tex */,
-				91FADE241F4A775400DEC52B /* Tritanopia.tex */,
 				91329A8B1F4F52410095DAE2 /* Gradient.swift */,
 			);
 			name = Gradients;
@@ -399,19 +381,13 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				91FADE291F4A775400DEC52B /* Grayscale.tex in Resources */,
-				91FADE281F4A775400DEC52B /* Deuteranopia.tex in Resources */,
 				91FADE5A1F4A784300DEC52B /* Defaults.plist in Resources */,
 				91FADE641F4A7A4F00DEC52B /* Preferences.storyboard in Resources */,
-				91FADE2A1F4A775400DEC52B /* Purple.tex in Resources */,
 				91FADE1E1F4A771800DEC52B /* FlagViewController.xib in Resources */,
-				91FADE2B1F4A775400DEC52B /* Tritanopia.tex in Resources */,
-				91FADE271F4A775400DEC52B /* Dark.tex in Resources */,
 				91FADE611F4A7A3E00DEC52B /* Panafall.storyboard in Resources */,
 				91FADE5E1F4A7A2400DEC52B /* Main.storyboard in Resources */,
 				91FADE381F4A77A200DEC52B /* Assets.xcassets in Resources */,
 				91B3D30B1F915DDD003132CB /* BlackTexture.png in Resources */,
-				91FADE261F4A775400DEC52B /* Basic.tex in Resources */,
 				91FADE071F4A765A00DEC52B /* Side.storyboard in Resources */,
 				91FADE5B1F4A784300DEC52B /* Filters.plist in Resources */,
 				91FADE571F4A782F00DEC52B /* BandSegments.plist in Resources */,

@@ -42,7 +42,9 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     var params                                  : Params!               // Radio & Panadapter references
     var gradient                                = Gradient(0)           // color gradient
     var autoBlackLevel                          : UInt32 = 0            // black level calculated by the Radio
-
+    var heightPercent                           : Float = 0.0
+    var updateNeeded                            = true
+    
     // ----------------------------------------------------------------------------
     // MARK: - Private properties    
 
@@ -70,26 +72,17 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     ]
     fileprivate var _waterfallPipelineState     :MTLRenderPipelineState!
     
-    fileprivate var _uniforms                   :Uniforms!
-    fileprivate var _uniformsBuffer             :MTLBuffer?
     fileprivate var _texture                    :MTLTexture!
     fileprivate var _samplerState               :MTLSamplerState!
     fileprivate var _commandQueue               :MTLCommandQueue!
     fileprivate var _clearColor                 :MTLClearColor?
     
-    fileprivate var _numberOfBins               : Int = 0
-    fileprivate var _binWidthHz                 : CGFloat = 0.0
-    fileprivate var _firstPass                  = true
-    
-    fileprivate var _texDuration                = 0                     // seconds
-    fileprivate var _waterfallDuration          = 0                     // seconds
-    fileprivate var _lineDuration               = 0                     // milliseconds
     fileprivate var _textureIndex               = 0                     // current "top" line
     
     fileprivate var _yIncrement                 : Float = 0.0           // tex vertical increment
-    fileprivate var _startingBinNumber          = 0                     // first bin to display (left)
-    fileprivate var _endingBinNumber            = 0                     // last bin to display (right)
-    
+    fileprivate var _stepValue                  =                       // texture clip space between lines
+        1.0 / Float(WaterfallLayer.kTextureHeight - 1)
+
     fileprivate var _currentLine = [UInt32](repeating: WaterfallLayer.kBlackRGBA, count: WaterfallLayer.kTextureWidth)
     
     // constants
@@ -122,7 +115,7 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         // create a command buffer
         let cmdBuffer = _commandQueue.makeCommandBuffer()
         
-        // setup a render pass descriptor
+        // create a render pass descriptor
         let renderPassDesc = MTLRenderPassDescriptor()
         renderPassDesc.colorAttachments[0].texture = drawable.texture
         renderPassDesc.colorAttachments[0].loadAction = .clear
@@ -132,20 +125,20 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         
         encoder.pushDebugGroup("Waterfall")
         
-        // use the Waterfall pipeline state
+        // set the pipeline state
         encoder.setRenderPipelineState(_waterfallPipelineState)
         
-        // bind the bytes containing the Waterfall vertices (position 0)
+        // bind the bytes containing the vertices
         let size = MemoryLayout.stride(ofValue: _waterfallVertices[0])
         encoder.setVertexBytes(&_waterfallVertices, length: size * _waterfallVertices.count, at: 0)
         
-        // bind the Waterfall texture for the Fragment shader
+        // bind the texture
         encoder.setFragmentTexture(_texture, at: 0)
         
-        // bind the sampler state for the Fragment shader
+        // bind the sampler state
         encoder.setFragmentSamplerState(_samplerState, at: 0)
         
-        // Draw as a Line
+        // Draw the box (2 triangles) containing the waterfall
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: _waterfallVertices.count)
         
         encoder.popDebugGroup()
@@ -153,7 +146,7 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         // finish using this encoder
         encoder.endEncoding()
         
-        // add a final command to present the drawable to the screen
+        // present the drawable to the screen
         cmdBuffer.present(drawable)
         
         // finalize rendering & push the command buffer to the GPU
@@ -179,7 +172,7 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         // get the Library (contains all compiled .metal files in this project)
         let library = device!.newDefaultLibrary()!
         
-        // create a Render Pipeline Descriptor for the Spectrum
+        // create a Render Pipeline Descriptor
         let waterfallPipelineDesc = MTLRenderPipelineDescriptor()
         waterfallPipelineDesc.vertexFunction = library.makeFunction(name: kWaterfallVertex)
         waterfallPipelineDesc.fragmentFunction = library.makeFunction(name: kWaterfallFragment)
@@ -198,7 +191,7 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         samplerDescriptor.minFilter = .linear
         samplerDescriptor.magFilter = .linear
         
-        // create the Sampler State
+        // create and save the Sampler State
         _samplerState = device!.makeSamplerState(descriptor: samplerDescriptor)
     }
     /// Set the Metal clear color
@@ -211,6 +204,8 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
                                     blue: Double(color.blueComponent),
                                     alpha: Double(color.alphaComponent))
     }
+    /// Force a redraw
+    ///
     func redraw() {
         
         DispatchQueue.main.async {
@@ -241,54 +236,42 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         
         autoBlackLevel = dataFrame.autoBlackLevel
         
-        // YES, reset the flag
-        _firstPass = false
+        // recalc values initially or when center/bandwidth changes
+        if updateNeeded {
+            
+            // calculate the starting & ending bin numbers
+            let startingBinNumber = Float( (CGFloat(_start) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
+            let endingBinNumber = Float( (CGFloat(_end) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
         
-        // calc the levels
-        gradient.calcLevels(autoBlackEnabled: _waterfall!.autoBlackEnabled, autoBlackLevel: autoBlackLevel, blackLevel: _waterfall!.blackLevel, colorGain: _waterfall!.colorGain)
-        
-        // save the line duration
-        _lineDuration = dataFrame.lineDuration
-        
-        // calculate texture duration (seconds)
-        _texDuration = (_lineDuration * WaterfallLayer.kTextureHeight) / 1_000
-        
-        // calculate waterfall duration (seconds)
-        _waterfallDuration = Int( (CGFloat(_lineDuration) * frame.height ) / 1_000 )
-        
-        // calculate the starting & ending bin numbers
-        _startingBinNumber = Int( (CGFloat(_start) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
-        _endingBinNumber = Int( (CGFloat(_end) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
-        
-        // set the right & left texture x coordinates
-        let leftSide = Float(_startingBinNumber) / Float(WaterfallLayer.kTextureWidth)
-        let rightSide = Float(_endingBinNumber) / Float(WaterfallLayer.kTextureWidth)
-        _waterfallVertices[3].texCoord.x = rightSide
-        _waterfallVertices[2].texCoord.x = rightSide
-        _waterfallVertices[1].texCoord.x = leftSide
-        _waterfallVertices[0].texCoord.x = leftSide
+            // set the right & left x coordinates of the texture
+            let leftSide = startingBinNumber / Float(WaterfallLayer.kTextureWidth)
+            let rightSide = endingBinNumber / Float(WaterfallLayer.kTextureWidth)
+            _waterfallVertices[3].texCoord.x = rightSide
+            _waterfallVertices[2].texCoord.x = rightSide
+            _waterfallVertices[1].texCoord.x = leftSide
+            _waterfallVertices[0].texCoord.x = leftSide
+        }
         
         let yOffset = Float(_textureIndex) / Float(WaterfallLayer.kTextureHeight - 1)
-        let stepValue = 1.0 / Float(WaterfallLayer.kTextureHeight - 1)
-        let heightPercent = Float(_waterfallDuration) / Float(_texDuration)
 
-        // set lower y coordinates of the texture to initial values
-        _waterfallVertices[3].texCoord.y = yOffset + 1 - stepValue
+        // set lower y coordinates of the texture
+        _waterfallVertices[3].texCoord.y = yOffset + 1 - _stepValue
         _waterfallVertices[2].texCoord.y = yOffset + 1 - heightPercent
-        _waterfallVertices[1].texCoord.y = yOffset + 1 - stepValue
+        _waterfallVertices[1].texCoord.y = yOffset + 1 - _stepValue
         _waterfallVertices[0].texCoord.y = yOffset + 1 - heightPercent
 
-        // lookup the intensities in the Gradient
+        // translate the intensities into colors
         let binsPtr = UnsafePointer<UInt16>(dataFrame.bins)
         for i in 0..<dataFrame.numberOfBins {
             _currentLine[i] = gradient.value( binsPtr.advanced(by: i).pointee )            
         }
+
         // copy the current line into the texture
         let region = MTLRegionMake2D(0, _textureIndex, dataFrame.numberOfBins, 1)
         let uint8Ptr = UnsafeRawPointer(_currentLine).bindMemory(to: UInt8.self, capacity: dataFrame.numberOfBins * 4)
         _texture.replace(region: region, mipmapLevel: 0, withBytes: uint8Ptr, bytesPerRow: dataFrame.numberOfBins * 4)
 
-        // increment the texture position
+        // increment the index (the texture line that is currently the "top" line on the display)
         _textureIndex = (_textureIndex + 1) % WaterfallLayer.kTextureHeight
 
         // interact with the UI
