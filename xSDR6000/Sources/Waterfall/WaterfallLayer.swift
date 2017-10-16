@@ -103,7 +103,12 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     static let kRedRGBA                         : UInt32 = 0xFF0000FF   // Red color in RGBA format
     static let kGreenRGBA                       : UInt32 = 0xFF00FF00   // Green color in RGBA format
     static let kBlueRGBA                        : UInt32 = 0xFFFF0000   // Blue color in RGBA format
-    
+
+    static let kBlackBGRA                       : UInt32 = 0xFF000000   // Black color in RGBA format
+    static let kRedBGRA                         : UInt32 = 0xFFFF0000   // Red color in BGRA format
+    static let kGreenBGRA                       : UInt32 = 0xFF00FF00   // Green color in BGRA format
+    static let kBlueBGRA                        : UInt32 = 0xFF0000FF   // Blue color in BGRA format
+
     // ----------------------------------------------------------------------------
     // MARK: - Public methods
     
@@ -140,9 +145,6 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         // bind the sampler state for the Fragment shader
         encoder.setFragmentSamplerState(_samplerState, at: 0)
         
-        // bind the buffer containing the Uniforms (position 1)
-        encoder.setVertexBuffer(_uniformsBuffer, offset: 0, at: 1)
-        
         // Draw as a Line
         encoder.drawPrimitives(type: .triangleStrip, vertexStart: 0, vertexCount: _waterfallVertices.count)
         
@@ -161,46 +163,6 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
-//    func updateTexCoords(binCount: Int) {
-//
-//        // is it the first pass?
-//        if _firstPass {
-//
-//            // YES, reset the flag
-//            _firstPass = false
-//
-//            // calculate texture duration (seconds)
-//            _texDuration = (_lineDuration * WaterfallLayer.kTextureHeight) / 1_000
-//
-//            // calculate waterfall duration (seconds)
-//            _waterfallDuration = Int( (CGFloat(_lineDuration) * frame.height ) / 1_000 )
-//
-//            // set lower y coordinates of the texture to initial values
-//            //      (upper values are set in property declarations)
-//            let bottomSide = 1.0 - Float(frame.height - 1) / Float(WaterfallLayer.kTextureHeight - 1)
-//            _waterfallVertices[2].texCoord.y = bottomSide
-//            _waterfallVertices[0].texCoord.y = bottomSide
-//
-//            // calculate how much to move the texture vertically for each line drawn
-//            _yIncrement = Float( 1.0 / (Float(WaterfallLayer.kTextureHeight) - 1.0))
-//
-//            // set the right & left texture x coordinates
-//            let leftSide = Float(_startingBinNumber) / Float(WaterfallLayer.kTextureWidth - 1)
-//            let rightSide = Float(_endingBinNumber) / Float(WaterfallLayer.kTextureWidth - 1)
-//            _waterfallVertices[3].texCoord.x = rightSide
-//            _waterfallVertices[2].texCoord.x = rightSide
-//            _waterfallVertices[1].texCoord.x = leftSide
-//            _waterfallVertices[0].texCoord.x = leftSide
-//
-//        } else {
-//
-//            // NO, update the upper & lower y coordinates of the texture
-//            _waterfallVertices[3].texCoord.y += _yIncrement
-//            _waterfallVertices[2].texCoord.y += _yIncrement
-//            _waterfallVertices[1].texCoord.y += _yIncrement
-//            _waterfallVertices[0].texCoord.y += _yIncrement
-//        }
-//    }
     /// Load a Texture from an asset
     ///
     func loadTexture() {
@@ -209,31 +171,6 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         let loader = MTKTextureLoader(device: device!)
         let texURL = Bundle.main.urlForImageResource("BlackTexture.png")!
         _texture = try! loader.newTexture(withContentsOf: texURL)
-    }
-    /// Populate Uniform values
-    ///
-    func populateUniforms(numberOfBins: Int, numberOfDisplayBins: Int, halfBinWidthCS: Float) {
-        
-        // set the uniforms
-        _uniforms = Uniforms(numberOfBins: Float(numberOfBins),
-                             numberOfDisplayBins: Float(numberOfDisplayBins),
-                             halfBinWidth: halfBinWidthCS)
-    }
-    /// Copy uniforms data to the Uniforms Buffer (create Buffer if needed)
-    ///
-    func updateUniformsBuffer() {
-        
-        let uniformSize = MemoryLayout.stride(ofValue: _uniforms)
-        
-        // has the Uniforms buffer been created?
-        if _uniformsBuffer == nil {
-            
-            // NO, create one
-            _uniformsBuffer = device!.makeBuffer(length: uniformSize)
-        }
-        // update the Uniforms buffer
-        let bufferPtr = _uniformsBuffer!.contents()
-        memcpy(bufferPtr, &_uniforms, uniformSize)
     }
     /// Setup State
     ///
@@ -344,7 +281,7 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         // lookup the intensities in the Gradient
         let binsPtr = UnsafePointer<UInt16>(dataFrame.bins)
         for i in 0..<dataFrame.numberOfBins {
-            _currentLine[i] = gradient.value(binsPtr.advanced(by: i).pointee)
+            _currentLine[i] = gradient.value( binsPtr.advanced(by: i).pointee )            
         }
         // copy the current line into the texture
         let region = MTLRegionMake2D(0, _textureIndex, dataFrame.numberOfBins, 1)

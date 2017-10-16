@@ -87,7 +87,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         // load the texture
         _waterfallLayer.loadTexture()
         
-        // setup Uniforms
+//         // setup Uniforms
 //        _waterfallLayer.populateUniforms(displayWidthHz: <#CGFloat#>, numberOfBins: <#Int#>, binWidthHz: <#CGFloat#>)
 //        _waterfallLayer.updateUniformsBuffer()
     }

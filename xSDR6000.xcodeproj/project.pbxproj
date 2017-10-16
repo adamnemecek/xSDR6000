@@ -54,11 +54,6 @@
 		91FADE291F4A775400DEC52B /* Grayscale.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE221F4A775400DEC52B /* Grayscale.tex */; };
 		91FADE2A1F4A775400DEC52B /* Purple.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE231F4A775400DEC52B /* Purple.tex */; };
 		91FADE2B1F4A775400DEC52B /* Tritanopia.tex in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE241F4A775400DEC52B /* Tritanopia.tex */; };
-		91FADE321F4A778700DEC52B /* OpenGLTools.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE2D1F4A778700DEC52B /* OpenGLTools.swift */; };
-		91FADE331F4A778700DEC52B /* Panadapter.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE2E1F4A778700DEC52B /* Panadapter.fsh */; };
-		91FADE341F4A778700DEC52B /* Panadapter.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE2F1F4A778700DEC52B /* Panadapter.vsh */; };
-		91FADE351F4A778700DEC52B /* Waterfall.fsh in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE301F4A778700DEC52B /* Waterfall.fsh */; };
-		91FADE361F4A778700DEC52B /* Waterfall.vsh in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE311F4A778700DEC52B /* Waterfall.vsh */; };
 		91FADE381F4A77A200DEC52B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE371F4A77A200DEC52B /* Assets.xcassets */; };
 		91FADE521F4A781800DEC52B /* OpusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE501F4A781800DEC52B /* OpusManager.swift */; };
 		91FADE531F4A781800DEC52B /* ParameterMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE511F4A781800DEC52B /* ParameterMonitor.swift */; };
@@ -140,11 +135,6 @@
 		91FADE221F4A775400DEC52B /* Grayscale.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Grayscale.tex; path = xSDR6000/Sources/Gradients/Grayscale.tex; sourceTree = SOURCE_ROOT; };
 		91FADE231F4A775400DEC52B /* Purple.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Purple.tex; path = xSDR6000/Sources/Gradients/Purple.tex; sourceTree = SOURCE_ROOT; };
 		91FADE241F4A775400DEC52B /* Tritanopia.tex */ = {isa = PBXFileReference; lastKnownFileType = file; name = Tritanopia.tex; path = xSDR6000/Sources/Gradients/Tritanopia.tex; sourceTree = SOURCE_ROOT; };
-		91FADE2D1F4A778700DEC52B /* OpenGLTools.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = OpenGLTools.swift; path = xSDR6000/Sources/OpenGL/OpenGLTools.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		91FADE2E1F4A778700DEC52B /* Panadapter.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; lineEnding = 0; name = Panadapter.fsh; path = xSDR6000/Sources/OpenGL/Panadapter.fsh; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
-		91FADE2F1F4A778700DEC52B /* Panadapter.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; lineEnding = 0; name = Panadapter.vsh; path = xSDR6000/Sources/OpenGL/Panadapter.vsh; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
-		91FADE301F4A778700DEC52B /* Waterfall.fsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; lineEnding = 0; name = Waterfall.fsh; path = xSDR6000/Sources/OpenGL/Waterfall.fsh; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
-		91FADE311F4A778700DEC52B /* Waterfall.vsh */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.glsl; lineEnding = 0; name = Waterfall.vsh; path = xSDR6000/Sources/OpenGL/Waterfall.vsh; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.glsl; };
 		91FADE371F4A77A200DEC52B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = xSDR6000/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		91FADE501F4A781800DEC52B /* OpusManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = OpusManager.swift; path = xSDR6000/Sources/Misc/OpusManager.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE511F4A781800DEC52B /* ParameterMonitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = ParameterMonitor.swift; path = xSDR6000/Sources/Misc/ParameterMonitor.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -288,7 +278,6 @@
 				9188A3CE1CFF01F9003F05A3 /* Preferences */,
 				91B171131CDF86C600600E02 /* Xibs */,
 				91B171151CDF872000600E02 /* Gradients */,
-				91B171171CDF876D00600E02 /* OpenGL */,
 				91682E461F49EC9700B6ADBE /* Documentation */,
 				91B1711A1CDF87CB00600E02 /* Misc */,
 			);
@@ -327,18 +316,6 @@
 				91329A8B1F4F52410095DAE2 /* Gradient.swift */,
 			);
 			name = Gradients;
-			sourceTree = "<group>";
-		};
-		91B171171CDF876D00600E02 /* OpenGL */ = {
-			isa = PBXGroup;
-			children = (
-				91FADE2D1F4A778700DEC52B /* OpenGLTools.swift */,
-				91FADE2E1F4A778700DEC52B /* Panadapter.fsh */,
-				91FADE2F1F4A778700DEC52B /* Panadapter.vsh */,
-				91FADE301F4A778700DEC52B /* Waterfall.fsh */,
-				91FADE311F4A778700DEC52B /* Waterfall.vsh */,
-			);
-			name = OpenGL;
 			sourceTree = "<group>";
 		};
 		91B1711A1CDF87CB00600E02 /* Misc */ = {
@@ -431,16 +408,12 @@
 				91FADE2B1F4A775400DEC52B /* Tritanopia.tex in Resources */,
 				91FADE271F4A775400DEC52B /* Dark.tex in Resources */,
 				91FADE611F4A7A3E00DEC52B /* Panafall.storyboard in Resources */,
-				91FADE351F4A778700DEC52B /* Waterfall.fsh in Resources */,
 				91FADE5E1F4A7A2400DEC52B /* Main.storyboard in Resources */,
-				91FADE331F4A778700DEC52B /* Panadapter.fsh in Resources */,
 				91FADE381F4A77A200DEC52B /* Assets.xcassets in Resources */,
 				91B3D30B1F915DDD003132CB /* BlackTexture.png in Resources */,
 				91FADE261F4A775400DEC52B /* Basic.tex in Resources */,
 				91FADE071F4A765A00DEC52B /* Side.storyboard in Resources */,
 				91FADE5B1F4A784300DEC52B /* Filters.plist in Resources */,
-				91FADE361F4A778700DEC52B /* Waterfall.vsh in Resources */,
-				91FADE341F4A778700DEC52B /* Panadapter.vsh in Resources */,
 				91FADE571F4A782F00DEC52B /* BandSegments.plist in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -477,7 +450,6 @@
 				91FADDFB1F4A75AE00DEC52B /* PanafallsViewController.swift in Sources */,
 				91E170611F8280FD009E7DF3 /* DbLayer.swift in Sources */,
 				91FADE051F4A765A00DEC52B /* PhoneViewController.swift in Sources */,
-				91FADE321F4A778700DEC52B /* OpenGLTools.swift in Sources */,
 				91E1705F1F8280FD009E7DF3 /* PanadapterLayer.swift in Sources */,
 				91FADE521F4A781800DEC52B /* OpusManager.swift in Sources */,
 				9172DC931F86CA030001C58C /* PanadapterView.swift in Sources */,

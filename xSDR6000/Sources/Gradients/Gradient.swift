@@ -14,6 +14,11 @@ import Cocoa
 
 final class Gradient {
     
+    
+    // Note:    The Gradients created by the extensions on NSGradient (basic, dark, etc.)
+    //          are formatted internally in bgra format since this is the native format
+    //          of the Metal framebuffer where they are used (in WaterfallLayer).
+    
     enum GradientType: String {
         case basic
         case dark
