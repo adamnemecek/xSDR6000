@@ -14,10 +14,6 @@ import Cocoa
 
 final class Gradient {
     
-    // Note:    The Gradients created by the extensions on NSGradient (basic, dark, etc.)
-    //          are formatted internally in bgra format since this is the native format
-    //          of the Metal framebuffer where they are used (in WaterfallLayer).
-    
     enum GradientType: String {
         case basic
         case dark
@@ -26,13 +22,6 @@ final class Gradient {
         case purple
         case tritanopia
     }
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - Internal properties
-    
-    var colorMap                                : NSGradient!
-    var colorArray                              = [UInt32](repeating: 0, count: kSize)
-    
     static let names = [
         GradientType.basic.rawValue,
         GradientType.dark.rawValue,
@@ -41,7 +30,12 @@ final class Gradient {
         GradientType.purple.rawValue,
         GradientType.tritanopia.rawValue
     ]
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Internal properties
     
+    var gradient                                : NSGradient!
+        
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
@@ -51,8 +45,6 @@ final class Gradient {
     
     private let kDefault                        = GradientType.basic    // default Gradient
     
-    static let kSize                            = 256                   // # colors in Gradient
-
     // ----------------------------------------------------------------------------
     // MARK: - Initialization
     
@@ -64,15 +56,16 @@ final class Gradient {
     /// - Parameter index:   Gradient index
     ///
     func loadGradient(_ index: Int) {
+        
         // is the Gradient index valid?
-        if index > 0 && index < Gradient.names.count {
+        if (0..<Gradient.names.count).contains(index) {
             
-            // YES, load it (by index)
+            // YES, load the indexed Gradient
             loadGradient( GradientType(rawValue: Gradient.names[index])! )
             
         } else {
             
-            // NO, load it (by name)
+            // NO, load the default
             loadGradient(kDefault)
         }
     }
@@ -84,25 +77,23 @@ final class Gradient {
         
         switch type {
         case .basic:
-            colorMap = NSGradient.basic
+            gradient = NSGradient.basic
             
         case .dark:
-            colorMap = NSGradient.dark
+            gradient = NSGradient.dark
             
         case .deuteranopia:
-            colorMap = NSGradient.deuteranopia
+            gradient = NSGradient.deuteranopia
             
         case .grayscale:
-            colorMap = NSGradient.grayscale
+            gradient = NSGradient.grayscale
             
         case .purple:
-            colorMap = NSGradient.purple
+            gradient = NSGradient.purple
             
         case .tritanopia:
-            colorMap = NSGradient.tritanopia
+            gradient = NSGradient.tritanopia
         }
-        // create the array of bgra values
-        makeArray()
     }
     /// Convert an intensity into a color value
     ///
@@ -111,6 +102,12 @@ final class Gradient {
     /// - Returns:          a bgra8Norm color from the Gradient
     ///
     func value(_ intensity: UInt16) -> UInt32 {
+        //
+        // Note:    The Gradients created by the extensions on NSGradient (basic, dark, etc.)
+        //          are formatted internally in rgba format however when they are accessed
+        //          in the value(:) method they return a bgra8Unorm since this is the native
+        //          format of the Metal framebuffer where they are used (in WaterfallLayer).
+        //        
         var index: CGFloat = 0.0
         
         if (intensity <= _lowThreshold) {
@@ -127,40 +124,8 @@ final class Gradient {
         
             index = (CGFloat(intensity - _lowThreshold) / CGFloat(_intensityRange))
         }
-        // get the interpolated color
-        let color = colorMap.interpolatedColor(atLocation: index)
-        
-        // capture the component values (assumes that the Blue & Red are swapped)
-        //      see the Note at the top of this class
-        let alpha = UInt32( UInt8( color.alphaComponent * CGFloat(UInt8.max) ) ) << 24
-        let red = UInt32( UInt8( color.blueComponent * CGFloat(UInt8.max) ) ) << 16
-        let green = UInt32( UInt8( color.greenComponent * CGFloat(UInt8.max) ) ) << 8
-        let blue = UInt32( UInt8( color.redComponent * CGFloat(UInt8.max) ) )
-        
-        // return the UInt32 (in bgra format)
-        return alpha + red + green + blue
-    }
-    /// Create a bgra Array from the Gradient
-    ///
-    func makeArray() {
-        
-        colorArray.removeAll(keepingCapacity: true)
-        
-        for i in 0..<Gradient.kSize  {
-            
-            // get the interpolated color
-            let color = colorMap.interpolatedColor( atLocation: CGFloat(i)/CGFloat(Gradient.kSize) )
-            
-            // capture the component values (assumes that the Blue & Red are swapped)
-            //      see the Note at the top of this class
-            let alpha = UInt32( UInt8( color.alphaComponent * CGFloat(UInt8.max) ) ) << 24
-            let red = UInt32( UInt8( color.blueComponent * CGFloat(UInt8.max) ) ) << 16
-            let green = UInt32( UInt8( color.greenComponent * CGFloat(UInt8.max) ) ) << 8
-            let blue = UInt32( UInt8( color.redComponent * CGFloat(UInt8.max) ) )
-            
-            // append the brga value
-            colorArray.append(alpha + red + green + blue)
-        }
+        // return the interpolated color in a UInt32 (in bgra format)
+        return gradient.interpolatedColor(atLocation: index).bgra8Unorm
     }
     /// Calculate the High & Low threshold values
     ///
@@ -171,14 +136,20 @@ final class Gradient {
     ///   - colorGain:          colorGain setting
     ///
     func calcLevels(autoBlackEnabled: Bool, autoBlackLevel: UInt32, blackLevel: Int, colorGain: Int) {
-
-        // calculate the "effective" blackLevel
-        let effectiveBlackLevel = (autoBlackEnabled ? Int( Float(autoBlackLevel)  / Float(UInt16.max) * 75 ) : blackLevel)
         
-        // calculate the Threshold values
-        _lowThreshold = calcLowThreshold(effectiveBlackLevel)
+        // autoBlack enabled?
+        if autoBlackEnabled {
+            // YES, use the Radio's auto blackLevel
+            _lowThreshold = UInt16(autoBlackLevel)
+        
+        } else {
+            // NO, calculate a level based on the BlackLevel setting
+            _lowThreshold = calcLowThreshold(blackLevel)
+        }
+        // calculate the High threshold values
         _highThreshold = calcHighThreshold(_lowThreshold, colorGain: colorGain)
 
+        // save the range
         _intensityRange = Float(_highThreshold - _lowThreshold)
     }
 

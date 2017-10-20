@@ -234,10 +234,16 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
     ///
     public func waterfallStreamHandler(_ dataFrame: WaterfallFrame ) {
         
+        if dataFrame.autoBlackLevel != autoBlackLevel {
+            
+            gradient.calcLevels(autoBlackEnabled: _waterfall!.autoBlackEnabled, autoBlackLevel: dataFrame.autoBlackLevel, blackLevel: _waterfall!.blackLevel, colorGain: _waterfall!.colorGain)
+        }
         autoBlackLevel = dataFrame.autoBlackLevel
         
         // recalc values initially or when center/bandwidth changes
         if updateNeeded {
+            
+            updateNeeded = false
             
             // calculate the starting & ending bin numbers
             let startingBinNumber = Float( (CGFloat(_start) - dataFrame.firstBinFreq) / dataFrame.binBandwidth )
@@ -266,7 +272,7 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
             _currentLine[i] = gradient.value( binsPtr.advanced(by: i).pointee )            
         }
 
-        // copy the current line into the texture
+        // copy the colors into the texture
         let region = MTLRegionMake2D(0, _textureIndex, dataFrame.numberOfBins, 1)
         let uint8Ptr = UnsafeRawPointer(_currentLine).bindMemory(to: UInt8.self, capacity: dataFrame.numberOfBins * 4)
         _texture.replace(region: region, mipmapLevel: 0, withBytes: uint8Ptr, bytesPerRow: dataFrame.numberOfBins * 4)
@@ -274,13 +280,7 @@ public final class WaterfallLayer: CAMetalLayer, CALayerDelegate, WaterfallStrea
         // increment the index (the texture line that is currently the "top" line on the display)
         _textureIndex = (_textureIndex + 1) % WaterfallLayer.kTextureHeight
 
-        // interact with the UI
-        DispatchQueue.main.async { [unowned self] in            
-            autoreleasepool {
-                
-                // draw
-                self.render()
-            }
-        }
+        // render
+        self.render()
     }
 }

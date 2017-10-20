@@ -250,16 +250,16 @@ extension NSGradient {
     static var basic: NSGradient {
         get {
             let colors = [
-                NSColor(red: 0, green: 0, blue: 0, alpha: 1).bgr8,           // black
-                NSColor(red: 0, green: 0, blue: 1, alpha: 1).bgr8,           // blue
-                NSColor(red: 0, green: 1, blue: 1, alpha: 1).bgr8,           // cyan
-                NSColor(red: 0, green: 1, blue: 0, alpha: 1).bgr8,           // green
-                NSColor(red: 1, green: 1, blue: 0, alpha: 1).bgr8,           // yellow
-                NSColor(red: 1, green: 0, blue: 0, alpha: 1).bgr8,           // red
-                NSColor(red: 1, green: 1, blue: 1, alpha: 1).bgr8            // white
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0, green: 0, blue: 1, alpha: 1),           // blue
+                NSColor(red: 0, green: 1, blue: 1, alpha: 1),           // cyan
+                NSColor(red: 0, green: 1, blue: 0, alpha: 1),           // green
+                NSColor(red: 1, green: 1, blue: 0, alpha: 1),           // yellow
+                NSColor(red: 1, green: 0, blue: 0, alpha: 1),           // red
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
             ]
             let locations: Array<CGFloat> = [ 0.0, 0.15, 0.25, 0.35, 0.55, 0.90, 1.0 ]
-            return NSGradient(colors: colors, atLocations: locations, colorSpace: .sRGB)!
+            return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
         }
     }
     
@@ -267,11 +267,11 @@ extension NSGradient {
     static var dark: NSGradient {
         get {
             let colors = [
-                NSColor(red: 0, green: 0, blue: 0, alpha: 1).bgr8,           // black
-                NSColor(red: 0, green: 0, blue: 1, alpha: 1).bgr8,           // blue
-                NSColor(red: 0, green: 1, blue: 0, alpha: 1).bgr8,           // green
-                NSColor(red: 1, green: 0, blue: 0, alpha: 1).bgr8,           // red
-                NSColor(red: 1, green: 0.71, blue: 0.76, alpha: 1).bgr8      // light pink
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0, green: 0, blue: 1, alpha: 1),           // blue
+                NSColor(red: 0, green: 1, blue: 0, alpha: 1),           // green
+                NSColor(red: 1, green: 0, blue: 0, alpha: 1),           // red
+                NSColor(red: 1, green: 0.71, blue: 0.76, alpha: 1)      // light pink
             ]
             let locations: Array<CGFloat> = [ 0.0, 0.65, 0.90, 0.95, 1.0 ]
             return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
@@ -282,13 +282,13 @@ extension NSGradient {
     static var deuteranopia: NSGradient {
         get {
             let colors = [
-                NSColor(red: 0, green: 0, blue: 0, alpha: 1).bgr8,           // black
-                NSColor(red: 0.03, green: 0.23, blue: 0.42, alpha: 1).bgr8,  // dark blue
-                NSColor(red: 0.52, green: 0.63, blue: 0.84, alpha: 1).bgr8,  // light blue
-                NSColor(red: 0.65, green: 0.59, blue: 0.45, alpha: 1).bgr8,  // dark yellow
-                NSColor(red: 1, green: 1, blue: 0, alpha: 1).bgr8,           // yellow
-                NSColor(red: 1, green: 1, blue: 0, alpha: 1).bgr8,           // yellow
-                NSColor(red: 1, green: 1, blue: 1, alpha: 1).bgr8            // white
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0.03, green: 0.23, blue: 0.42, alpha: 1),  // dark blue
+                NSColor(red: 0.52, green: 0.63, blue: 0.84, alpha: 1),  // light blue
+                NSColor(red: 0.65, green: 0.59, blue: 0.45, alpha: 1),  // dark yellow
+                NSColor(red: 1, green: 1, blue: 0, alpha: 1),           // yellow
+                NSColor(red: 1, green: 1, blue: 0, alpha: 1),           // yellow
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
             ]
             let locations: Array<CGFloat> = [ 0.0, 0.15, 0.50, 0.65, 0.75, 0.95, 1.0 ]
             return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
@@ -299,8 +299,8 @@ extension NSGradient {
     static var grayscale: NSGradient {
         get {
             let colors = [
-                NSColor(red: 0, green: 0, blue: 0, alpha: 1).bgr8,           // black
-                NSColor(red: 1, green: 1, blue: 1, alpha: 1).bgr8            // white
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
             ]
             let locations: Array<CGFloat> = [ 0.0, 1.0 ]
             return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
@@ -311,13 +311,13 @@ extension NSGradient {
     static var purple: NSGradient {
         get {
             let colors = [
-                NSColor(red: 0, green: 0, blue: 0, alpha: 1).bgr8,           // black
-                NSColor(red: 0, green: 0, blue: 1, alpha: 1).bgr8,           // blue
-                NSColor(red: 0, green: 1, blue: 0, alpha: 1).bgr8,           // green
-                NSColor(red: 1, green: 1, blue: 0, alpha: 1).bgr8,           // yellow
-                NSColor(red: 1, green: 0, blue: 0, alpha: 1).bgr8,           // red
-                NSColor(red: 0.5, green: 0, blue: 0.5, alpha: 1).bgr8,       // purple
-                NSColor(red: 1, green: 1, blue: 1, alpha: 1).bgr8            // white
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0, green: 0, blue: 1, alpha: 1),           // blue
+                NSColor(red: 0, green: 1, blue: 0, alpha: 1),           // green
+                NSColor(red: 1, green: 1, blue: 0, alpha: 1),           // yellow
+                NSColor(red: 1, green: 0, blue: 0, alpha: 1),           // red
+                NSColor(red: 0.5, green: 0, blue: 0.5, alpha: 1),       // purple
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
             ]
             let locations: Array<CGFloat> = [ 0.0, 0.15, 0.30, 0.45, 0.60, 0.75, 1.0 ]
             return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
@@ -328,13 +328,13 @@ extension NSGradient {
     static var tritanopia: NSGradient {
         get {
             let colors = [
-                NSColor(red: 0, green: 0, blue: 0, alpha: 1).bgr8,           // black
-                NSColor(red: 0, green: 0.27, blue: 0.32, alpha: 1).bgr8,     // dark teal
-                NSColor(red: 0.42, green: 0.73, blue: 0.84, alpha: 1).bgr8,  // light blue
-                NSColor(red: 0.29, green: 0.03, blue: 0.09, alpha: 1).bgr8,  // dark red
-                NSColor(red: 1, green: 0, blue: 0, alpha: 1).bgr8,           // red
-                NSColor(red: 0.84, green: 0.47, blue: 0.52, alpha: 1).bgr8,  // light red
-                NSColor(red: 1, green: 1, blue: 1, alpha: 1).bgr8            // white
+                NSColor(red: 0, green: 0, blue: 0, alpha: 1),           // black
+                NSColor(red: 0, green: 0.27, blue: 0.32, alpha: 1),     // dark teal
+                NSColor(red: 0.42, green: 0.73, blue: 0.84, alpha: 1),  // light blue
+                NSColor(red: 0.29, green: 0.03, blue: 0.09, alpha: 1),  // dark red
+                NSColor(red: 1, green: 0, blue: 0, alpha: 1),           // red
+                NSColor(red: 0.84, green: 0.47, blue: 0.52, alpha: 1),  // light red
+                NSColor(red: 1, green: 1, blue: 1, alpha: 1)            // white
             ]
             let locations: Array<CGFloat> = [ 0.0, 0.15, 0.25, 0.45, 0.90, 0.95, 1.0 ]
             return NSGradient(colors: colors, atLocations: locations, colorSpace: .deviceRGB)!
@@ -344,14 +344,24 @@ extension NSGradient {
 
 extension NSColor {
     
-    // return a float4 version of an NSColor
+    // return a float4 version of an rgba NSColor
     var float4Color: float4 { return float4( Float(self.redComponent),
                                              Float(self.greenComponent),
                                              Float(self.blueComponent),
                                              Float(self.alphaComponent))
     }
-    // return a bgr8 version of an rgba color
-    var bgr8: NSColor { return NSColor(red: self.blueComponent, green: self.greenComponent, blue: self.redComponent, alpha: self.alphaComponent) }
-    
+    // return a bgr8Unorm version of an rgba NSColor
+    var bgra8Unorm: UInt32 {
+        
+        // capture the component values (assumes that the Blue & Red are swapped)
+        //      see the Note at the top of this class
+        let alpha = UInt32( UInt8( self.alphaComponent * CGFloat(UInt8.max) ) ) << 24
+        let red = UInt32( UInt8( self.redComponent * CGFloat(UInt8.max) ) ) << 16
+        let green = UInt32( UInt8( self.greenComponent * CGFloat(UInt8.max) ) ) << 8
+        let blue = UInt32( UInt8( self.blueComponent * CGFloat(UInt8.max) ) )
+        
+        // return the UInt32 (in bgra format)
+        return alpha + red + green + blue
+    }
 }
 

@@ -85,7 +85,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     ///
     private func setupWaterfallLayer() {
         
-        // setup buffers
+        // setup state
         _waterfallLayer.setupState()
         
         // setup the spectrum background color
@@ -168,7 +168,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         #keyPath(Waterfall.autoBlackEnabled),
         #keyPath(Waterfall.blackLevel),
         #keyPath(Waterfall.colorGain),
-        #keyPath(Waterfall.gradientIndex)
+        #keyPath(Waterfall.gradientIndex),
     ]
 
     fileprivate let _panadapterKeyPaths = [      // Panadapter keypaths to observe
@@ -203,7 +203,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         switch keyPath! {
-        
+            
         case #keyPath(Waterfall.autoBlackEnabled), #keyPath(Waterfall.blackLevel), #keyPath(Waterfall.colorGain):
             // recalc the levels
             _waterfallLayer.gradient.calcLevels(autoBlackEnabled: _waterfall!.autoBlackEnabled, autoBlackLevel: _waterfallLayer.autoBlackLevel, blackLevel: _waterfall!.blackLevel, colorGain: _waterfall!.colorGain)
