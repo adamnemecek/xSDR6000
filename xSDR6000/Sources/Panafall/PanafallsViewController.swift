@@ -207,7 +207,7 @@ class PanafallsViewController: NSSplitViewController {
         if let panadapter = note.object as? Panadapter {
             
             // YES, log the event
-            _log.msg("ID = \(panadapter.id)", level: .debug, function: #function, file: #file, line: #line)
+            _log.msg("ID = \(panadapter.id.hex)", level: .debug, function: #function, file: #file, line: #line)
             
             // observe changes to Panadapter properties
             observations(panadapter, paths: _panadapterKeyPaths)
@@ -243,7 +243,7 @@ class PanafallsViewController: NSSplitViewController {
         if let waterfall = note.object as? Waterfall {
             
             // YES, log the event
-            _log.msg("ID = \(waterfall.id)", level: .debug, function: #function, file: #file, line: #line)
+            _log.msg("ID = \(waterfall.id.hex)", level: .debug, function: #function, file: #file, line: #line)
 
 //            // observe changes to Waterfall properties
 //            observations(waterfall, paths: _waterfallKeyPaths)
@@ -275,7 +275,7 @@ class PanafallsViewController: NSSplitViewController {
         if let panadapter = note.object as? Panadapter {
             
             // YES, log the event
-            _log.msg("ID = \(panadapter.id)", level: .debug, function: #function, file: #file, line: #line)
+            _log.msg("ID = \(panadapter.id.hex)", level: .debug, function: #function, file: #file, line: #line)
 
             // remove Panadapter property observers
             observations(panadapter, paths: _panadapterKeyPaths, remove: true)
@@ -294,7 +294,7 @@ class PanafallsViewController: NSSplitViewController {
         if let waterfall = note.object as? Waterfall {
             
             // YES, log the event
-            _log.msg("ID = \(waterfall.id)", level: .debug, function: #function, file: #file, line: #line)
+            _log.msg("ID = \(waterfall.id.hex)", level: .debug, function: #function, file: #file, line: #line)
             
 //            // remove Waterfall property observers
 //            observations(waterfall, paths: _waterfallKeyPaths, remove: true)
