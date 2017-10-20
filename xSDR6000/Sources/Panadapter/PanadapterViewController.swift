@@ -74,6 +74,9 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     override func viewDidLoad() {
         super.viewDidLoad()
         
+        // add notification subscriptions
+        addNotifications()
+
         // make the view controller the delegate for the view
         _panadapterView = self.view as! PanadapterView
         _panadapterView.delegate = self
@@ -87,9 +90,11 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // direct stream data to the panadapter layer
         _panadapter?.delegate = _panadapterLayer
 
-        // begin observations (defaults, panadapter, radio, tnf & slice)
-        setupObservations()
-        
+        // begin observations (defaults, panadapter & radio)
+        observations(UserDefaults.standard, paths: _defaultsKeyPaths)
+        observations(_panadapter!, paths: _panadapterKeyPaths)
+        observations(_radio, paths: _radioKeyPaths)
+
         // draw each layer once
         _frequencyLayer.redraw()
         _dbLayer.redraw()
@@ -155,28 +160,6 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // setup Uniforms
         _panadapterLayer.populateUniforms(size: view.frame.size)
         _panadapterLayer.updateUniformsBuffer()
-    }
-    /// Setup Tnf's & Slices present at viewDidLoad time, start observations & Notification
-    ///
-    private func setupObservations() {
-        
-        // capture tnfs present at viewDidLoad time
-        for (_, tnf) in _radio.tnfs {
-            // add observations of this Tnf
-            observations(tnf, paths: _tnfKeyPaths)
-        }
-        // capture slices present at viewDidLoad time
-        for (_, slice) in _radio.slices {
-            // add observations of this Slice
-            observations(slice, paths: _sliceKeyPaths)
-        }
-        // begin observations (defaults, panadapter & radio)
-        observations(UserDefaults.standard, paths: _defaultsKeyPaths)
-        observations(_panadapter!, paths: _panadapterKeyPaths)
-        observations(_radio, paths: _radioKeyPaths)
-
-        // add notification subscriptions
-        addNotifications()
     }
 
     // ----------------------------------------------------------------------------
@@ -512,11 +495,18 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // does the Notification contain a SLice object?
         if let slice = note.object as? xLib6000.Slice {
             
-            // YES, add observations of this Slice
-            observations(slice, paths: _sliceKeyPaths)
-            
-            // force a redraw
-            _sliceLayer.redraw()
+            // YES, on this panadapter?
+            if slice.panadapterId == _panadapter!.id {
+                
+                // YES, log the event
+                _log.msg("ID = \(slice.id) on pan = \(_panadapter!.id.hex)", level: .debug, function: #function, file: #file, line: #line)
+                
+                // YES, add observations of this Slice
+                observations(slice, paths: _sliceKeyPaths)
+                
+                // force a redraw
+                _sliceLayer.redraw()
+            }
         }
     }
     /// Process .sliceWillBeRemoved Notification
@@ -528,11 +518,18 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // does the Notification contain a Slice object?
         if let slice = note.object as? xLib6000.Slice {
             
-            // YES, remove observations of this Slice
-            observations(slice, paths: _sliceKeyPaths, remove: true)
-            
-            // force a redraw
-            _sliceLayer.redraw()
+            // YES, on this panadapter?
+            if slice.panadapterId == _panadapter!.id {
+                
+                // YES, log the event
+                _log.msg("ID = \(slice.id) on pan = \(_panadapter!.id.hex)", level: .debug, function: #function, file: #file, line: #line)
+                
+                // YES, remove observations of this Slice
+                observations(slice, paths: _sliceKeyPaths, remove: true)
+                
+                // force a redraw
+                _sliceLayer.redraw()
+            }
         }
     }
     /// Process .tnfHasBeenAdded Notification
@@ -544,7 +541,10 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // does the Notification contain a Tnf object?
         if let tnf = note.object as? Tnf {
             
-            // YES, add observations of this Tnf
+            // YES, log the event
+            _log.msg("ID = \(tnf.id)", level: .debug, function: #function, file: #file, line: #line)
+
+            // add observations of this Tnf
             observations(tnf, paths: _tnfKeyPaths)
 
             // force a redraw
@@ -560,7 +560,10 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // does the Notification contain a Tnf object?
         if let tnf = note.object as? Tnf {
             
-            // YES, remove observations of this Tnf
+            // YES, log the event
+            _log.msg("ID = \(tnf.id)", level: .debug, function: #function, file: #file, line: #line)
+
+            // remove observations of this Tnf
             observations(tnf, paths: _tnfKeyPaths, remove: true)
             
             // force a redraw
