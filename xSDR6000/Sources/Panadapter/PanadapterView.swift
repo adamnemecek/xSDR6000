@@ -29,10 +29,11 @@ final public class PanadapterView: NSView, CALayerDelegate {
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
-    fileprivate var _panLeft                : NSPanGestureRecognizer!
+    fileprivate var _panLeft                : NSPanGestureRecognizer!   // gestures
+    fileprivate var _clickLeft              : NSClickGestureRecognizer!
     fileprivate var _clickRight             : NSClickGestureRecognizer!
     
-    fileprivate var _minY                   : CAConstraint!
+    fileprivate var _minY                   : CAConstraint!         // layer constraints
     fileprivate var _minX                   : CAConstraint!
     fileprivate var _maxY                   : CAConstraint!
     fileprivate var _maxX                   : CAConstraint!
@@ -57,6 +58,12 @@ final public class PanadapterView: NSView, CALayerDelegate {
         createLayers()
     }
 
+    public override func viewDidEndLiveResize() {
+        
+        // alert the controller to a resize
+        delegate.didResize()
+    }
+    
     // ----------------------------------------------------------------------------
     // MARK: - Public methods
     
@@ -93,6 +100,12 @@ final public class PanadapterView: NSView, CALayerDelegate {
         _panLeft.buttonMask = kLeftButton
         
         addGestureRecognizer(_panLeft)
+        
+        // create a left-click gesture
+        _clickLeft = NSClickGestureRecognizer(target: delegate, action: #selector(PanadapterViewController.clickLeft(_:)))
+        _clickLeft.buttonMask = kLeftButton
+        
+        addGestureRecognizer(_clickLeft)
         
         // create a right-click gesture
         _clickRight = NSClickGestureRecognizer(target: delegate, action: #selector(PanadapterViewController.clickRight(_:)))

@@ -132,37 +132,6 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     }
 
     // ----------------------------------------------------------------------------
-    // MARK: - Private methods
-
-    /// Pass the Params struct to each layer
-    ///
-    private func passParams() {
-        
-        _frequencyLayer.params = _params
-        _dbLayer.params = _params
-        _sliceLayer.params = _params
-        _tnfLayer.params = _params
-    }
-    /// Setup Panadapter layer buffers & parameters
-    ///
-    private func setupPanadapterLayer() {
-        
-        // TODO: Make this a preference value
-        _panadapterLayer.spectrumStyle = .line
-        
-        // setup buffers
-        _panadapterLayer.setupBuffers()
-        
-        // setup the spectrum background color
-        _panadapterLayer.setClearColor(Defaults[.spectrumBackground])
-        
-        
-        // setup Uniforms
-        _panadapterLayer.populateUniforms(size: view.frame.size)
-        _panadapterLayer.updateUniformsBuffer()
-    }
-
-    // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
     /// Respond to Pan gesture (left mouse down)
@@ -218,8 +187,8 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
             } else if _dr.original.x < view.frame.width - _dbLayer.width {
                 
                 // in spectrum, check for presence of Slice or Tnf
-                let dragSlice = hitTestSlice(frequency: _dr.frequency)
-                let dragTnf = hitTestTnf(frequency: _dr.frequency)
+                let dragSlice = hitTestSlice(at: _dr.frequency)
+                let dragTnf = hitTestTnf(at: _dr.frequency)
                 if let _ =  dragSlice{
                     // in Slice drag / resize
                     _dr.type = .slice
@@ -290,7 +259,26 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
             return true
         }
     }
-    /// respond to Right Click gesture
+    /// Respond to Click-Left gesture
+    ///
+    /// - Parameter gr:         the Click Gesture Recognizer
+    ///
+    @objc func clickLeft(_ gr: NSClickGestureRecognizer) {
+        
+        // get the coordinates and convert to this View
+        let mouseLocation = gr.location(in: view)
+        
+        // calculate the frequency
+        let clickFrequency = (mouseLocation.x * _hzPerUnit) + CGFloat(_start)
+        
+        // Is there an inactive Slice at the clickFrequency
+        if activateSlice(at: clickFrequency) {
+            
+            // YES, it is now the active Slice
+            redrawSlices()
+        }
+    }
+    /// Respond to Click-Right gesture
     ///     NOTE: will only receive events in db legend, see previous method
     ///
     /// - Parameter gr:         the Click Gesture Recognizer
@@ -300,16 +288,54 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // update the Db Legend spacings
         _dbLayer.updateLegendSpacing(gestureRecognizer: gr, in: view)
     }
+    /// Redraw after a resize
+    ///
+    func didResize() {
         
-    /// FInd the Slice at a frequency (if any)
+        // after a resize, redraw display components
+        redrawDbLegend()
+        redrawFrequencyLegend()
+        redrawSlices()
+    }
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
+    /// Pass the Params struct to each layer
+    ///
+    private func passParams() {
+        
+        _frequencyLayer.params = _params
+        _dbLayer.params = _params
+        _sliceLayer.params = _params
+        _tnfLayer.params = _params
+    }
+    /// Setup Panadapter layer buffers & parameters
+    ///
+    private func setupPanadapterLayer() {
+        
+        // TODO: Make this a preference value
+        _panadapterLayer.spectrumStyle = .line
+        
+        // setup buffers
+        _panadapterLayer.setupBuffers()
+        
+        // setup the spectrum background color
+        _panadapterLayer.setClearColor(Defaults[.spectrumBackground])
+        
+        
+        // setup Uniforms
+        _panadapterLayer.populateUniforms(size: view.frame.size)
+        _panadapterLayer.updateUniformsBuffer()
+    }
+    /// Find the Slice at a frequency (if any)
     ///
     /// - Parameter freq:       the target frequency
     /// - Returns:              a slice or nil
     ///
-    func hitTestSlice(frequency freq: CGFloat) -> xLib6000.Slice? {
+    private func hitTestSlice(at freq: CGFloat) -> xLib6000.Slice? {
         var slice: xLib6000.Slice?
         
-        for (_, s) in _radio.slices {
+        for (_, s) in _radio.slices where s.panadapterId == _panadapter!.id{
             if s.frequency + s.filterLow <= Int(freq) && s.frequency + s.filterHigh >= Int(freq) {
                 slice = s
                 break
@@ -317,12 +343,37 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         }
         return slice
     }
+    /// Make a Slice active
+    ///
+    /// - Parameter freq:       the target frequency
+    ///
+    private func activateSlice(at freq: CGFloat) -> Bool {
+        var slice: xLib6000.Slice?
+        
+        for (_, s) in _radio.slices where s.panadapterId == _panadapter!.id && s.frequency + s.filterLow <= Int(freq) && s.frequency + s.filterHigh >= Int(freq) {
+            
+            // if it isn't already active, save the Slice
+            if !s.active { slice = s }
+            break
+        }
+        // was there an inactive Slice at the frequency?
+        if let slice = slice {
+            
+            // YES, make it active and all others inactive
+            for (_, s) in _radio.slices where s.panadapterId == _panadapter!.id {
+                
+                s.active = ( slice == s)
+            }
+        }
+        // indicate whether the active slice has been changed
+        return slice != nil
+    }
     /// Find the Tnf at or near a frequency (if any)
     ///
     /// - Parameter freq:       the target frequency
     /// - Returns:              a tnf or nil
     ///
-    func hitTestTnf(frequency freq: CGFloat) -> Tnf? {
+    private func hitTestTnf(at freq: CGFloat) -> Tnf? {
         var tnf: Tnf?
         
         // calculate a minimum width for hit testing
@@ -338,6 +389,7 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         }
         return tnf
     }
+    
 
     // ----------------------------------------------------------------------------
     // MARK: - Observation Methods
