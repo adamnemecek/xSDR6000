@@ -17,7 +17,7 @@ public final class SliceLayer: CALayer {
     
     var params                          : Params!           // Radio & Panadapter references
     var lineColor                       = NSColor(srgbRed: 1.0, green: 1.0, blue: 1.0, alpha: 0.2)
-    
+    var triangleSize                    : CGFloat = 15.0
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
@@ -37,40 +37,12 @@ public final class SliceLayer: CALayer {
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
-    func updateSlice(dragable dr: PanadapterViewController.Dragable) {
-
-        // calculate offsets in x & y
-        let deltaX = dr.current.x - dr.previous.x
-        let deltaY = dr.current.y - dr.previous.y
-        
-        // is there a slice object?
-        if let slice = dr.object as? xLib6000.Slice {
-            
-            // YES, drag or resize?
-            if abs(deltaX) > abs(deltaY) {
-                // drag
-                slice.frequency += Int(deltaX * _hzPerUnit)
-            } else {
-                // resize
-                slice.filterLow -= Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
-                slice.filterHigh += Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
-            }
-        }
-        // redraw the slices
-        redraw()
-    }
-
-    // ----------------------------------------------------------------------------
-    // MARK: - CALayerDelegate methods
-    
-    /// Draw Layers
+    /// Draw Layer
     ///
-    /// - Parameters:
-    ///   - layer:      a CALayer
-    ///   - ctx:        context
+    /// - Parameter ctx:        a CG context
     ///
     public func drawLayer(in ctx: CGContext) {
-
+        
         // setup the graphics context
         let context = NSGraphicsContext(cgContext: ctx, flipped: false)
         NSGraphicsContext.saveGraphicsState()
@@ -106,16 +78,19 @@ public final class SliceLayer: CALayer {
             
             // is it on this panadapter?
             if slice.frequency >= _start && slice.frequency <= _end {
-
+                
                 // YES, calculate the line position
                 let sliceFrequencyPosition = CGFloat(slice.frequency - _start) / _hzPerUnit
-
+                
                 // draw the line
                 _path.vLine(at: sliceFrequencyPosition, fromY: 0, toY: frame.height)
+                
+                // draw the triangle at the top
+                _path.drawTriangle(at: sliceFrequencyPosition, topWidth: triangleSize, triangleHeight: triangleSize, topPosition: frame.height)
             }
         }
         _path.strokeRemove()
-
+        
         // set the inactive slice color
         Defaults[.sliceInactive].set()
         
@@ -133,9 +108,35 @@ public final class SliceLayer: CALayer {
             }
         }
         _path.strokeRemove()
-
+        
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
+    }
+    /// Process a drag
+    ///
+    /// - Parameter dr:         the draggable
+    ///
+    func updateSlice(dragable dr: PanadapterViewController.Dragable) {
+
+        // calculate offsets in x & y
+        let deltaX = dr.current.x - dr.previous.x
+        let deltaY = dr.current.y - dr.previous.y
+        
+        // is there a slice object?
+        if let slice = dr.object as? xLib6000.Slice {
+            
+            // YES, drag or resize?
+            if abs(deltaX) > abs(deltaY) {
+                // drag
+                slice.frequency += Int(deltaX * _hzPerUnit)
+            } else {
+                // resize
+                slice.filterLow -= Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
+                slice.filterHigh += Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
+            }
+        }
+        // redraw the slices
+        redraw()
     }
     /// Force the layer to be redrawn
     ///

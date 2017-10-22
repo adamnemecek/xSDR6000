@@ -36,40 +36,12 @@ public final class TnfLayer: CALayer {
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
-    func updateTnf(dragable dr: PanadapterViewController.Dragable) {
-
-        // calculate offsets in x & y
-        let deltaX = dr.current.x - dr.previous.x
-        let deltaY = dr.current.y - dr.previous.y
+    /// Draw Layer
+    ///
+    /// - Parameter ctx:        a CG context
+    ///
+    func drawLayer(in ctx: CGContext) {
         
-        // is there a tnf object?
-        if let tnf = dr.object as? Tnf {
-            
-            // YES, drag or resize?
-            if abs(deltaX) > abs(deltaY) {
-                // drag
-                tnf.frequency = Int(dr.current.x * _hzPerUnit) + _start
-            } else {
-                
-                // resize
-                tnf.width = tnf.width + Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
-            }
-        }
-        // redraw the tnfs
-        redraw()
-    }
-    
-    // ----------------------------------------------------------------------------
-    // MARK: - CALayerDelegate methods
-    
-    /// Draw Layers
-    ///
-    /// - Parameters:
-    ///   - layer:      a CALayer
-    ///   - ctx:        context
-    ///
-    public func drawLayer(in ctx: CGContext) {
-
         // setup the graphics context
         let context = NSGraphicsContext(cgContext: ctx, flipped: false)
         NSGraphicsContext.saveGraphicsState()
@@ -98,11 +70,36 @@ public final class TnfLayer: CALayer {
             }
         }
         _path.strokeRemove()
-
+        
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
     }
-    
+    /// Process a drag
+    ///
+    /// - Parameter dr:         the draggable
+    ///
+    func updateTnf(dragable dr: PanadapterViewController.Dragable) {
+
+        // calculate offsets in x & y
+        let deltaX = dr.current.x - dr.previous.x
+        let deltaY = dr.current.y - dr.previous.y
+        
+        // is there a tnf object?
+        if let tnf = dr.object as? Tnf {
+            
+            // YES, drag or resize?
+            if abs(deltaX) > abs(deltaY) {
+                // drag
+                tnf.frequency = Int(dr.current.x * _hzPerUnit) + _start
+            } else {
+                
+                // resize
+                tnf.width = tnf.width + Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
+            }
+        }
+        // redraw the tnfs
+        redraw()
+    }
     /// Force the layer to be redrawn
     ///
     func redraw() {

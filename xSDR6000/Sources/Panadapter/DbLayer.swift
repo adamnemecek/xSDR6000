@@ -36,77 +36,27 @@ public final class DbLayer: CALayer {
 
     fileprivate let kFormat             = " %4.0f"
 
-    func updateDbmLevel(dragable dr: PanadapterViewController.Dragable) {
-
-        // Upper half of the legend?
-        if dr.original.y > frame.height/2 {
-            
-            // YES, update the max value
-            _panadapter!.maxDbm += (dr.previous.y - dr.current.y)
-        
-        } else {
-            
-            // NO, update the min value
-            _panadapter!.minDbm += (dr.previous.y - dr.current.y)
-        }
-        // redraw the db legend
-        redraw()
-    }
-    
-    func updateLegendSpacing(gestureRecognizer gr: NSClickGestureRecognizer, in view: NSView) {
-        var item: NSMenuItem!
-
-        // get the "click" coordinates and convert to the View
-        let position = gr.location(in: view)
-        
-        // create the Spacings popup menu
-        let menu = NSMenu(title: "Spacings")
-        
-        // populate the popup menu of Spacings
-        for i in 0..<_spacings.count {
-            item = menu.insertItem(withTitle: "\(_spacings[i]) dbm", action: #selector(legendSpacing(_:)), keyEquivalent: "", at: i)
-            item.tag = Int(_spacings[i]) ?? 0
-            item.target = self
-        }
-        // display the popup
-        menu.popUp(positioning: menu.item(at: 0), at: position, in: view)
-    }
-    /// respond to the Context Menu selection
-    ///
-    /// - Parameter sender:     the Context Menu
-    ///
-    @objc fileprivate func legendSpacing(_ sender: NSMenuItem) {
-        
-        // set the Db Legend spacing
-        Defaults[.dbLegendSpacing] = String(sender.tag, radix: 10)
-        
-        // redraw the db legend
-        redraw()
-    }
-
     // ----------------------------------------------------------------------------
-    // MARK: - CALayerDelegate methods
+    // MARK: - Internal methods
     
-    /// Draw Layers
+    /// Draw Layer
     ///
-    /// - Parameters:
-    ///   - layer:      a CALayer
-    ///   - ctx:        context
+    /// - Parameter ctx:        a CG context
     ///
-    public func drawLayer(in ctx: CGContext) {
+    func drawLayer(in ctx: CGContext) {
         
         // setup the graphics context
         let context = NSGraphicsContext(cgContext: ctx, flipped: false)
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrent(context)
-
+        
         // setup the Legend font & size
         _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
         _attributes[NSFontAttributeName] = font
         
         // calculate a typical font height
         _fontHeight = "-000".size(withAttributes: _attributes).height
-
+        
         // setup the Legend color
         _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
         
@@ -140,8 +90,8 @@ public final class DbLayer: CALayer {
         let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
         _path.setLineDash( dash, count: 2, phase: 0 )
         Defaults[.gridLines].set()
-
-        // draw the lines
+        
+        // draw the horizontal grid lines
         for i in 0...numberOfLegends {
             
             // calculate the y coordinate of the legend
@@ -151,9 +101,53 @@ public final class DbLayer: CALayer {
             _path.hLine(at: yPosition + _fontHeight/3, fromX: 0, toX: frame.width - width )
         }
         _path.strokeRemove()
-
+        
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
+    }
+    /// Process a Dbm level drag
+    ///
+    /// - Parameter dr:         the draggable
+    ///
+    func updateDbmLevel(dragable dr: PanadapterViewController.Dragable) {
+
+        // Upper half of the legend?
+        if dr.original.y > frame.height/2 {
+            
+            // YES, update the max value
+            _panadapter!.maxDbm += (dr.previous.y - dr.current.y)
+        
+        } else {
+            
+            // NO, update the min value
+            _panadapter!.minDbm += (dr.previous.y - dr.current.y)
+        }
+        // redraw the db legend
+        redraw()
+    }
+    /// Process a Dbm spacing change
+    ///
+    /// - Parameters:
+    ///   - gr:                 a Gesture Recognizer
+    ///   - view:               the view of the gesture
+    ///
+    func updateLegendSpacing(gestureRecognizer gr: NSClickGestureRecognizer, in view: NSView) {
+        var item: NSMenuItem!
+
+        // get the "click" coordinates and convert to the View
+        let position = gr.location(in: view)
+        
+        // create the Spacings popup menu
+        let menu = NSMenu(title: "Spacings")
+        
+        // populate the popup menu of Spacings
+        for i in 0..<_spacings.count {
+            item = menu.insertItem(withTitle: "\(_spacings[i]) dbm", action: #selector(legendSpacing(_:)), keyEquivalent: "", at: i)
+            item.tag = Int(_spacings[i]) ?? 0
+            item.target = self
+        }
+        // display the popup
+        menu.popUp(positioning: menu.item(at: 0), at: position, in: view)
     }
     /// Force the layer to be redrawn
     ///
@@ -163,5 +157,21 @@ public final class DbLayer: CALayer {
             // force a redraw
             self.setNeedsDisplay()
         }
+    }
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
+    /// respond to the Context Menu selection
+    ///
+    /// - Parameter sender:     the Context Menu
+    ///
+    @objc fileprivate func legendSpacing(_ sender: NSMenuItem) {
+        
+        // set the Db Legend spacing
+        Defaults[.dbLegendSpacing] = String(sender.tag, radix: 10)
+        
+        // redraw the db legend
+        redraw()
     }
 }
