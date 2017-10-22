@@ -242,7 +242,7 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         // does the Notification contain a Panadapter object?
         if let waterfall = note.object as? Waterfall {
             
-            // YES, is it this panadapter
+            // YES, is it this panadapter's Waterfall?
             if waterfall == _waterfall! {
                 
                 // YES, remove Defaults property observers
