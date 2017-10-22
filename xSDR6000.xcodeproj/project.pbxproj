@@ -9,6 +9,8 @@
 /* Begin PBXBuildFile section */
 		9124E1C31F8BF27100B50F6C /* WaterfallShaders.metal in Sources */ = {isa = PBXBuildFile; fileRef = 9124E1C21F8BF27100B50F6C /* WaterfallShaders.metal */; };
 		91329A8C1F4F52410095DAE2 /* Gradient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91329A8B1F4F52410095DAE2 /* Gradient.swift */; };
+		914539601F9CD6560093CBF8 /* FlagViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9145395F1F9CD6560093CBF8 /* FlagViewController.swift */; };
+		914539621F9CD8250093CBF8 /* BlackTexture.png in Resources */ = {isa = PBXBuildFile; fileRef = 914539611F9CD8250093CBF8 /* BlackTexture.png */; };
 		916CF6C91F89B04000AE4ABA /* WaterfallViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916CF6C81F89B04000AE4ABA /* WaterfallViewController.swift */; };
 		916CF6CB1F89B14000AE4ABA /* WaterfallView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916CF6CA1F89B14000AE4ABA /* WaterfallView.swift */; };
 		916CF6CD1F89B32900AE4ABA /* WaterfallLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 916CF6CC1F89B32900AE4ABA /* WaterfallLayer.swift */; };
@@ -20,7 +22,6 @@
 		916D513A1F75A63900F1117B /* XCGLogger.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 91C206821F67811500581284 /* XCGLogger.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		916D513B1F75A63900F1117B /* xLib6000.framework in Embed Frameworks */ = {isa = PBXBuildFile; fileRef = 91C206831F67811500581284 /* xLib6000.framework */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		9172DC931F86CA030001C58C /* PanadapterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9172DC921F86CA030001C58C /* PanadapterView.swift */; };
-		91B3D30B1F915DDD003132CB /* BlackTexture.png in Resources */ = {isa = PBXBuildFile; fileRef = 91B3D30A1F915DDD003132CB /* BlackTexture.png */; };
 		91E1705D1F8280FD009E7DF3 /* SliceLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E170571F8280FD009E7DF3 /* SliceLayer.swift */; };
 		91E1705E1F8280FD009E7DF3 /* TnfLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E170581F8280FD009E7DF3 /* TnfLayer.swift */; };
 		91E1705F1F8280FD009E7DF3 /* PanadapterLayer.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91E170591F8280FD009E7DF3 /* PanadapterLayer.swift */; };
@@ -33,7 +34,6 @@
 		91FADDF01F4A754100DEC52B /* MainWindowController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDED1F4A754100DEC52B /* MainWindowController.swift */; };
 		91FADDF11F4A754100DEC52B /* RadioPickerViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDEE1F4A754100DEC52B /* RadioPickerViewController.swift */; };
 		91FADDF21F4A754100DEC52B /* RadioViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDEF1F4A754100DEC52B /* RadioViewController.swift */; };
-		91FADDF81F4A75AE00DEC52B /* FlagViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDF31F4A75AE00DEC52B /* FlagViewController.swift */; };
 		91FADDF91F4A75AE00DEC52B /* PanafallButtonView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDF41F4A75AE00DEC52B /* PanafallButtonView.swift */; };
 		91FADDFA1F4A75AE00DEC52B /* PanafallButtonViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDF51F4A75AE00DEC52B /* PanafallButtonViewController.swift */; };
 		91FADDFB1F4A75AE00DEC52B /* PanafallsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADDF61F4A75AE00DEC52B /* PanafallsViewController.swift */; };
@@ -47,7 +47,6 @@
 		91FADE0A1F4A769400DEC52B /* EqViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE091F4A769400DEC52B /* EqViewController.swift */; };
 		91FADE1B1F4A76FB00DEC52B /* ColorsViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE191F4A76FB00DEC52B /* ColorsViewController.swift */; };
 		91FADE1C1F4A76FB00DEC52B /* PreferencesTabViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE1A1F4A76FB00DEC52B /* PreferencesTabViewController.swift */; };
-		91FADE1E1F4A771800DEC52B /* FlagViewController.xib in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE1D1F4A771800DEC52B /* FlagViewController.xib */; };
 		91FADE381F4A77A200DEC52B /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 91FADE371F4A77A200DEC52B /* Assets.xcassets */; };
 		91FADE521F4A781800DEC52B /* OpusManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE501F4A781800DEC52B /* OpusManager.swift */; };
 		91FADE531F4A781800DEC52B /* ParameterMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 91FADE511F4A781800DEC52B /* ParameterMonitor.swift */; };
@@ -82,13 +81,14 @@
 /* Begin PBXFileReference section */
 		9124E1C21F8BF27100B50F6C /* WaterfallShaders.metal */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.metal; name = WaterfallShaders.metal; path = xSDR6000/Sources/Waterfall/WaterfallShaders.metal; sourceTree = SOURCE_ROOT; };
 		91329A8B1F4F52410095DAE2 /* Gradient.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = Gradient.swift; path = xSDR6000/Sources/Gradients/Gradient.swift; sourceTree = SOURCE_ROOT; };
+		9145395F1F9CD6560093CBF8 /* FlagViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = FlagViewController.swift; path = xSDR6000/Sources/Panadapter/FlagViewController.swift; sourceTree = SOURCE_ROOT; };
+		914539611F9CD8250093CBF8 /* BlackTexture.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; name = BlackTexture.png; path = xSDR6000/Sources/Gradients/BlackTexture.png; sourceTree = SOURCE_ROOT; };
 		916CF6C81F89B04000AE4ABA /* WaterfallViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = WaterfallViewController.swift; path = xSDR6000/Sources/Waterfall/WaterfallViewController.swift; sourceTree = SOURCE_ROOT; };
 		916CF6CA1F89B14000AE4ABA /* WaterfallView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WaterfallView.swift; path = xSDR6000/Sources/Waterfall/WaterfallView.swift; sourceTree = SOURCE_ROOT; };
 		916CF6CC1F89B32900AE4ABA /* WaterfallLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = WaterfallLayer.swift; path = xSDR6000/Sources/Waterfall/WaterfallLayer.swift; sourceTree = SOURCE_ROOT; };
 		916CF6CE1F89B35A00AE4ABA /* TimeLayer.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; name = TimeLayer.swift; path = xSDR6000/Sources/Waterfall/TimeLayer.swift; sourceTree = SOURCE_ROOT; };
 		9172DC921F86CA030001C58C /* PanadapterView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = PanadapterView.swift; path = xSDR6000/Sources/Panadapter/PanadapterView.swift; sourceTree = SOURCE_ROOT; };
 		91B16FD71CDF7F5E00600E02 /* xSDR6000.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = xSDR6000.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		91B3D30A1F915DDD003132CB /* BlackTexture.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BlackTexture.png; sourceTree = "<group>"; };
 		91C2067E1F67811500581284 /* AudioLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = AudioLibrary.framework; sourceTree = "<group>"; };
 		91C2067F1F67811500581284 /* ObjcExceptionBridging.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = ObjcExceptionBridging.framework; sourceTree = "<group>"; };
 		91C206801F67811500581284 /* OpusOSX.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = OpusOSX.framework; sourceTree = "<group>"; };
@@ -108,7 +108,6 @@
 		91FADDED1F4A754100DEC52B /* MainWindowController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = MainWindowController.swift; path = xSDR6000/Sources/Radio/MainWindowController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADDEE1F4A754100DEC52B /* RadioPickerViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = RadioPickerViewController.swift; path = xSDR6000/Sources/Radio/RadioPickerViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADDEF1F4A754100DEC52B /* RadioViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = RadioViewController.swift; path = xSDR6000/Sources/Radio/RadioViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		91FADDF31F4A75AE00DEC52B /* FlagViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = FlagViewController.swift; path = xSDR6000/Sources/Panafall/FlagViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADDF41F4A75AE00DEC52B /* PanafallButtonView.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = PanafallButtonView.swift; path = xSDR6000/Sources/Panafall/PanafallButtonView.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADDF51F4A75AE00DEC52B /* PanafallButtonViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = PanafallButtonViewController.swift; path = xSDR6000/Sources/Panafall/PanafallButtonViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADDF61F4A75AE00DEC52B /* PanafallsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = PanafallsViewController.swift; path = xSDR6000/Sources/Panafall/PanafallsViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -122,7 +121,6 @@
 		91FADE091F4A769400DEC52B /* EqViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = EqViewController.swift; path = xSDR6000/Sources/Side/EqViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE191F4A76FB00DEC52B /* ColorsViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = ColorsViewController.swift; path = xSDR6000/Sources/Preferences/ColorsViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE1A1F4A76FB00DEC52B /* PreferencesTabViewController.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = PreferencesTabViewController.swift; path = xSDR6000/Sources/Preferences/PreferencesTabViewController.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
-		91FADE1D1F4A771800DEC52B /* FlagViewController.xib */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = file.xib; name = FlagViewController.xib; path = xSDR6000/Sources/Xibs/FlagViewController.xib; sourceTree = SOURCE_ROOT; };
 		91FADE371F4A77A200DEC52B /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Assets.xcassets; path = xSDR6000/Assets.xcassets; sourceTree = SOURCE_ROOT; };
 		91FADE501F4A781800DEC52B /* OpusManager.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = OpusManager.swift; path = xSDR6000/Sources/Misc/OpusManager.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
 		91FADE511F4A781800DEC52B /* ParameterMonitor.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; lineEnding = 0; name = ParameterMonitor.swift; path = xSDR6000/Sources/Misc/ParameterMonitor.swift; sourceTree = SOURCE_ROOT; xcLanguageSpecificationIdentifier = xcode.lang.swift; };
@@ -151,7 +149,6 @@
 			isa = PBXGroup;
 			children = (
 				91FADE5F1F4A7A3E00DEC52B /* Panafall.storyboard */,
-				91FADDF31F4A75AE00DEC52B /* FlagViewController.swift */,
 				91FADDF41F4A75AE00DEC52B /* PanafallButtonView.swift */,
 				91FADDF51F4A75AE00DEC52B /* PanafallButtonViewController.swift */,
 				91FADDF61F4A75AE00DEC52B /* PanafallsViewController.swift */,
@@ -171,6 +168,7 @@
 				91E170571F8280FD009E7DF3 /* SliceLayer.swift */,
 				91E170581F8280FD009E7DF3 /* TnfLayer.swift */,
 				91E1705A1F8280FD009E7DF3 /* PanadapterShaders.metal */,
+				9145395F1F9CD6560093CBF8 /* FlagViewController.swift */,
 			);
 			name = Panadapter;
 			sourceTree = "<group>";
@@ -252,7 +250,7 @@
 		91B16FD91CDF7F5E00600E02 /* xSDR6000 */ = {
 			isa = PBXGroup;
 			children = (
-				91B3D30A1F915DDD003132CB /* BlackTexture.png */,
+				914539611F9CD8250093CBF8 /* BlackTexture.png */,
 				91FADE371F4A77A200DEC52B /* Assets.xcassets */,
 				91FADDE61F4A74FB00DEC52B /* AppDelegate.swift */,
 				91FADDE71F4A74FB00DEC52B /* Extensions.swift */,
@@ -264,21 +262,12 @@
 				91473E631CF7E20E00DE2ADF /* Panadapter */,
 				91473E641CF7E22400DE2ADF /* Waterfall */,
 				9188A3CE1CFF01F9003F05A3 /* Preferences */,
-				91B171131CDF86C600600E02 /* Xibs */,
 				91B171151CDF872000600E02 /* Gradients */,
 				91682E461F49EC9700B6ADBE /* Documentation */,
 				91B1711A1CDF87CB00600E02 /* Misc */,
 			);
 			name = xSDR6000;
 			path = xFlex;
-			sourceTree = "<group>";
-		};
-		91B171131CDF86C600600E02 /* Xibs */ = {
-			isa = PBXGroup;
-			children = (
-				91FADE1D1F4A771800DEC52B /* FlagViewController.xib */,
-			);
-			name = Xibs;
 			sourceTree = "<group>";
 		};
 		91B171141CDF86F500600E02 /* Radio */ = {
@@ -382,12 +371,11 @@
 			buildActionMask = 2147483647;
 			files = (
 				91FADE5A1F4A784300DEC52B /* Defaults.plist in Resources */,
+				914539621F9CD8250093CBF8 /* BlackTexture.png in Resources */,
 				91FADE641F4A7A4F00DEC52B /* Preferences.storyboard in Resources */,
-				91FADE1E1F4A771800DEC52B /* FlagViewController.xib in Resources */,
 				91FADE611F4A7A3E00DEC52B /* Panafall.storyboard in Resources */,
 				91FADE5E1F4A7A2400DEC52B /* Main.storyboard in Resources */,
 				91FADE381F4A77A200DEC52B /* Assets.xcassets in Resources */,
-				91B3D30B1F915DDD003132CB /* BlackTexture.png in Resources */,
 				91FADE071F4A765A00DEC52B /* Side.storyboard in Resources */,
 				91FADE5B1F4A784300DEC52B /* Filters.plist in Resources */,
 				91FADE571F4A782F00DEC52B /* BandSegments.plist in Resources */,
@@ -421,6 +409,7 @@
 				916CF6CF1F89B35A00AE4ABA /* TimeLayer.swift in Sources */,
 				91FADDEA1F4A74FB00DEC52B /* AppDelegate.swift in Sources */,
 				91FADE041F4A765A00DEC52B /* PCWViewController.swift in Sources */,
+				914539601F9CD6560093CBF8 /* FlagViewController.swift in Sources */,
 				916CF6CB1F89B14000AE4ABA /* WaterfallView.swift in Sources */,
 				91E1705D1F8280FD009E7DF3 /* SliceLayer.swift in Sources */,
 				91FADDFB1F4A75AE00DEC52B /* PanafallsViewController.swift in Sources */,
@@ -443,7 +432,6 @@
 				91FADDEB1F4A74FB00DEC52B /* Extensions.swift in Sources */,
 				91E170621F8280FD009E7DF3 /* PanadapterViewController.swift in Sources */,
 				91E170641F82814B009E7DF3 /* FrequencyLayer.swift in Sources */,
-				91FADDF81F4A75AE00DEC52B /* FlagViewController.swift in Sources */,
 				91FADDFE1F4A763300DEC52B /* BandButtonViewController.swift in Sources */,
 				916CF6C91F89B04000AE4ABA /* WaterfallViewController.swift in Sources */,
 				91FADE081F4A765A00DEC52B /* SideViewController.swift in Sources */,
