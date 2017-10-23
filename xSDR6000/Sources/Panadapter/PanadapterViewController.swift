@@ -271,10 +271,10 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // calculate the frequency
         let clickFrequency = (mouseLocation.x * _hzPerUnit) + CGFloat(_start)
         
-        // Is there an inactive Slice at the clickFrequency
+        // activate the Slice at the clickFrequency (if any)
         if activateSlice(at: clickFrequency) {
             
-            // YES, it is now the active Slice
+            // redraw if a Slice was activated
             redrawSlices()
         }
     }
@@ -332,11 +332,21 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     /// - Parameter freq:       the target frequency
     /// - Returns:              a slice or nil
     ///
-    private func hitTestSlice(at freq: CGFloat) -> xLib6000.Slice? {
+    private func hitTestSlice(at freq: CGFloat, thisPanOnly: Bool = true) -> xLib6000.Slice? {
         var slice: xLib6000.Slice?
         
-        for (_, s) in _radio.slices where s.panadapterId == _panadapter!.id{
+        for (_, s) in _radio.slices {
+            
+            // only Slices on this Panadapter?
+            if thisPanOnly && s.panadapterId != _panadapter!.id {
+                
+                // YES, skip this Slice
+                continue
+            }
+            // is the Slice within the Panadapter bandwidth?
             if s.frequency + s.filterLow <= Int(freq) && s.frequency + s.filterHigh >= Int(freq) {
+                
+                // YES, save it and break out
                 slice = s
                 break
             }
@@ -348,24 +358,21 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     /// - Parameter freq:       the target frequency
     ///
     private func activateSlice(at freq: CGFloat) -> Bool {
-        var slice: xLib6000.Slice?
         
-        for (_, s) in _radio.slices where s.panadapterId == _panadapter!.id && s.frequency + s.filterLow <= Int(freq) && s.frequency + s.filterHigh >= Int(freq) {
-            
-            // if it isn't already active, save the Slice
-            if !s.active { slice = s }
-            break
-        }
-        // was there an inactive Slice at the frequency?
+        // is there a Slice at the indicated freq?
+        let slice = hitTestSlice(at: freq, thisPanOnly: false)
         if let slice = slice {
-            
-            // YES, make it active and all others inactive
-            for (_, s) in _radio.slices where s.panadapterId == _panadapter!.id {
+        
+            // YES, make all Slices inactive
+            for (_, s) in _radio.slices {
                 
-                s.active = ( slice == s)
+                s.active = false
             }
+            // make the "hit" slice active
+            slice.active = true
+            
         }
-        // indicate whether the active slice has been changed
+        // return true if slice was found
         return slice != nil
     }
     /// Find the Tnf at or near a frequency (if any)
@@ -427,7 +434,8 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     fileprivate let _sliceKeyPaths = [
         #keyPath(xLib6000.Slice.frequency),
         #keyPath(xLib6000.Slice.filterLow),
-        #keyPath(xLib6000.Slice.filterHigh)
+        #keyPath(xLib6000.Slice.filterHigh),
+        #keyPath(xLib6000.Slice.active)
     ]
     
     /// Add / Remove property observations
@@ -457,7 +465,8 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     override public func observeValue(forKeyPath keyPath: String?, of object: Any?, change: [NSKeyValueChangeKey : Any]?, context: UnsafeMutableRawPointer?) {
         
         switch keyPath! {
-            
+        
+        // Color related
         case "frequencyLegend":
             _frequencyLayer.redraw()
             
@@ -474,12 +483,14 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
             
         case "spectrumBackground":
             _panadapterLayer.setClearColor(Defaults[.spectrumBackground])
-            
+        
+        // Panadapter frequency / bandwidth
         case #keyPath(Panadapter.center), #keyPath(Panadapter.bandwidth):
             _sliceLayer.redraw()
             _frequencyLayer.redraw()
             fallthrough
-            
+        
+        // Tnf related
         case #keyPath(Radio.tnfEnabled):
             fallthrough
         case "tnfInactive", "tnfNormal", "tnfDeep", "tnfVeryDeep":
@@ -487,9 +498,10 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         case #keyPath(Tnf.frequency), #keyPath(Tnf.depth), #keyPath(Tnf.width):
             _tnfLayer.redraw()
             
+        // Slice related
         case "sliceInactive", "sliceActive", "sliceFilter":
            fallthrough            
-        case #keyPath(xLib6000.Slice.frequency), #keyPath(xLib6000.Slice.filterLow), #keyPath(xLib6000.Slice.filterHigh):
+        case #keyPath(xLib6000.Slice.frequency), #keyPath(xLib6000.Slice.filterLow), #keyPath(xLib6000.Slice.filterHigh), #keyPath(xLib6000.Slice.active):
             _sliceLayer.redraw()
         
         default:
@@ -513,7 +525,8 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         
         NC.makeObserver(self, with: #selector(tnfWillBeRemoved(_:)), of: .tnfWillBeRemoved, object: nil)
         
-        NC.makeObserver(self, with: #selector(panadapterWillBeRemoved(_:)), of: .panadapterWillBeRemoved, object: nil)
+        // only receive removal Notifications sent by this Panadapter
+        NC.makeObserver(self, with: #selector(panadapterWillBeRemoved(_:)), of: .panadapterWillBeRemoved, object: _panadapter!)
     }
     /// Process .panadapterWillBeRemoved Notification
     ///
@@ -524,18 +537,14 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // does the Notification contain a Panadapter object?
         if let panadapter = note.object as? Panadapter {
             
-            // YES, is it this panadapter
-            if panadapter == _panadapter! {
-                
-                // YES, remove Defaults property observers
-                observations(Defaults, paths: _defaultsKeyPaths, remove: true)
-                
-                // remove Radio property observers
-                observations(_radio, paths: _radioKeyPaths, remove: true)
-                
-                // remove Panadapter property observers
-                observations(panadapter, paths: _panadapterKeyPaths, remove: true)
-            }
+            // YES, remove Defaults property observers
+            observations(Defaults, paths: _defaultsKeyPaths, remove: true)
+            
+            // remove Radio property observers
+            observations(_radio, paths: _radioKeyPaths, remove: true)
+            
+            // remove Panadapter property observers
+            observations(panadapter, paths: _panadapterKeyPaths, remove: true)
         }
     }
     /// Process .sliceHasBeenAdded Notification
