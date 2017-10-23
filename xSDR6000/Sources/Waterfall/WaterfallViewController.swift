@@ -231,7 +231,8 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
     ///
     fileprivate func addNotifications() {
         
-        NC.makeObserver(self, with: #selector(waterfallWillBeRemoved(_:)), of: .waterfallWillBeRemoved, object: nil)
+        // only receive removal Notifications sent by this Waterfall
+        NC.makeObserver(self, with: #selector(waterfallWillBeRemoved(_:)), of: .waterfallWillBeRemoved, object: _waterfall!)
     }
     /// Process .waterfallWillBeRemoved Notification
     ///
@@ -242,18 +243,14 @@ class WaterfallViewController: NSViewController, NSGestureRecognizerDelegate {
         // does the Notification contain a Panadapter object?
         if let waterfall = note.object as? Waterfall {
             
-            // YES, is it this panadapter's Waterfall?
-            if waterfall == _waterfall! {
-                
-                // YES, remove Defaults property observers
-                observations(Defaults, paths: _defaultsKeyPaths, remove: true)
-                
-                // remove Waterfall property observers
-                observations(waterfall, paths: _waterfallKeyPaths, remove: true)
-                
-                // remove Panadapter property observers
-                observations(_panadapter!, paths: _panadapterKeyPaths, remove: true)
-            }
+            // YES, remove Defaults property observers
+            observations(UserDefaults.standard, paths: _defaultsKeyPaths, remove: true)
+            
+            // remove Waterfall property observers
+            observations(waterfall, paths: _waterfallKeyPaths, remove: true)
+            
+            // remove Panadapter property observers
+            observations(_panadapter!, paths: _panadapterKeyPaths, remove: true)
         }
     }
 }
