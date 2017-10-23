@@ -48,10 +48,10 @@ public final class SliceLayer: CALayer {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrent(context)
         
-        // for each Slice
-        for (_, slice) in _radio.slices {
+        // for each Slice on this panadapter
+        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id {
             
-            // is it on this panadapter?
+            // is it inside the bandwidth?
             if slice.frequency >= _start && slice.frequency <= _end {
                 
                 // YES, calculate the position & width
@@ -73,8 +73,8 @@ public final class SliceLayer: CALayer {
         // set the active slice color
         Defaults[.sliceActive].set()
         
-        // for each active Slice
-        for (_, slice) in _radio.slices where slice.active {
+        // for each active Slice on this panadapter
+        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id && slice.active {
             
             // is it on this panadapter?
             if slice.frequency >= _start && slice.frequency <= _end {
@@ -94,8 +94,8 @@ public final class SliceLayer: CALayer {
         // set the inactive slice color
         Defaults[.sliceInactive].set()
         
-        // for each inactive Slice
-        for (_, slice) in _radio.slices where !slice.active {
+        // for each inactive Slice on this panadapter
+        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id && !slice.active {
             
             // is it on this panadapter?
             if slice.frequency >= _start && slice.frequency <= _end{
