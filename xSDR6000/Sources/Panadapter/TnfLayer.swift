@@ -47,29 +47,7 @@ public final class TnfLayer: CALayer {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrent(context)
         
-        // for each Tnf
-        for (_, tnf) in _radio.tnfs {
-            
-            // is it on this panadapter?
-            if tnf.frequency >= _start && tnf.frequency <= _end {
-                
-                // YES, calculate the position & width
-                let tnfPosition = CGFloat(tnf.frequency - tnf.width/2 - _start) / _hzPerUnit
-                let tnfWidth = CGFloat(tnf.width) / _hzPerUnit
-                
-                // get the color
-                let color = _radio.tnfEnabled ? Defaults[.tnfActive] : Defaults[.tnfInactive]
-                
-                // draw the rectangle
-                let rect = NSRect(x: tnfPosition, y: 0, width: tnfWidth, height: frame.height)
-                
-                _path.fillRect( rect, withColor: color, andAlpha: Defaults[.sliceFilterOpacity])
-                
-                // crosshatch it based on depth
-                _path.crosshatch(rect, color: lineColor, depth: tnf.depth, twoWay: tnf.permanent)
-            }
-        }
-        _path.strokeRemove()
+        drawTnfs()
         
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
@@ -109,5 +87,34 @@ public final class TnfLayer: CALayer {
             self.setNeedsDisplay()
         }
     }
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
+    /// Draw the outline of tnf(s)
+    ///
+    fileprivate func drawTnfs() {
+        // for each Tnf
+        for (_, tnf) in _radio.tnfs {
+            
+            // is it on this panadapter?
+            if tnf.frequency >= _start && tnf.frequency <= _end {
+                
+                // YES, calculate the position & width
+                let tnfPosition = CGFloat(tnf.frequency - tnf.width/2 - _start) / _hzPerUnit
+                let tnfWidth = CGFloat(tnf.width) / _hzPerUnit
+                
+                // draw the rectangle
+                let rect = NSRect(x: tnfPosition, y: 0, width: tnfWidth, height: frame.height)
+                
+                _path.fillRect( rect, withColor: _radio.tnfEnabled ? Defaults[.tnfActive] : Defaults[.tnfInactive])
+                
+                // crosshatch it based on depth
+                _path.crosshatch(rect, color: lineColor, depth: tnf.depth, twoWay: tnf.permanent)
+            }
+        }
+        _path.strokeRemove()
+    }
+    
 }
 

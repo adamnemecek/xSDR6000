@@ -48,66 +48,11 @@ public final class SliceLayer: CALayer {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrent(context)
         
-        // for each Slice on this panadapter
-        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id {
-            
-            // is it inside the bandwidth?
-            if slice.frequency >= _start && slice.frequency <= _end {
-                
-                // YES, calculate the position & width
-                let slicePosition = CGFloat(slice.frequency + slice.filterLow - _start) / _hzPerUnit
-                let sliceWidth = CGFloat( -slice.filterLow + slice.filterHigh ) / _hzPerUnit
-                
-                // get the color
-                let color = Defaults[.sliceFilter]
-                
-                // calculate the rectangle
-                let rect = NSRect(x: slicePosition, y: 0, width: sliceWidth, height: frame.height)
-                
-                // draw the rectangle
-                _path.fillRect( rect, withColor: color, andAlpha: Defaults[.sliceFilterOpacity])
-            }
-        }
-        _path.strokeRemove()
+        drawFilterOutlines()
         
-        // set the active slice color
-        Defaults[.sliceActive].set()
+        drawActiveSlice()
         
-        // for each active Slice on this panadapter
-        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id && slice.active {
-            
-            // is it on this panadapter?
-            if slice.frequency >= _start && slice.frequency <= _end {
-                
-                // YES, calculate the line position
-                let sliceFrequencyPosition = CGFloat(slice.frequency - _start) / _hzPerUnit
-                
-                // draw the line
-                _path.vLine(at: sliceFrequencyPosition, fromY: 0, toY: frame.height)
-                
-                // draw the triangle at the top
-                _path.drawTriangle(at: sliceFrequencyPosition, topWidth: triangleSize, triangleHeight: triangleSize, topPosition: frame.height)
-            }
-        }
-        _path.strokeRemove()
-        
-        // set the inactive slice color
-        Defaults[.sliceInactive].set()
-        
-        // for each inactive Slice on this panadapter
-        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id && !slice.active {
-            
-            // is it on this panadapter?
-            if slice.frequency >= _start && slice.frequency <= _end{
-                
-                // YES, calculate the line position
-                let sliceFrequencyPosition = CGFloat(slice.frequency - _start) / _hzPerUnit
-                
-                // draw the line
-                _path.vLine(at: sliceFrequencyPosition, fromY: 0, toY: frame.height)
-            }
-        }
-        _path.strokeRemove()
+        drawInactiveSlices()
         
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
@@ -127,9 +72,12 @@ public final class SliceLayer: CALayer {
             
             // YES, drag or resize?
             if abs(deltaX) > abs(deltaY) {
+                
                 // drag
                 slice.frequency += Int(deltaX * _hzPerUnit)
+            
             } else {
+                
                 // resize
                 slice.filterLow -= Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
                 slice.filterHigh += Int(deltaY * CGFloat(_bandwidth) * kMultiplier)
@@ -147,6 +95,79 @@ public final class SliceLayer: CALayer {
             self.setNeedsDisplay()
         }
     }
+
+    // ----------------------------------------------------------------------------
+    // MARK: - Private methods
+    
+    /// Draw the outline of a SLice filter
+    ///
+    fileprivate func drawFilterOutlines() {
+        
+        // draw the filter outline(s)
+        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id {
+            
+            // is it inside the bandwidth?
+            if slice.frequency >= _start && slice.frequency <= _end {
+                
+                // YES, calculate the position & width
+                let slicePosition = CGFloat(slice.frequency + slice.filterLow - _start) / _hzPerUnit
+                let sliceWidth = CGFloat( -slice.filterLow + slice.filterHigh ) / _hzPerUnit
+                
+                // calculate the rectangle
+                let rect = NSRect(x: slicePosition, y: 0, width: sliceWidth, height: frame.height)
+                
+                // draw the rectangle
+                _path.fillRect( rect, withColor: Defaults[.sliceFilter])
+            }
+        }
+        _path.strokeRemove()
+    }
+    /// Draw the frequency line of the active Slice
+    ///
+    fileprivate func drawActiveSlice() {
+        // set the active slice color
+        Defaults[.sliceActive].set()
+        
+        // draw the active frequency line
+        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id && slice.active {
+            
+            // is it on this panadapter?
+            if slice.frequency >= _start && slice.frequency <= _end {
+                
+                // YES, calculate the line position
+                let sliceFrequencyPosition = CGFloat(slice.frequency - _start) / _hzPerUnit
+                
+                // draw the line
+                _path.vLine(at: sliceFrequencyPosition, fromY: 0, toY: frame.height)
+                
+                // draw the triangle at the top
+                _path.drawTriangle(at: sliceFrequencyPosition, topWidth: triangleSize, triangleHeight: triangleSize, topPosition: frame.height)
+            }
+        }
+        _path.strokeRemove()
+    }
+    /// Draw the frequency line(s) of the inactive Slice(s)
+    ///
+    fileprivate func drawInactiveSlices() {
+        // set the inactive slice color
+        Defaults[.sliceInactive].set()
+        
+        // draw the inactive frequency line(s)
+        for (_, slice) in _radio.slices where slice.panadapterId == _panadapter!.id && !slice.active {
+            
+            // is it on this panadapter?
+            if slice.frequency >= _start && slice.frequency <= _end{
+                
+                // YES, calculate the line position
+                let sliceFrequencyPosition = CGFloat(slice.frequency - _start) / _hzPerUnit
+                
+                // draw the line
+                _path.vLine(at: sliceFrequencyPosition, fromY: 0, toY: frame.height)
+            }
+        }
+        _path.strokeRemove()
+    }
+
 }
 
 

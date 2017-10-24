@@ -71,68 +71,7 @@ public final class FrequencyLayer: CALayer {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrent(context)
         
-        // set the background color
-        backgroundColor = Defaults[.frequencyLegendBackground].cgColor
-        
-        // setup the Frequency Legend font & size
-        _attributes[NSForegroundColorAttributeName] = Defaults[.frequencyLegend]
-        _attributes[NSFontAttributeName] = font
-        
-        let legendHeight = "123.456".size(withAttributes: _attributes).height
-        
-        // remember the position of the previous legend (left to right)
-        var previousLegendPosition: CGFloat = 0.0
-        
-        // calculate the spacings
-        let freqRange = _end - _start
-        let bandwidthParams = kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? kBandwidthParams[0]
-        let xIncrPerLegend = CGFloat(bandwidthParams.spacing) / _hzPerUnit
-        
-        // calculate the number & position of the legend marks
-        let numberOfMarks = freqRange / bandwidthParams.spacing
-        let firstFreqValue = _start + bandwidthParams.spacing - (_start - ( (_start / bandwidthParams.spacing) * bandwidthParams.spacing))
-        let firstFreqPosition = CGFloat(firstFreqValue - _start) / _hzPerUnit
-        
-        // horizontal line above legend
-        Defaults[.frequencyLegend].set()
-        _path.hLine(at: height, fromX: 0, toX: frame.width)
-        
-        // draw legends
-        for i in 0...numberOfMarks {
-            let xPosition = firstFreqPosition + (CGFloat(i) * xIncrPerLegend)
-            
-            // calculate the Frequency legend value & width
-            let legendLabel = String(format: bandwidthParams.format, ( CGFloat(firstFreqValue) + CGFloat( i * bandwidthParams.spacing)) / 1_000_000.0)
-            let legendWidth = legendLabel.size(withAttributes: _attributes).width
-            
-            // skip the legend if it would overlap the start or end or if it would be too close to the previous legend
-            if xPosition > 0 && xPosition + legendWidth < frame.width && xPosition - previousLegendPosition > 1.2 * legendWidth {
-                // draw the legend
-                legendLabel.draw(at: NSMakePoint( xPosition - (legendWidth/2), 1), withAttributes: _attributes)
-                // save the position for comparison when drawing the next legend
-                previousLegendPosition = xPosition
-            }
-        }
-        _path.strokeRemove()
-        
-        // set Line Width, Color & Dash
-        _path.lineWidth = CGFloat(Defaults[.gridLineWidth])
-        let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
-        _path.setLineDash( dash, count: 2, phase: 0 )
-        Defaults[.gridLines].set()
-        
-        // draw vertical grid lines
-        for i in 0...numberOfMarks {
-            let xPosition = firstFreqPosition + (CGFloat(i) * xIncrPerLegend)
-            
-            // draw a vertical line at the frequency legend
-            if xPosition < bounds.width {
-                _path.vLine(at: xPosition, fromY: bounds.height, toY: legendHeight)
-            }
-            // draw an "in-between" vertical line
-            _path.vLine(at: xPosition + (xIncrPerLegend/2), fromY: bounds.height, toY: legendHeight)
-        }
-        _path.strokeRemove()
+        drawLegend()
         
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
@@ -189,5 +128,68 @@ public final class FrequencyLayer: CALayer {
             // force a redraw
             self.setNeedsDisplay()
         }
+    }
+    fileprivate func drawLegend() {
+        
+        // set the background color
+        backgroundColor = Defaults[.frequencyLegendBackground].cgColor
+        
+        // setup the Frequency Legend font & size
+        _attributes[NSForegroundColorAttributeName] = Defaults[.frequencyLegend]
+        _attributes[NSFontAttributeName] = font
+        
+        let bandwidthParams = kBandwidthParams.filter { $0.high > _bandwidth && $0.low <= _bandwidth }.first ?? kBandwidthParams[0]
+        let xIncrPerLegend = CGFloat(bandwidthParams.spacing) / _hzPerUnit
+        
+        // calculate the number & position of the legend marks
+        let numberOfMarks = (_end - _start) / bandwidthParams.spacing
+        let firstFreqValue = _start + bandwidthParams.spacing - (_start - ( (_start / bandwidthParams.spacing) * bandwidthParams.spacing))
+        let firstFreqPosition = CGFloat(firstFreqValue - _start) / _hzPerUnit
+
+        // remember the position of the previous legend (left to right)
+        var previousLegendPosition: CGFloat = 0.0
+        
+        // horizontal line above legend
+        Defaults[.frequencyLegend].set()
+        _path.hLine(at: height, fromX: 0, toX: frame.width)
+        
+        // draw legends
+        for i in 0...numberOfMarks {
+            let xPosition = firstFreqPosition + (CGFloat(i) * xIncrPerLegend)
+            
+            // calculate the Frequency legend value & width
+            let legendLabel = String(format: bandwidthParams.format, ( CGFloat(firstFreqValue) + CGFloat( i * bandwidthParams.spacing)) / 1_000_000.0)
+            let legendWidth = legendLabel.size(withAttributes: _attributes).width
+            
+            // skip the legend if it would overlap the start or end or if it would be too close to the previous legend
+            if xPosition > 0 && xPosition + legendWidth < frame.width && xPosition - previousLegendPosition > 1.2 * legendWidth {
+                // draw the legend
+                legendLabel.draw(at: NSMakePoint( xPosition - (legendWidth/2), 1), withAttributes: _attributes)
+                // save the position for comparison when drawing the next legend
+                previousLegendPosition = xPosition
+            }
+        }
+        _path.strokeRemove()
+        
+        let legendHeight = "123.456".size(withAttributes: _attributes).height
+
+        // set Line Width, Color & Dash
+        _path.lineWidth = CGFloat(Defaults[.gridLineWidth])
+        let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
+        _path.setLineDash( dash, count: 2, phase: 0 )
+        Defaults[.gridLines].set()
+        
+        // draw vertical grid lines
+        for i in 0...numberOfMarks {
+            let xPosition = firstFreqPosition + (CGFloat(i) * xIncrPerLegend)
+            
+            // draw a vertical line at the frequency legend
+            if xPosition < bounds.width {
+                _path.vLine(at: xPosition, fromY: bounds.height, toY: legendHeight)
+            }
+            // draw an "in-between" vertical line
+            _path.vLine(at: xPosition + (xIncrPerLegend/2), fromY: bounds.height, toY: legendHeight)
+        }
+        _path.strokeRemove()
     }
 }

@@ -50,57 +50,7 @@ public final class DbLayer: CALayer {
         NSGraphicsContext.saveGraphicsState()
         NSGraphicsContext.setCurrent(context)
         
-        // setup the Legend font & size
-        _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
-        _attributes[NSFontAttributeName] = font
-        
-        // calculate a typical font height
-        _fontHeight = "-000".size(withAttributes: _attributes).height
-        
-        // setup the Legend color
-        _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
-        
-        // get the spacing between legends
-        let dbSpacing = CGFloat(Defaults[.dbLegendSpacing])
-        
-        // calculate the number of legends & the y pixels per db
-        let dbRange = _maxDbm - _minDbm
-        let numberOfLegends = Int( dbRange / dbSpacing)
-        let yIncrPerDb = frame.height / dbRange
-        
-        // calculate the value of the first legend & its y coordinate
-        let minDbmValue = _minDbm - _minDbm.truncatingRemainder(dividingBy:  dbSpacing)
-        let yOffset = -_minDbm.truncatingRemainder(dividingBy: dbSpacing) * yIncrPerDb
-        
-        
-        // draw the legends
-        for i in 0...numberOfLegends {
-            
-            // calculate the y coordinate of the legend
-            let yPosition = yOffset + (CGFloat(i) * yIncrPerDb * dbSpacing) - _fontHeight/3
-            
-            // format & draw the legend
-            let lineLabel = String(format: kFormat, minDbmValue + (CGFloat(i) * dbSpacing))
-            lineLabel.draw(at: NSMakePoint(frame.width - width, yPosition ) , withAttributes: _attributes)
-        }
-        _path.strokeRemove()
-        
-        // set Line Width, Color & Dash
-        _path.lineWidth = CGFloat(Defaults[.gridLineWidth])
-        let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
-        _path.setLineDash( dash, count: 2, phase: 0 )
-        Defaults[.gridLines].set()
-        
-        // draw the horizontal grid lines
-        for i in 0...numberOfLegends {
-            
-            // calculate the y coordinate of the legend
-            let yPosition = yOffset + (CGFloat(i) * yIncrPerDb * dbSpacing) - _fontHeight/3
-            
-            // draw the line
-            _path.hLine(at: yPosition + _fontHeight/3, fromX: 0, toX: frame.width - width )
-        }
-        _path.strokeRemove()
+        drawLegend()
         
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
@@ -162,7 +112,62 @@ public final class DbLayer: CALayer {
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
-    /// respond to the Context Menu selection
+    /// Draw the Dbm legend and horizontal grid lines
+    ///
+    fileprivate func drawLegend() {
+        
+        // setup the Legend font & size
+        _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
+        _attributes[NSFontAttributeName] = font
+        
+        // calculate a typical font height
+        _fontHeight = "-000".size(withAttributes: _attributes).height
+        
+        // setup the Legend color
+        _attributes[NSForegroundColorAttributeName] = Defaults[.dbLegend]
+        
+        // get the spacing between legends
+        let dbSpacing = CGFloat(Defaults[.dbLegendSpacing])
+        
+        // calculate the number of legends & the y pixels per db
+        let dbRange = _maxDbm - _minDbm
+        let numberOfLegends = Int( dbRange / dbSpacing)
+        let yIncrPerDb = frame.height / dbRange
+        
+        // calculate the value of the first legend & its y coordinate
+        let minDbmValue = _minDbm - _minDbm.truncatingRemainder(dividingBy:  dbSpacing)
+        let yOffset = -_minDbm.truncatingRemainder(dividingBy: dbSpacing) * yIncrPerDb
+        
+        // draw the legends
+        for i in 0...numberOfLegends {
+            
+            // calculate the y coordinate of the legend
+            let yPosition = yOffset + (CGFloat(i) * yIncrPerDb * dbSpacing) - _fontHeight/3
+            
+            // format & draw the legend
+            let lineLabel = String(format: kFormat, minDbmValue + (CGFloat(i) * dbSpacing))
+            lineLabel.draw(at: NSMakePoint(frame.width - width, yPosition ) , withAttributes: _attributes)
+        }
+        _path.strokeRemove()
+        
+        // set Line Width, Color & Dash
+        _path.lineWidth = CGFloat(Defaults[.gridLineWidth])
+        let dash: [CGFloat] = Defaults[.gridLinesDashed] ? [2.0, 1.0] : [2.0, 0.0]
+        _path.setLineDash( dash, count: 2, phase: 0 )
+        Defaults[.gridLines].set()
+        
+        // draw the horizontal grid lines
+        for i in 0...numberOfLegends {
+            
+            // calculate the y coordinate of the legend
+            let yPosition = yOffset + (CGFloat(i) * yIncrPerDb * dbSpacing) - _fontHeight/3
+            
+            // draw the line
+            _path.hLine(at: yPosition + _fontHeight/3, fromX: 0, toX: frame.width - width )
+        }
+        _path.strokeRemove()
+    }
+    /// respond to the Dbm spacing Menu selection
     ///
     /// - Parameter sender:     the Context Menu
     ///
