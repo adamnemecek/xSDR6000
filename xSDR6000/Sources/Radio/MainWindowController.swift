@@ -23,5 +23,8 @@ class MainWindowController: NSWindowController {
     @IBOutlet weak var remoteTxEnabled: NSButton!
     @IBOutlet weak var cwxEnabled: NSButton!
     @IBOutlet weak var fdxEnabled: NSButton!
-        
+    
+    override func awakeFromNib() {
+        windowFrameAutosaveName = "MainWindow"
+    }
 }
