@@ -114,26 +114,31 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     }
 
     // ----------------------------------------------------------------------------
-    // MARK: - Public methods
+    // MARK: - Internal methods
     
     // force a redraw of a layer
     
-    public func redrawFrequencyLegend() {
+    func redrawFrequencyLegend() {
         _frequencyLayer.redraw()
     }
-    public func redrawDbLegend() {
+    func redrawDbLegend() {
         _dbLayer.redraw()
     }
-    public func redrawTnfs() {
+    func redrawTnfs() {
         _tnfLayer.redraw()
     }
-    public func redrawSlices() {
+    func redrawSlices() {
         _sliceLayer.redraw()
     }
-
-    // ----------------------------------------------------------------------------
-    // MARK: - Internal methods
-    
+    /// Redraw after a resize
+    ///
+    func didResize() {
+        
+        // after a resize, redraw display components
+        redrawDbLegend()
+        redrawFrequencyLegend()
+        redrawSlices()
+    }
     /// Respond to Pan gesture (left mouse down)
     ///
     /// - Parameter gr:         the Pan Gesture Recognizer
@@ -288,15 +293,7 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // update the Db Legend spacings
         _dbLayer.updateLegendSpacing(gestureRecognizer: gr, in: view)
     }
-    /// Redraw after a resize
-    ///
-    func didResize() {
-        
-        // after a resize, redraw display components
-        redrawDbLegend()
-        redrawFrequencyLegend()
-        redrawSlices()
-    }
+
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
     
@@ -322,10 +319,32 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // setup the spectrum background color
         _panadapterLayer.setClearColor(Defaults[.spectrumBackground])
         
-        
         // setup Uniforms
         _panadapterLayer.populateUniforms(size: view.frame.size)
         _panadapterLayer.updateUniformsBuffer()
+    }
+    /// Create & configure a Flag for the specified Slice
+    ///
+    /// - Parameter slice:          the Slice
+    ///
+    private func setupFlag(_ slice: xLib6000.Slice) {
+    
+        // get the Storyboard containing a Flag View Controller
+        let sb = NSStoryboard(name: "Panafall", bundle: nil)
+        
+        // create a Flag View Controller
+        let flagVc = sb.instantiateController(withIdentifier: "Flag") as! FlagViewController
+
+        // pass a reference to Params
+        flagVc.representedObject = representedObject
+        flagVc.slice = slice
+
+        addChildViewController(flagVc)
+        
+        DispatchQueue.main.async {
+            // add the Flag view
+            self.view.addSubview(flagVc.view)
+        }
     }
     /// Find the Slice at a frequency (if any)
     ///
@@ -402,15 +421,17 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     // MARK: - Observation Methods
     
     fileprivate let _defaultsKeyPaths = [               // Defaults keypaths to observe
+        
         "frequencyLegend",
         "dbLegend",
+        "dbLegendSpacing",
         "gridLines",
+        "gridLinesDashed",
+        "gridLineWidth",
         "spectrum",
         "spectrumBackground",
+        "tnfActive",
         "tnfInactive",
-        "tnfNormal",
-        "tnfDeep",
-        "tnfVeryDeep",
         "sliceActive",
         "sliceInactive",
         "sliceFilter"
@@ -470,14 +491,14 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         case "frequencyLegend":
             _frequencyLayer.redraw()
             
-        case "dbLegend":
+        case "dbLegend", "dbLegendSpacing":
             _dbLayer.redraw()
             
-        case "gridLines":
+        case "gridLines", "gridLinesDashed", "gridLineWidth":
             _frequencyLayer.redraw()
             _dbLayer.redraw()
             
-        case "spectrum", "tnfInactive":
+        case "spectrum":
             _panadapterLayer.populateUniforms(size: view.frame.size)
             _panadapterLayer.updateUniformsBuffer()
             
@@ -493,13 +514,13 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // Tnf related
         case #keyPath(Radio.tnfEnabled):
             fallthrough
-        case "tnfInactive", "tnfNormal", "tnfDeep", "tnfVeryDeep":
+        case "tnfActive", "tnfInactive":
             fallthrough
         case #keyPath(Tnf.frequency), #keyPath(Tnf.depth), #keyPath(Tnf.width):
             _tnfLayer.redraw()
             
         // Slice related
-        case "sliceInactive", "sliceActive", "sliceFilter":
+        case "sliceActive", "sliceInactive", "sliceFilter":
            fallthrough            
         case #keyPath(xLib6000.Slice.frequency), #keyPath(xLib6000.Slice.filterLow), #keyPath(xLib6000.Slice.filterHigh), #keyPath(xLib6000.Slice.active):
             _sliceLayer.redraw()
@@ -567,6 +588,9 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
                 
                 // force a redraw
                 _sliceLayer.redraw()
+                
+                // add the Flag
+                setupFlag(slice)
             }
         }
     }
