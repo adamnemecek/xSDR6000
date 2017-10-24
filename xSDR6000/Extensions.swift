@@ -139,12 +139,11 @@ extension NSBezierPath {
     /// - Parameters:
     ///   - rect:   the rect
     ///   - color:  the fill color
-    ///   - alpha:  the aplha value
     ///
-    func fillRect( _ rect:NSRect, withColor color:NSColor, andAlpha alpha:CGFloat = 1) {
+    func fillRect( _ rect:NSRect, withColor color:NSColor) {
 
         // fill the rectangle with the requested color and alpha
-        color.withAlphaComponent(alpha).set()
+        color.set()
         appendRect( rect )
         fill()
     }
