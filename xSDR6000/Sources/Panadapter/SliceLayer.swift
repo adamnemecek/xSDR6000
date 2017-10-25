@@ -16,8 +16,8 @@ public final class SliceLayer: CALayer {
     // MARK: - Internal properties
     
     var params                          : Params!           // Radio & Panadapter references
-    var lineColor                       = NSColor(srgbRed: 1.0, green: 1.0, blue: 1.0, alpha: 0.2)
     var triangleSize                    : CGFloat = 15.0
+    
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
     
@@ -31,6 +31,7 @@ public final class SliceLayer: CALayer {
     fileprivate var _hzPerUnit          : CGFloat { return CGFloat(_end - _start) / self.frame.width }
     
     fileprivate var _path               = NSBezierPath()
+    fileprivate var _sliceFlags         : [SliceId: FlagViewController] = [:]
 
     fileprivate let kMultiplier         : CGFloat = 0.001
 
@@ -53,6 +54,8 @@ public final class SliceLayer: CALayer {
         drawActiveSlice()
         
         drawInactiveSlices()
+        
+        drawFlags()
         
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
@@ -167,7 +170,34 @@ public final class SliceLayer: CALayer {
         }
         _path.strokeRemove()
     }
-
+    /// Create or redraw Slice flags
+    ///
+    fileprivate func drawFlags() {
+        
+        for (_, slice) in _radio.slices {
+            
+            // is there a Flag for this Slice?
+            if _sliceFlags[slice.id] == nil {
+                
+                // NO, create one
+                _sliceFlags[slice.id] = (delegate as! PanadapterView).createFlagView()
+                _sliceFlags[slice.id]!.slice = slice
+                
+                (delegate as! PanadapterView).addSubview(_sliceFlags[slice.id]!.view)
+            }
+            let flagVc = _sliceFlags[slice.id]!
+            
+            // calculate the Flag position
+            let flagWidth = flagVc.view.frame.width
+            let flagHeight = flagVc.view.frame.height - (delegate as! PanadapterView).frequencyLegendHeight
+            let flagPositionX = (CGFloat(slice.frequency - _start) / _hzPerUnit) - flagWidth
+            let flagPositionY = frame.height - flagHeight
+            flagVc.flagPosition = NSPoint(x: flagPositionX, y: flagPositionY)
+            
+            // YES, reposition it
+            flagVc.reposition()
+        }
+    }
 }
 
 

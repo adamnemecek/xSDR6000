@@ -18,8 +18,10 @@ public final class FrequencyLayer: CALayer {
     // MARK: - Internal properties
     
     var params                          : Params!               // Radio & Panadapter references
-    var height                          : CGFloat = 20          // layer height
+    var legendHeight                    : CGFloat = 20          // height of legend area
     var font                            = NSFont(name: "Monaco", size: 12.0)
+    var markerHeight                    : CGFloat = 0.6         // height % for band markers
+    
 
     // ----------------------------------------------------------------------------
     // MARK: - Private properties
@@ -57,6 +59,9 @@ public final class FrequencyLayer: CALayer {
             (    5_000,            0,      400, "%0.4f")            //  0.005 -> 0 Mhz
     ]
 
+    // band & markers
+    fileprivate lazy var _segments = Band.sharedInstance.segments
+    
     // ----------------------------------------------------------------------------
     // MARK: - Internal methods
     
@@ -72,6 +77,8 @@ public final class FrequencyLayer: CALayer {
         NSGraphicsContext.setCurrent(context)
         
         drawLegend()
+        
+        if Defaults[.showMarkers] { drawBandMarkers() }
         
         // restore the graphics context
         NSGraphicsContext.restoreGraphicsState()
@@ -151,7 +158,7 @@ public final class FrequencyLayer: CALayer {
         
         // horizontal line above legend
         Defaults[.frequencyLegend].set()
-        _path.hLine(at: height, fromX: 0, toX: frame.width)
+        _path.hLine(at: legendHeight, fromX: 0, toX: frame.width)
         
         // draw legends
         for i in 0...numberOfMarks {
@@ -171,7 +178,7 @@ public final class FrequencyLayer: CALayer {
         }
         _path.strokeRemove()
         
-        let legendHeight = "123.456".size(withAttributes: _attributes).height
+//        let legendHeight = "123.456".size(withAttributes: _attributes).height
 
         // set Line Width, Color & Dash
         _path.lineWidth = CGFloat(Defaults[.gridLineWidth])
@@ -189,6 +196,83 @@ public final class FrequencyLayer: CALayer {
             }
             // draw an "in-between" vertical line
             _path.vLine(at: xPosition + (xIncrPerLegend/2), fromY: bounds.height, toY: legendHeight)
+        }
+        _path.strokeRemove()
+    }
+    
+    /// Draw the Band Markers
+    ///
+    fileprivate func drawBandMarkers() {
+        // use solid lines
+        _path.setLineDash( [2.0, 0.0], count: 2, phase: 0 )
+        
+        // filter for segments that overlap the panadapter frequency range
+        let overlappingSegments = _segments.filter {
+            (($0.start >= _start || $0.end <= _end) ||    // start or end in panadapter
+                $0.start < _start && $0.end > _end) &&    // start -> end spans panadapter
+                $0.enabled && $0.useMarkers}                                    // segment is enabled & uses Markers
+        
+        // ***** Band edges *****
+        Defaults[.bandEdge].set()  // set the color
+        _path.lineWidth = 1         // set the width
+        
+        // filter for segments that contain a band edge
+        let edgeSegments = overlappingSegments.filter {$0.startIsEdge || $0.endIsEdge}
+        for s in edgeSegments {
+            
+            // is the start of the segment a band edge?
+            if s.startIsEdge {
+                
+                // YES, draw a vertical line for the starting band edge
+                _path.vLine(at: CGFloat(s.start - _start) / _hzPerUnit, fromY: frame.height * markerHeight, toY: 0)
+                _path.drawX(at: NSPoint(x: CGFloat(s.start - _start) / _hzPerUnit, y: frame.height * markerHeight), halfWidth: 6)
+            }
+            
+            // is the end of the segment a band edge?
+            if s.endIsEdge {
+                
+                // YES, draw a vertical line for the ending band edge
+                _path.vLine(at: CGFloat(s.end - _start) / _hzPerUnit, fromY: frame.height * markerHeight, toY: 0)
+                _path.drawX(at: NSPoint(x: CGFloat(s.end - _start) / _hzPerUnit, y: frame.height * markerHeight), halfWidth: 6)
+            }
+        }
+        _path.strokeRemove()
+        
+        // ***** Inside segments *****
+        Defaults[.segmentEdge].set()        // set the color
+        _path.lineWidth = 1         // set the width
+        var previousEnd = 0
+        
+        // filter for segments that contain an inside segment
+        let insideSegments = overlappingSegments.filter {!$0.startIsEdge && !$0.endIsEdge}
+        for s in insideSegments {
+            
+            // does this segment overlap the previous segment?
+            if s.start != previousEnd {
+                
+                // NO, draw a vertical line for the inside segment start
+                _path.vLine(at: CGFloat(s.start - _start) / _hzPerUnit, fromY: frame.height * markerHeight - 6/2 - 1, toY: 0)
+                _path.drawCircle(at: NSPoint(x: CGFloat(s.start - _start) / _hzPerUnit, y: frame.height * markerHeight), radius: 6)
+            }
+            
+            // draw a vertical line for the inside segment end
+            _path.vLine(at: CGFloat(s.end - _start) / _hzPerUnit, fromY: frame.height * markerHeight - 6/2 - 1, toY: 0)
+            _path.drawCircle(at: NSPoint(x: CGFloat(s.end - _start) / _hzPerUnit, y: frame.height * markerHeight), radius: 6)
+            previousEnd = s.end
+        }
+        _path.strokeRemove()
+        
+        // ***** Band Shading *****
+        Defaults[.bandMarker].withAlphaComponent(Defaults[.bandMarkerOpacity]).set()
+        for s in overlappingSegments {
+            
+            // calculate start & end of shading
+            let start = (s.start >= _start) ? s.start : _start
+            let end = (_end >= s.end) ? s.end : _end
+            
+            // draw a shaded rectangle for the Segment
+            let rect = NSRect(x: CGFloat(start - _start) / _hzPerUnit, y: 0, width: CGFloat(end - start) / _hzPerUnit, height: 20)
+            NSBezierPath.fill(rect)
         }
         _path.strokeRemove()
     }

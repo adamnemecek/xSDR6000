@@ -241,7 +241,7 @@
         <scene sceneID="rSb-95-jkI">
             <objects>
                 <viewController storyboardIdentifier="Flag" id="Lmw-yC-7qh" customClass="FlagViewController" customModule="xSDR6000" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" wantsLayer="YES" alphaValue="0.5" id="gnm-lQ-RMP">
+                    <view key="view" wantsLayer="YES" alphaValue="0.69999999999999996" id="gnm-lQ-RMP">
                         <rect key="frame" x="0.0" y="0.0" width="232" height="121"/>
                         <autoresizingMask key="autoresizingMask"/>
                         <subviews>
@@ -274,6 +274,9 @@
                                     <color key="textColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
                                     <color key="backgroundColor" name="textBackgroundColor" catalog="System" colorSpace="catalog"/>
                                 </textFieldCell>
+                                <connections>
+                                    <binding destination="Lmw-yC-7qh" name="value" keyPath="slice.frequency" id="aWe-3V-wDf"/>
+                                </connections>
                             </textField>
                             <levelIndicator verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="QmW-8Y-qvJ" userLabel="Meter">
                                 <rect key="frame" x="20" y="29" width="213" height="16"/>
@@ -307,6 +310,10 @@
                             </button>
                             <segmentedControl verticalHuggingPriority="750" translatesAutoresizingMaskIntoConstraints="NO" id="g37-bZ-HJg">
                                 <rect key="frame" x="-2" y="-2" width="236" height="24"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" constant="232" id="6yV-Ic-HSW"/>
+                                    <constraint firstAttribute="height" constant="21" id="Wu3-P0-eVD"/>
+                                </constraints>
                                 <segmentedCell key="cell" borderStyle="border" alignment="left" style="rounded" trackingMode="selectOne" id="SEx-oQ-yyl">
                                     <font key="font" metaFont="system"/>
                                     <segments>
@@ -366,6 +373,7 @@
                             <constraint firstItem="Uto-K2-n1M" firstAttribute="top" secondItem="gnm-lQ-RMP" secondAttribute="top" id="Ikw-pc-lBb"/>
                             <constraint firstItem="hYh-6I-ona" firstAttribute="leading" secondItem="YBt-pN-jdN" secondAttribute="trailing" constant="7" id="K0r-dT-sut"/>
                             <constraint firstItem="xac-o3-EAx" firstAttribute="firstBaseline" secondItem="EPm-mJ-5M0" secondAttribute="firstBaseline" id="NBn-IB-2Hy"/>
+                            <constraint firstItem="g37-bZ-HJg" firstAttribute="leading" secondItem="gnm-lQ-RMP" secondAttribute="leading" id="NBu-fu-wb4"/>
                             <constraint firstAttribute="trailing" secondItem="EPm-mJ-5M0" secondAttribute="trailing" id="Ndf-1t-gog"/>
                             <constraint firstAttribute="bottom" secondItem="g37-bZ-HJg" secondAttribute="bottom" id="Nee-Mc-L12"/>
                             <constraint firstItem="zgl-Xs-ljY" firstAttribute="centerY" secondItem="xac-o3-EAx" secondAttribute="centerY" id="Nxo-cv-7Ey"/>
@@ -384,6 +392,7 @@
                             <constraint firstItem="lt7-5n-8DK" firstAttribute="top" secondItem="Uto-K2-n1M" secondAttribute="bottom" constant="12" id="nou-F0-bK0"/>
                             <constraint firstItem="Uto-K2-n1M" firstAttribute="top" secondItem="xac-o3-EAx" secondAttribute="top" id="qhW-ZR-pt2"/>
                             <constraint firstItem="YBt-pN-jdN" firstAttribute="leading" secondItem="CKp-fX-2L5" secondAttribute="trailing" constant="1" id="rGv-dA-Ngt"/>
+                            <constraint firstAttribute="trailing" secondItem="g37-bZ-HJg" secondAttribute="trailing" id="vkb-RF-vS8"/>
                             <constraint firstItem="5h5-G3-gv4" firstAttribute="top" secondItem="xac-o3-EAx" secondAttribute="bottom" constant="15" id="ycc-Uu-gTF"/>
                         </constraints>
                     </view>
@@ -867,6 +876,6 @@
     <resources>
         <image name="NSLockLockedTemplate" width="10" height="14"/>
         <image name="NSLockUnlockedTemplate" width="10" height="14"/>
-        <image name="NSStopProgressFreestandingTemplate" width="14" height="14"/>
+        <image name="NSStopProgressFreestandingTemplate" width="11" height="11"/>
     </resources>
 </document>

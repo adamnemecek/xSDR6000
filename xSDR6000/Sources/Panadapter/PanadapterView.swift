@@ -17,7 +17,7 @@ final public class PanadapterView: NSView, CALayerDelegate {
     {
         didSet { createGestures() }
     }
-    var frequencyLegendHeight               : CGFloat = 20          // frequency height
+    var frequencyLegendHeight               : CGFloat = 20          // height of legend
 
     var rootLayer                           : CALayer!              // layers
     var panadapterLayer                     : PanadapterLayer!
@@ -87,6 +87,26 @@ final public class PanadapterView: NSView, CALayerDelegate {
             break
         }
     }
+    
+    
+    
+    /// Create a Slice Flag
+    ///
+    func createFlagView() -> FlagViewController {
+        
+        // get the Storyboard containing a Flag View Controller
+        let sb = NSStoryboard(name: "Panafall", bundle: nil)
+        
+        // create a Flag View Controller
+        let flagVc = sb.instantiateController(withIdentifier: "Flag") as! FlagViewController
+        
+        delegate.addChildViewController(flagVc)
+        
+        return flagVc
+    }
+
+    
+    
     
     // ----------------------------------------------------------------------------
     // MARK: - Private methods
@@ -180,7 +200,7 @@ final public class PanadapterView: NSView, CALayerDelegate {
         frequencyLayer.addConstraint(_maxY)
         frequencyLayer.delegate = self
         frequencyLayer.compositingFilter = compositingFilter
-        frequencyLayer.height = frequencyLegendHeight
+        frequencyLayer.legendHeight = frequencyLegendHeight
         
         // ***** Tnf layer *****
         tnfLayer = TnfLayer()

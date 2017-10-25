@@ -58,6 +58,8 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
     fileprivate var _tnfLayer               : TnfLayer { return _panadapterView.tnfLayer }
     fileprivate var _sliceLayer             : SliceLayer { return _panadapterView.sliceLayer }
     
+    
+
     fileprivate var _dr                     = Dragable()
 
     // constants
@@ -111,6 +113,9 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         // update the spectrum layer
         _panadapterLayer.populateUniforms(size: view.frame.size)
         _panadapterLayer.updateUniformsBuffer()
+
+//        Swift.print("viewDidLayout, width = \(view.frame.width), height = \(view.frame.height)")
+    
     }
 
     // ----------------------------------------------------------------------------
@@ -183,7 +188,7 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
             _dr.object = nil
 
             // what type of drag?
-            if _dr.original.y < _frequencyLayer.height {
+            if _dr.original.y < _frequencyLayer.legendHeight {
                 
                 // in frequency legend, bandwidth drag
                 _dr.type = .frequency
@@ -323,29 +328,6 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         _panadapterLayer.populateUniforms(size: view.frame.size)
         _panadapterLayer.updateUniformsBuffer()
     }
-    /// Create & configure a Flag for the specified Slice
-    ///
-    /// - Parameter slice:          the Slice
-    ///
-    private func setupFlag(_ slice: xLib6000.Slice) {
-    
-        // get the Storyboard containing a Flag View Controller
-        let sb = NSStoryboard(name: "Panafall", bundle: nil)
-        
-        // create a Flag View Controller
-        let flagVc = sb.instantiateController(withIdentifier: "Flag") as! FlagViewController
-
-        // pass a reference to Params
-        flagVc.representedObject = representedObject
-        flagVc.slice = slice
-
-        addChildViewController(flagVc)
-        
-        DispatchQueue.main.async {
-            // add the Flag view
-            self.view.addSubview(flagVc.view)
-        }
-    }
     /// Find the Slice at a frequency (if any)
     ///
     /// - Parameter freq:       the target frequency
@@ -415,7 +397,6 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         }
         return tnf
     }
-    
 
     // ----------------------------------------------------------------------------
     // MARK: - Observation Methods
@@ -434,7 +415,8 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
         "tnfInactive",
         "sliceActive",
         "sliceInactive",
-        "sliceFilter"
+        "sliceFilter",
+        "showMarkers"
     ]
     
     fileprivate let _tnfKeyPaths = [                    // Tnf keypaths to observe
@@ -504,6 +486,10 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
             
         case "spectrumBackground":
             _panadapterLayer.setClearColor(Defaults[.spectrumBackground])
+            
+        // Band Markers
+        case "showMarkers":
+            _frequencyLayer.redraw()
         
         // Panadapter frequency / bandwidth
         case #keyPath(Panadapter.center), #keyPath(Panadapter.bandwidth):
@@ -587,10 +573,7 @@ final class PanadapterViewController : NSViewController, NSGestureRecognizerDele
                 observations(slice, paths: _sliceKeyPaths)
                 
                 // force a redraw
-                _sliceLayer.redraw()
-                
-                // add the Flag
-                setupFlag(slice)
+                _sliceLayer.redraw()                
             }
         }
     }
